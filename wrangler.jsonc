@@ -1,6 +1,7 @@
 {
   // Green Ocean — website + small server on Cloudflare Workers
   "name": "greenocean",
+  "keep_vars": true,
   "main": "src/worker.js",
   "compatibility_date": "2026-09-01",
 
@@ -22,11 +23,17 @@
     { "name": "MAIL", "destination_address": "thegreenoceanplants@gmail.com" }
   ],
 
+ {
+  // ...
   "vars": {
-    "OWNER_EMAIL": "thegreenoceanplants@gmail.com",
+    "ADMIN_PASSWORD": "Admin@2026green",
     "FROM_EMAIL": "website@greenocean.co.in",
-    "SUPPORT_EMAIL": "support@greenocean.co.in",
-    "STORE_NAME": "Green Ocean"
+    "OWNER_EMAIL": "thegreenoceanplants@gmail.com",
+    "STORE_NAME": "Green Ocean",
+    "SUPPORT_EMAIL": "support@greenocean.co.in"
+  },
+  // ...
+}
   },
 
   "observability": { "enabled": true }
