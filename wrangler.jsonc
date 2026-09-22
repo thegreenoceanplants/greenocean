@@ -1,0 +1,36 @@
+{
+  // Green Ocean — website + small server on Cloudflare Workers
+  "name": "greenocean",
+  "keep_vars": true,
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-01",
+
+  // website files
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // storage
+  "kv_namespaces": [
+    { "binding": "DATA", "id": "b2f3c4fdbc0f4040a0aaa1b760112de6" }
+  ],
+
+  // emails for new orders and contact messages go to this verified address
+  "send_email": [
+    { "name": "MAIL", "destination_address": "thegreenoceanplants@gmail.com" }
+  ],
+
+  // NOTE: ADMIN_PASSWORD is NOT here on purpose.
+  // Add it in Cloudflare → greenocean → Settings → Variables and Secrets → type "Secret".
+  "vars": {
+    "FROM_EMAIL": "website@greenocean.co.in",
+    "OWNER_EMAIL": "thegreenoceanplants@gmail.com",
+    "STORE_NAME": "Green Ocean",
+    "SUPPORT_EMAIL": "support@greenocean.co.in"
+  },
+
+  "observability": { "enabled": true }
+}
