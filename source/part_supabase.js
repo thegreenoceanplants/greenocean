@@ -42,7 +42,9 @@ const SB={
       if(session)await SB.applySession(session);
     }catch(e){}
     sb.auth.onAuthStateChange((event,session)=>{
+      if(event==='PASSWORD_RECOVERY'){ IS_RECOVERY=true; }
       SB.applySession(session).then(()=>{
+        if(event==='PASSWORD_RECOVERY'&&session){ go('#/account'); paint(); toast('Set a new password to finish resetting your account'); return; }
         if(event==='SIGNED_IN'&&session){
           if(!DB.customers.some(c=>c.email===DB.session.email))
             DB.customers.unshift({id:DB.session.id,name:DB.session.name,email:DB.session.email,phone:DB.session.phone,city:'',orders:0,spent:0,joined:today()});
@@ -101,8 +103,10 @@ const SB={
     return {ok:true};
   },
   async updatePassword(newPass,oldPass){
-    const {error}=await sb.auth.updateUser({password:newPass,currentPassword:oldPass});
+    const opts=IS_RECOVERY?{password:newPass}:{password:newPass,currentPassword:oldPass};
+    const {error}=await sb.auth.updateUser(opts);
     if(error)return {ok:false,error:sbError(error)};
+    IS_RECOVERY=false;
     return {ok:true};
   },
   async updateProfile(fields){
@@ -114,4 +118,5 @@ const SB={
   async signOut(){ if(sb)await sb.auth.signOut(); }
 };
 let OTP_SENT_EMAIL='';
+let IS_RECOVERY=false;
 </script>

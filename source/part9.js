@@ -340,11 +340,13 @@ document.addEventListener('submit',async e=>{
     save();paint();toast('Details saved');return;}
   if(f.id==='pwForm'){e.preventDefault(); if(!validateForm(f))return;
     const d=Object.fromEntries(new FormData(f).entries());
+    const wasRecovery=IS_RECOVERY;
     const btn=f.querySelector('button'),label=btn.innerHTML; btn.disabled=true; btn.innerHTML='Updating…';
     const res=await SB.updatePassword(d.pass,d.oldpass);
     btn.disabled=false; btn.innerHTML=label;
     if(!res.ok){toast(res.error,true);return;}
     f.reset(); f.querySelectorAll('.inp').forEach(i=>i.classList.remove('good','bad'));
+    if(wasRecovery)paint();
     toast('Password updated');return;}
   if(f.id==='setForm'){e.preventDefault(); if(!validateForm(f))return;const d=Object.fromEntries(new FormData(f).entries());
     Object.assign(DB.settings,{store:d.store,tag:d.tag,email:d.email,phone:d.phone,address:d.address,gst:d.gst,
