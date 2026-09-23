@@ -103,6 +103,9 @@ button svg,a svg{pointer-events:none}
 .logo{white-space:nowrap}
 @media(max-width:430px){.hdr-in{gap:6px}.logo{font-size:18px;gap:6px}.logo .leaf,.logo svg{width:22px;height:22px}.icons{gap:0}.icon-btn{width:34px;height:34px}.usermenu{padding:6px 8px}}
 @media(max-width:350px){.wrap{padding:0 10px}.logo{font-size:16px}.icon-btn{width:31px;height:31px}.hdr-in{gap:4px}}
+@media(max-width:940px){.hdr .logo img{height:42px!important}}
+@media(max-width:430px){.hdr .logo img{height:38px!important}}
+@media(max-width:350px){.hdr .logo img{height:34px!important}}
 
 /* ---------- Hero ---------- */
 .hero{background:linear-gradient(105deg,#F3EFE3 0%,#F6F2E8 45%,#E9F0E6 100%);border-bottom:1px solid var(--line);position:relative;overflow:hidden}
@@ -1417,7 +1420,7 @@ function header(active){
       <div class="strip-set">${items}</div><div class="strip-set" aria-hidden="true">${items}</div></div></div>
   <header class="hdr"><div class="wrap hdr-in">
     <button class="icon-btn burger" data-act="menu" aria-label="Open menu">${ic('menu',22)}</button>
-    <a class="logo" href="#/"><img src="${src('img:logo')}" alt="${esc(s.store)}" style="height:34px;width:auto;display:block"></a>
+    <a class="logo" href="#/"><img src="${src('img:logo')}" alt="${esc(s.store)}" style="height:48px;width:auto;display:block;object-fit:contain"></a>
     <nav class="nav" aria-label="Main">${NAV_MAIN.map(n=>`<a href="${n[1]}" class="${navOn(n[2])?'on':''}" ${navOn(n[2])?'aria-current="page"':''}>${n[0]}</a>`).join('')}</nav>
     <form class="search" data-act="search"><span>${ic('search',16)}</span>
       <input name="q" placeholder="Search for plants, planters and more..." aria-label="Search products"></form>
@@ -1433,7 +1436,7 @@ function footer(){
   const s=DB.settings;
   return `<footer class="ft"><div class="wrap">
    <div class="ft-in">
-    <div><div class="logo"><img src="${src('img:logo')}" alt="${esc(s.store)}" style="height:30px;width:auto;display:block"></div>
+    <div><div class="logo"><img src="${src('img:logo')}" alt="${esc(s.store)}" style="height:42px;width:auto;display:block;object-fit:contain"></div>
       <p style="font-size:12.5px;opacity:.8;max-width:30ch;margin:8px 0 0">${esc(s.tag)}. Grown at our nursery in ${esc(s.address)}.</p>
       <div class="soc">
         ${s.instagram?`<a href="${esc(s.instagram)}" target="_blank" rel="noopener" aria-label="Green Ocean on Instagram">${ic('instagram',16)}</a>`:''}
@@ -1885,7 +1888,7 @@ const NAV=[['dashboard','Dashboard','home'],['products','Products','box'],['cate
 function adminLogin(){
   return `<div style="min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(140deg,#0C3A28,#15563D)">
    <form class="panel" id="admForm" novalidate style="width:100%;max-width:380px;padding:24px">
-     <div class="logo" style="justify-content:center;margin-bottom:8px"><img src="${src('img:logo')}" alt="${esc(DB.settings.store)}" style="height:64px;width:auto;display:block"></div>
+     <div class="logo" style="justify-content:center;margin-bottom:8px"><img src="${src('img:logo')}" alt="${esc(DB.settings.store)}" style="height:82px;width:auto;display:block;object-fit:contain"></div>
      <p style="text-align:center;color:var(--muted);font-size:13px;margin:0 0 18px">Admin panel · sign in to manage the store</p>
      <div class="field"><label for="adm_user">Username</label><div class="ifield"><span class="ico">${ic('user',18)}</span>
        <input class="inp" id="adm_user" name="user" data-v="any" data-label="Username" placeholder="admin" autocomplete="username" autocapitalize="none" spellcheck="false"></div></div>
@@ -1898,7 +1901,7 @@ function adminLogin(){
 }
 function adminShell(page,body,title,sub,actions){
   return `<div class="adm"><aside class="side" id="side">
-    <div class="side-top"><div class="logo"><img src="${src('img:logo')}" alt="${esc(DB.settings.store)}" style="height:46px;width:auto;display:block"></div><small style="margin-left:0;margin-top:4px">Admin Panel</small></div>
+    <div class="side-top"><div class="logo"><img src="${src('img:logo')}" alt="${esc(DB.settings.store)}" style="height:56px;width:auto;display:block;object-fit:contain"></div><small style="margin-left:0;margin-top:4px">Admin Panel</small></div>
     <nav>${NAV.map(n=>`<a href="#/admin/${n[0]}" class="${page===n[0]?'on':''}">${ic(n[2],17)} ${n[1]}${n[0]==='messages'&&(API.messages||[]).some(m=>!m.read)?` <span class="pill green" style="margin-left:auto;padding:1px 8px">${API.messages.filter(m=>!m.read).length}</span>`:''}</a>`).join('')}</nav>
     <div class="side-bot"><a href="#/" style="display:flex;gap:10px;align-items:center;padding:9px 11px;font-size:13.5px">${ic('back',17)} Back to Website</a></div>
   </aside><div>
