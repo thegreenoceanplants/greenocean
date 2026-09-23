@@ -1067,6 +1067,123 @@ function admMessages(){
     'Messages',API.on?`${list.filter(m=>!m.read).length} unread · also sent to your email`:'Contact-form messages');
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* ================= SUPABASE AUTH ================= */
+const SUPABASE_URL='https://kkuxyrwklyszargqfgzw.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrdXh5cndrbHlzemFyZ3FmZ3p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjg5MDMsImV4cCI6MjEwNTY0NDkwM30.mgUkIgAU51nTgua8TxDmJ8gOwXOQQ4acDLpv1diQGYY';
+const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,
+  {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}}):null;
+
+function sbError(e){
+  const m=(e&&e.message)||'Something went wrong. Please try again.';
+  if(/already registered/i.test(m))return 'That email already has an account — sign in instead';
+  if(/Invalid login credentials/i.test(m))return 'That email/mobile number or password is not right';
+  if(/Password should be/i.test(m))return 'Password must be at least 6 characters';
+  if(/rate limit|too many/i.test(m))return 'Too many attempts — please wait a minute and try again';
+  if(/Token has expired|invalid/i.test(m))return 'That code is wrong or has expired — please try again';
+  return m;
+}
+
+const SB={
+  ready:false,
+  async profileToSession(user){
+    if(!user)return null;
+    let prof=null;
+    try{ const r=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle(); prof=r.data; }catch(e){}
+    const meta=user.user_metadata||{};
+    return {id:user.id,
+      name:(prof&&prof.name)||meta.name||meta.full_name||(user.email||'').split('@')[0],
+      email:user.email||(prof&&prof.email)||'',
+      phone:(prof&&prof.phone)||user.phone||'',
+      address:(prof&&prof.address)||'',city:(prof&&prof.city)||'',pin:(prof&&prof.pin)||''};
+  },
+  async applySession(session){
+    DB.session=session?await SB.profileToSession(session.user):null;
+    if(!session)DB.sessionTemp=false;
+    save();
+    if(typeof paint==='function')paint();
+  },
+  async init(){
+    if(!sb){ console.warn('Supabase failed to load — check your connection.'); return; }
+    try{
+      const {data:{session}}=await sb.auth.getSession();
+      if(session)await SB.applySession(session);
+    }catch(e){}
+    sb.auth.onAuthStateChange((event,session)=>{
+      SB.applySession(session).then(()=>{
+        if(event==='SIGNED_IN'&&session){
+          if(!DB.customers.some(c=>c.email===DB.session.email))
+            DB.customers.unshift({id:DB.session.id,name:DB.session.name,email:DB.session.email,phone:DB.session.phone,city:'',orders:0,spent:0,joined:today()});
+          const nx=DB.afterLogin; DB.afterLogin=''; save();
+          if(location.hash==='#/login'||location.hash==='#/signup')go(nx==='checkout'?'#/checkout':'#/account');
+          toast('Welcome'+(DB.session.name?', '+DB.session.name.split(' ')[0]:'')+'!');
+        }
+      });
+    });
+    SB.ready=true;
+  },
+  async lookupEmailByPhone(phone){
+    try{ const {data}=await sb.from('profiles').select('email').eq('phone',phone).maybeSingle(); return data&&data.email||null; }
+    catch(e){ return null; }
+  },
+  async signUp({name,email,phone,pass}){
+    if(!sb)return {ok:false,error:'Accounts are temporarily unavailable — please try again shortly.'};
+    const {data,error}=await sb.auth.signUp({email,password:pass,
+      options:{data:{name,phone},emailRedirectTo:location.origin+location.pathname}});
+    if(error)return {ok:false,error:sbError(error)};
+    if(data && data.user && !data.session) return {ok:true,needsConfirm:true};
+    return {ok:true};
+  },
+  async signIn({login,pass}){
+    if(!sb)return {ok:false,error:'Accounts are temporarily unavailable — please try again shortly.'};
+    let email=login.trim();
+    const digits=email.replace(/[^0-9]/g,'');
+    if(/^[6-9][0-9]{9}$/.test(digits)){
+      const found=await SB.lookupEmailByPhone(digits);
+      if(!found)return {ok:false,error:'No account found for that mobile number. Try your email, or create an account.'};
+      email=found;
+    }
+    const {error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error)return {ok:false,error:sbError(error)};
+    return {ok:true};
+  },
+  async signInWithGoogle(){
+    if(!sb)return;
+    await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+  },
+  async sendOtp(email){
+    if(!sb)return {ok:false,error:'Accounts are temporarily unavailable — please try again shortly.'};
+    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+    if(error)return {ok:false,error:sbError(error)};
+    return {ok:true};
+  },
+  async verifyOtp(email,token){
+    const {error}=await sb.auth.verifyOtp({email,token,type:'email'});
+    if(error)return {ok:false,error:sbError(error)};
+    return {ok:true};
+  },
+  async resetPassword(email){
+    if(!sb)return {ok:false,error:'Accounts are temporarily unavailable — please try again shortly.'};
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+'#/account'});
+    if(error)return {ok:false,error:sbError(error)};
+    return {ok:true};
+  },
+  async updatePassword(newPass,oldPass){
+    const {error}=await sb.auth.updateUser({password:newPass,currentPassword:oldPass});
+    if(error)return {ok:false,error:sbError(error)};
+    return {ok:true};
+  },
+  async updateProfile(fields){
+    const u=DB.session; if(!u)return {ok:false,error:'Not signed in'};
+    const {error}=await sb.from('profiles').update({...fields,updated_at:new Date().toISOString()}).eq('id',u.id);
+    if(error)return {ok:false,error:sbError(error)};
+    return {ok:true};
+  },
+  async signOut(){ if(sb)await sb.auth.signOut(); }
+};
+let OTP_SENT_EMAIL='';
+</script>
 <script>
 /* ================= VALIDATION ================= */
 const RULES={
@@ -1191,12 +1308,13 @@ function viewLogin(){
       <div class="auth-row"><label><input type="checkbox" name="remember" checked> Remember me</label>
         <a href="#/login" class="auth-link" data-act="forgot">Forgot password?</a></div>
       <button class="btn btn-primary btn-block btn-lg">Sign in ${ic('arrow',16)}</button></form>`:
-     `<div class="auth-note">${ic('phone',16)} <b>One-time code login is coming soon.</b><br>
-        We are connecting SMS and email codes in our next update. Until then, please sign in with your email or mobile number and password.</div>
-      <button class="btn btn-primary btn-block btn-lg" style="margin-top:14px" data-act="authTab" data-tab="pw">Use password instead ${ic('arrow',16)}</button>`}
+     `<form id="otpForm" novalidate>
+      ${!OTP_SENT_EMAIL?iField('Email address','email','email','email','mail','Enter your email address'):
+        `<p style="margin:0 0 10px;font-size:13.5px;color:var(--muted)">Code sent to <b>${esc(OTP_SENT_EMAIL)}</b>. <a href="#" data-act="otpChangeEmail" style="color:var(--green-700);font-weight:600">Change email</a></p>
+         ${iField('6-digit code','token','text','code','lock','Enter the code from your email')}`}
+      <button class="btn btn-primary btn-block btn-lg" style="margin-top:2px">${OTP_SENT_EMAIL?'Verify & sign in':'Send code'} ${ic('arrow',16)}</button></form>`}
     <div class="auth-or">OR</div>
     <button type="button" class="auth-alt" data-act="socialLogin" data-p="Google">${ic('google',18)} Continue with Google</button>
-    <button type="button" class="auth-alt" data-act="socialLogin" data-p="Apple">${ic('apple',18)} Continue with Apple</button>
     <p class="auth-foot">New to Green Ocean? <a href="#/signup">Create a new account</a></p>`;
   return authShell('login',card);
 }
@@ -2442,17 +2560,29 @@ document.addEventListener('click',e=>{
     case 'admLogout': adminSignOut();toast('Signed out of admin'); break;
     case 'eye': { const inp=t.parentElement.querySelector('input'); const show=inp.type==='password';
       inp.type=show?'text':'password'; t.innerHTML=ic(show?'eyeoff':'eye',18); t.setAttribute('aria-label',show?'Hide password':'Show password'); break; }
-    case 'authTab': AUTH_TAB=d.tab||'pw'; paint(); break;
-    case 'forgot': e.preventDefault(); openModal('Forgot your password?',`<p style="margin:0 0 12px;line-height:1.6">Password reset by email is coming in our next update.
-      Until then, message us on WhatsApp from your registered mobile number and we will help you get back in within a few hours.</p>
-      <a class="btn btn-primary btn-sq btn-block" target="_blank" rel="noopener" href="https://wa.me/${waNumber()}?text=${encodeURIComponent('Hi Green Ocean, I forgot my website password. My registered mobile number is ')}">${ic('phone',15)} Get help on WhatsApp</a>`,
-      `<button class="btn btn-line btn-sq" data-close="1">Close</button>`); break;
-    case 'socialLogin': openModal('Continue with '+(d.p||'Google'),`<p style="margin:0 0 10px;line-height:1.6"><b>${esc(d.p||'Google')} sign-in is being connected</b> and will switch on with our next update.</p>
-      <p style="margin:0;color:var(--muted);font-size:13.5px">For now, please sign in with your email or mobile number and password — or create an account in under a minute.</p>`,
-      `<a class="btn btn-line btn-sq" href="#/signup" data-close="1">Create account</a><button class="btn btn-primary btn-sq" data-close="1">OK</button>`); break;
+    case 'authTab': AUTH_TAB=d.tab||'pw'; OTP_SENT_EMAIL=''; paint(); break;
+    case 'otpChangeEmail': e.preventDefault(); OTP_SENT_EMAIL=''; paint(); break;
+    case 'forgot': e.preventDefault(); openModal('Reset your password',
+      `<div class="field"><label>Email address</label><input class="inp" id="fpEmail" type="email" placeholder="Enter the email on your account"></div>
+       <p style="margin:8px 0 0;font-size:12.5px;color:var(--muted)">We'll email you a link to set a new password. Signed up with only a mobile number? Message us on WhatsApp instead.</p>`,
+      `<a class="btn btn-line btn-sq" target="_blank" rel="noopener" href="https://wa.me/${waNumber()}?text=${encodeURIComponent('Hi Green Ocean, I forgot my website password. My registered mobile number is ')}">${ic('phone',15)} WhatsApp</a>
+       <button class="btn btn-primary btn-sq" id="fpSend">Send reset link</button>`);
+      $('#fpSend').onclick=async()=>{
+        const em=($('#fpEmail').value||'').trim(); const chk=RULES.email(em);
+        if(chk!==true){toast(chk,true);return;}
+        const btn=$('#fpSend'); btn.disabled=true; btn.textContent='Sending…';
+        const res=await SB.resetPassword(em);
+        btn.disabled=false; btn.textContent='Send reset link';
+        if(!res.ok){toast(res.error,true);return;}
+        closeLayer(); toast('Check your inbox for the reset link');};
+      break;
+    case 'socialLogin':
+      if((d.p||'Google')==='Google'){ SB.signInWithGoogle(); break; }
+      openModal('Continue with Apple',`<p style="margin:0;line-height:1.6">Apple sign-in isn't available yet. Please use email/mobile, OTP, or Google for now.</p>`,
+        `<button class="btn btn-primary btn-sq" data-close="1">OK</button>`); break;
     case 'publishNow': schedulePublish(true); toast('Publishing to the live website…'); break;
     case 'contactAgain': paint(); break;
-    case 'logout': DB.session=null;DB.afterLogin='';save();go('#/');toast('Signed out'); break;
+    case 'logout': SB.signOut();DB.afterLogin='';go('#/');toast('Signed out'); break;
     case 'applyFilter': {
       const p=new URLSearchParams();
       const g=n=>{const el=document.querySelector(`input[name="${n}"]:checked`);return el?el.value:'';};
@@ -2534,7 +2664,7 @@ document.addEventListener('change',e=>{
     setOrderStatus(o,val).then(ok=>{if(ok)toast('Order #'+st+' is now '+val);});}
 });
 /* ---------- form submits ---------- */
-document.addEventListener('submit',e=>{
+document.addEventListener('submit',async e=>{
   const f=e.target, act=f.dataset.act;
   if(act==='search'){e.preventDefault();const q=new FormData(f).get('q');go('#/shop?q='+encodeURIComponent(q||''));return;}
   if(act==='admSearch'){e.preventDefault();const q=new FormData(f).get('q');go('#/admin/products?q='+encodeURIComponent(q||''));return;}
@@ -2584,30 +2714,56 @@ document.addEventListener('submit',e=>{
     return;}
   if(f.id==='suForm'){e.preventDefault(); if(!validateForm(f))return;
     const d=Object.fromEntries(new FormData(f).entries());
-    if(userByEmail(d.email)){toast('That email already has an account — sign in instead',true);go('#/login');return;}
-    if((DB.users||[]).some(u=>u.phone===d.phone)){toast('That mobile number is already registered',true);return;}
-    const u={id:uid('u'),name:d.name.trim(),email:d.email.trim().toLowerCase(),phone:d.phone,pass:d.pass,
-      address:'',city:'',pin:'',joined:today()};
-    DB.users.push(u); signIn(u); DB.sessionTemp=false;
-    if(!DB.customers.some(c=>c.email===u.email))DB.customers.unshift({id:u.id,name:u.name,email:u.email,phone:u.phone,city:'',orders:0,spent:0,joined:today()});
-    const nx=DB.afterLogin; DB.afterLogin=''; save(); go(nx==='checkout'?'#/checkout':'#/account'); toast('Welcome to Green Ocean, '+u.name.split(' ')[0]);return;}
+    const btn=f.querySelector('button'),label=btn.innerHTML; btn.disabled=true; btn.innerHTML='Creating account…';
+    const res=await SB.signUp({name:d.name.trim(),email:d.email.trim().toLowerCase(),phone:d.phone,pass:d.pass});
+    btn.disabled=false; btn.innerHTML=label;
+    if(!res.ok){toast(res.error,true); if(/already has an account/.test(res.error))go('#/login'); return;}
+    if(res.needsConfirm){ openModal('Confirm your email',`<p style="margin:0;line-height:1.6">We've sent a confirmation link to <b>${esc(d.email)}</b>. Please open it, then come back and sign in.</p>`,
+      `<button class="btn btn-primary btn-sq" data-close="1">OK</button>`); go('#/login'); return; }
+    return;}
   if(f.id==='liForm'){e.preventDefault(); if(!validateForm(f))return;
     const d=Object.fromEntries(new FormData(f).entries());
-    const u=userByLogin(d.email);
-    if(!u||u.pass!==d.pass){toast('That email/mobile number or password is not right',true);return;}
-    signIn(u); DB.sessionTemp=!d.remember; try{sessionStorage.setItem('go_sess','1');}catch(e){}
-    const nx=DB.afterLogin; DB.afterLogin=''; save();
-    go(nx==='checkout'?'#/checkout':'#/account'); toast('Signed in as '+u.name.split(' ')[0]);return;}
+    const btn=f.querySelector('button'),label=btn.innerHTML; btn.disabled=true; btn.innerHTML='Signing in…';
+    if(!d.remember)DB.sessionTemp=true;
+    const res=await SB.signIn({login:d.email,pass:d.pass});
+    btn.disabled=false; btn.innerHTML=label;
+    if(!res.ok){toast(res.error,true);return;}
+    try{sessionStorage.setItem('go_sess','1');}catch(e){}
+    return;}
+  if(f.id==='otpForm'){e.preventDefault();
+    const d=Object.fromEntries(new FormData(f).entries());
+    const btn=f.querySelector('button'),label=btn.innerHTML;
+    if(!OTP_SENT_EMAIL){
+      const chk=RULES.email(d.email); if(chk!==true){toast(chk,true);return;}
+      btn.disabled=true; btn.innerHTML='Sending…';
+      const res=await SB.sendOtp(d.email.trim().toLowerCase());
+      btn.disabled=false; btn.innerHTML=label;
+      if(!res.ok){toast(res.error,true);return;}
+      OTP_SENT_EMAIL=d.email.trim().toLowerCase(); paint(); toast('Code sent — check your email'); return;
+    }
+    if(!/^[0-9]{6}$/.test((d.token||'').trim())){toast('Enter the 6-digit code',true);return;}
+    btn.disabled=true; btn.innerHTML='Verifying…';
+    const res=await SB.verifyOtp(OTP_SENT_EMAIL,d.token.trim());
+    btn.disabled=false; btn.innerHTML=label;
+    if(!res.ok){toast(res.error,true);return;}
+    OTP_SENT_EMAIL=''; try{sessionStorage.setItem('go_sess','1');}catch(e){}
+    return;}
   if(f.id==='acForm'){e.preventDefault(); if(!validateForm(f))return;
-    const d=Object.fromEntries(new FormData(f).entries()); const u=currentUser();
-    if((DB.users||[]).some(x=>x.phone===d.phone&&x.id!==u.id)){toast('That mobile number belongs to another account',true);return;}
-    Object.assign(u,{name:d.name,phone:d.phone,address:d.address,city:d.city,pin:d.pin});
-    signIn(u); const c=DB.customers.find(x=>x.email===u.email); if(c){c.name=u.name;c.phone=u.phone;c.city=u.city;}
+    const d=Object.fromEntries(new FormData(f).entries());
+    const btn=f.querySelector('button'),label=btn.innerHTML; btn.disabled=true; btn.innerHTML='Saving…';
+    const res=await SB.updateProfile({name:d.name,phone:d.phone,address:d.address,city:d.city,pin:d.pin});
+    btn.disabled=false; btn.innerHTML=label;
+    if(!res.ok){toast(res.error,true);return;}
+    Object.assign(DB.session,{name:d.name,phone:d.phone,address:d.address,city:d.city,pin:d.pin});
+    const c=DB.customers.find(x=>x.email===DB.session.email); if(c){c.name=d.name;c.phone=d.phone;c.city=d.city;}
     save();paint();toast('Details saved');return;}
   if(f.id==='pwForm'){e.preventDefault(); if(!validateForm(f))return;
-    const d=Object.fromEntries(new FormData(f).entries()); const u=currentUser();
-    if(u.pass!==d.oldpass){toast('Current password is wrong',true);return;}
-    u.pass=d.pass; save(); f.reset(); f.querySelectorAll('.inp').forEach(i=>i.classList.remove('good','bad'));
+    const d=Object.fromEntries(new FormData(f).entries());
+    const btn=f.querySelector('button'),label=btn.innerHTML; btn.disabled=true; btn.innerHTML='Updating…';
+    const res=await SB.updatePassword(d.pass,d.oldpass);
+    btn.disabled=false; btn.innerHTML=label;
+    if(!res.ok){toast(res.error,true);return;}
+    f.reset(); f.querySelectorAll('.inp').forEach(i=>i.classList.remove('good','bad'));
     toast('Password updated');return;}
   if(f.id==='setForm'){e.preventDefault(); if(!validateForm(f))return;const d=Object.fromEntries(new FormData(f).entries());
     Object.assign(DB.settings,{store:d.store,tag:d.tag,email:d.email,phone:d.phone,address:d.address,gst:d.gst,
@@ -2626,7 +2782,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLayer();
   if(e.key==='Enter'&&e.target&&e.target.id==='cpn'){e.preventDefault();const b=document.querySelector('[data-act="applyCoupon"]');if(b)b.click();}});
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='cpn'&&CPN_MSG){ CPN_MSG=null; const m=document.getElementById('cpnMsg'); if(m){m.textContent='';m.className='cpn-msg';} e.target.classList.remove('bad'); } });
 /* ---------- boot ---------- */
-load(); paint(); API.init();
+load(); paint(); API.init(); SB.init();
 </script>
 </body>
 </html>
