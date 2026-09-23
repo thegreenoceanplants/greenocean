@@ -636,6 +636,41 @@ textarea.inp{min-height:90px;resize:vertical}
 @media(max-width:900px){.brand-grid{grid-template-columns:1fr}.brand-side{position:static;grid-template-columns:1fr 1fr}.brand-hero-inner{padding:32px 28px}.brand-hero::after{width:58%}}
 @media(max-width:650px){.brand-wrap{padding:18px 10px 30px}.brand-hero{border-radius:16px;min-height:250px}.brand-hero-inner{padding:27px 20px}.brand-hero h1{font-size:32px}.brand-hero::after{width:82%;opacity:.15}.brand-features,.contact-cards,.brand-side{grid-template-columns:1fr}.brand-card,.contact-form-card{padding:17px 15px}.brand-cta{align-items:flex-start;flex-direction:column}.brand-cta .btn{width:100%}.contact-card{grid-template-columns:40px 1fr;padding:15px}.contact-card .ci{width:40px;height:40px}}
 
+
+
+/* ---------- Premium Our Story + Plant Care Blog ---------- */
+.story-premium{background:linear-gradient(180deg,#f6faf7 0%,#ffffff 46%,#f3f8f4 100%);min-height:70vh}
+.story-premium .brand-wrap{padding-top:24px}
+.story-pro-hero{position:relative;overflow:hidden;border-radius:28px;display:grid;grid-template-columns:1.04fr .96fr;min-height:430px;background:linear-gradient(125deg,#0b3d2a 0%,#13563c 58%,#2b7b56 100%);color:#fff;box-shadow:0 22px 56px rgba(12,58,40,.18);margin-bottom:22px}
+.story-pro-copy{position:relative;z-index:2;padding:48px 44px 42px;display:flex;flex-direction:column;justify-content:center}
+.story-pro-copy h1{font-family:var(--serif);font-size:clamp(38px,5.2vw,58px);line-height:1.02;letter-spacing:-.035em;margin:14px 0 14px;font-weight:600;max-width:760px}
+.story-pro-copy>p{margin:0;max-width:650px;color:#e5f1e9;font-size:15.5px;line-height:1.78}
+.story-pro-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.story-pro-actions .btn-line{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.35);color:#fff}.story-pro-actions .btn-line:hover{background:rgba(255,255,255,.16)}
+.story-pro-facts{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.story-pro-facts span{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.09);padding:7px 10px;border-radius:999px;font-size:11.5px;color:#f2faf5}
+.story-pro-visual{position:relative;min-height:430px;background:#dfece2;overflow:hidden}
+.story-pro-visual .main{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.story-pro-visual::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,61,42,.22),transparent 34%),linear-gradient(0deg,rgba(7,44,30,.2),transparent 45%)}
+.story-sticker{position:absolute;right:24px;bottom:24px;z-index:2;background:rgba(255,255,255,.94);color:#123b2b;border-radius:18px;padding:15px 17px;box-shadow:0 12px 28px rgba(10,50,30,.16);max-width:210px}.story-sticker b{display:block;font-family:var(--serif);font-size:18px;margin-bottom:3px}.story-sticker small{display:block;color:#627269;font-size:11.5px;line-height:1.45}
+.story-section-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;align-items:stretch;margin-bottom:18px}
+.story-paper{background:#fff;border:1px solid #e1e8e3;border-radius:18px;padding:26px;box-shadow:0 5px 24px rgba(20,63,42,.05)}
+.story-paper .ey{font-size:11px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:#27835f;margin-bottom:9px}.story-paper h2{font-family:var(--serif);font-size:29px;line-height:1.15;margin:0 0 12px;font-weight:600;color:#14241c}.story-paper p{margin:0 0 11px;color:#52635a;font-size:14px;line-height:1.78}.story-paper p:last-child{margin-bottom:0}
+.story-photo-card{position:relative;border-radius:18px;overflow:hidden;min-height:330px;background:#e8f1ea;box-shadow:0 5px 24px rgba(20,63,42,.05)}.story-photo-card img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}.story-photo-card::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(8,53,35,.65),transparent 58%)}.story-photo-caption{position:absolute;left:20px;right:20px;bottom:18px;z-index:2;color:#fff}.story-photo-caption b{display:block;font-family:var(--serif);font-size:22px}.story-photo-caption span{font-size:12px;color:#e7f2eb}
+.story-process{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.story-process-card{background:#fff;border:1px solid #e2e9e4;border-radius:16px;padding:18px;box-shadow:0 3px 16px rgba(20,63,42,.04)}.story-process-card .n{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#e7f4eb;color:#13734f;font-weight:800;font-size:12px;margin-bottom:11px}.story-process-card b{display:block;font-size:14px;margin-bottom:5px;color:#1c3025}.story-process-card p{margin:0;color:#65756c;font-size:12.6px;line-height:1.55}
+.story-shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.story-shop-card{display:block;position:relative;min-height:155px;border-radius:16px;overflow:hidden;background:#e6f0e8}.story-shop-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.story-shop-card::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(6,44,29,.78),rgba(6,44,29,.03) 65%)}.story-shop-card span{position:absolute;left:15px;right:15px;bottom:13px;z-index:2;color:#fff}.story-shop-card b{display:block;font-size:14px}.story-shop-card small{font-size:11px;color:#e7f2eb}
+.story-quote{margin-top:18px;background:linear-gradient(120deg,#eaf5ed,#f8fbf9);border:1px solid #dce9e0;border-radius:18px;padding:25px;text-align:center}.story-quote .q{font-family:var(--serif);font-size:25px;line-height:1.35;color:#164b35;max-width:760px;margin:0 auto}.story-quote small{display:block;margin-top:8px;color:#6a7a71;font-size:12px}
+
+.blog-page{background:linear-gradient(180deg,#f6faf7 0%,#fff 42%,#f4f8f5 100%);min-height:70vh}.blog-wrap{max-width:1180px;margin:0 auto;padding:28px 16px 44px}
+.blog-hero{position:relative;overflow:hidden;border-radius:26px;background:linear-gradient(115deg,#0d422e 0%,#155a40 60%,#3d8b63 100%);color:#fff;padding:40px 42px;margin-bottom:20px;box-shadow:0 18px 46px rgba(12,58,40,.16)}.blog-hero::after{content:'';position:absolute;right:-30px;top:-65px;width:430px;height:340px;background:url('/assets/img/content3.jpg?v=4b7408e9') center/cover no-repeat;opacity:.24;border-radius:52%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 35%);mask-image:linear-gradient(90deg,transparent,#000 35%)}.blog-hero>*{position:relative;z-index:1}.blog-hero h1{font-family:var(--serif);font-size:clamp(35px,5vw,50px);line-height:1.05;margin:13px 0 10px;font-weight:600;letter-spacing:-.025em}.blog-hero p{margin:0;max-width:720px;color:#e8f3ec;font-size:15px;line-height:1.72}.blog-topic-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.blog-topic-row span{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.1);border-radius:999px;font-size:11.5px;color:#f3faf5}
+.blog-featured{display:grid;grid-template-columns:1.18fr .82fr;background:#fff;border:1px solid #e1e8e3;border-radius:20px;overflow:hidden;box-shadow:0 6px 24px rgba(20,63,42,.055);margin-bottom:20px}.blog-featured-img{min-height:330px;background:#e8f1ea}.blog-featured-img img{width:100%;height:100%;object-fit:cover}.blog-featured-copy{padding:30px;display:flex;flex-direction:column;justify-content:center}.blog-label{display:inline-flex;align-items:center;gap:6px;width:max-content;background:#e8f4ec;color:#147452;border-radius:999px;padding:6px 9px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.blog-featured-copy h2{font-family:var(--serif);font-size:31px;line-height:1.13;margin:12px 0 8px;font-weight:600}.blog-featured-copy p{margin:0 0 15px;color:#607168;font-size:13.5px;line-height:1.65}.blog-meta{display:flex;gap:11px;flex-wrap:wrap;color:#7a8981;font-size:11.5px;margin-bottom:15px}.blog-meta span{display:inline-flex;align-items:center;gap:5px}
+.blog-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:24px 0 13px}.blog-title-row h2{font-family:var(--serif);font-size:27px;margin:0;font-weight:600}.blog-title-row p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.blog-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.blog-card-pro{background:#fff;border:1px solid #e1e8e3;border-radius:16px;overflow:hidden;box-shadow:0 3px 16px rgba(20,63,42,.035);transition:transform .15s,box-shadow .15s}.blog-card-pro:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(20,63,42,.08)}.blog-card-pro .img{aspect-ratio:1.55;background:#e8f1ea;overflow:hidden}.blog-card-pro .img img{width:100%;height:100%;object-fit:cover}.blog-card-pro .copy{padding:15px}.blog-card-pro h3{font-family:var(--serif);font-size:19px;line-height:1.25;margin:7px 0 7px;font-weight:600}.blog-card-pro p{margin:0;color:#68776f;font-size:12.7px;line-height:1.55}.blog-card-pro .more{display:inline-flex;gap:5px;align-items:center;margin-top:12px;color:#176e4e;font-size:12px;font-weight:700}
+.blog-basics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.blog-basic{background:linear-gradient(135deg,#eff7f1,#fff);border:1px solid #dfe9e2;border-radius:15px;padding:17px}.blog-basic .bi{width:38px;height:38px;border-radius:10px;background:#fff;color:#157551;display:grid;place-items:center;box-shadow:0 2px 8px rgba(20,70,45,.06);margin-bottom:9px}.blog-basic b{display:block;font-size:13.5px;margin-bottom:4px}.blog-basic p{margin:0;color:#697870;font-size:12.3px;line-height:1.5}
+.blog-cta{margin-top:20px;border-radius:18px;background:linear-gradient(110deg,#0f4632,#237657);color:#fff;padding:23px 25px;display:flex;align-items:center;justify-content:space-between;gap:18px}.blog-cta h3{font-family:var(--serif);font-size:23px;margin:0 0 4px;font-weight:600}.blog-cta p{margin:0;color:#dcebe2;font-size:13px}.blog-cta .btn{flex:none}
+
+.blog-article{background:linear-gradient(180deg,#f6faf7,#fff 40%,#f5f8f6);min-height:70vh}.article-wrap{max-width:1060px;margin:0 auto;padding:26px 16px 44px}.article-hero{background:#fff;border:1px solid #e1e8e3;border-radius:22px;overflow:hidden;box-shadow:0 8px 30px rgba(20,63,42,.06)}.article-cover{height:430px;background:#e7efe9}.article-cover img{width:100%;height:100%;object-fit:cover}.article-head{padding:28px 30px 24px}.article-head h1{font-family:var(--serif);font-size:clamp(31px,5vw,46px);line-height:1.08;margin:11px 0 9px;font-weight:600;letter-spacing:-.025em}.article-head .lead{margin:0;color:#5e6f66;font-size:15px;line-height:1.65;max-width:760px}.article-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start;margin-top:18px}.article-body{background:#fff;border:1px solid #e2e9e4;border-radius:18px;padding:26px 28px}.article-body p{font-size:15px;line-height:1.85;color:#42554b;margin:0 0 16px}.article-body p:last-child{margin-bottom:0}.article-callout{margin:20px 0 0;background:linear-gradient(135deg,#edf7f0,#f8fbf9);border:1px solid #dbe9df;border-left:4px solid #27875f;border-radius:13px;padding:16px 17px}.article-callout b{display:block;color:#1a4f39;margin-bottom:4px}.article-callout p{font-size:13px;line-height:1.6;margin:0;color:#607168}.article-side{position:sticky;top:112px;display:grid;gap:12px}.article-side-card{background:#fff;border:1px solid #e1e8e3;border-radius:15px;padding:17px}.article-side-card h3{font-family:var(--serif);font-size:18px;margin:0 0 8px;font-weight:600}.article-related{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #e8ede9;align-items:center}.article-related:last-child{border-bottom:0}.article-related img{width:62px;height:50px;border-radius:9px;object-fit:cover;background:#e8f1ea}.article-related b{font-size:12.2px;line-height:1.3;display:block}.article-related small{font-size:10.5px;color:#7a8981}.article-side .btn{width:100%}
+@media(max-width:900px){.story-pro-hero{grid-template-columns:1fr}.story-pro-visual{min-height:300px}.story-section-grid,.blog-featured,.article-layout{grid-template-columns:1fr}.story-process{grid-template-columns:repeat(2,1fr)}.story-shop-grid,.blog-card-grid,.blog-basics{grid-template-columns:repeat(2,1fr)}.article-side{position:static;grid-template-columns:1fr 1fr}.article-cover{height:360px}}
+@media(max-width:650px){.story-pro-copy{padding:30px 20px}.story-pro-hero{border-radius:18px;min-height:0}.story-pro-visual{min-height:260px}.story-sticker{right:14px;bottom:14px}.story-section-grid{gap:12px}.story-paper{padding:19px}.story-process,.story-shop-grid,.blog-card-grid,.blog-basics,.article-side{grid-template-columns:1fr}.blog-wrap,.article-wrap{padding:18px 10px 32px}.blog-hero{padding:27px 20px;border-radius:18px}.blog-hero::after{opacity:.12}.blog-featured-copy{padding:20px}.blog-featured-img{min-height:240px}.blog-cta{align-items:flex-start;flex-direction:column}.article-cover{height:250px}.article-head{padding:20px 18px}.article-body{padding:20px 16px}.article-head h1{font-size:32px}.story-pro-copy h1{font-size:39px}.story-paper h2{font-size:25px}}
+
 </style>
 </head>
 <body>
@@ -2236,15 +2271,45 @@ function brandSideNav(active){
 function seoDiscoveryCard(){return `<div class="brand-side-card brand-seo-card"><h3>Green Ocean online nursery</h3><p>Shop nursery-fresh plants and useful gardening products with clear support before and after your order.</p><div class="brand-tags"><span>online plant nursery India</span><span>buy indoor plants online</span><span>plant nursery Dhanbad</span><span>planters online</span><span>plant gifts India</span><span>nursery delivery</span></div></div>`;}
 function viewStoryPage(p){
   setGreenOceanPageSEO('story'); ensureGreenOceanSchema();
-  return header('story')+`<main class="brand-page"><div class="brand-wrap">
-    <section class="brand-hero story"><div class="brand-hero-inner"><span class="brand-kicker">${ic('leaf',14)} Our Story</span><h1>Growing greener homes, one plant at a time.</h1><p>Green Ocean is a plant nursery based in Balihari, Dhanbad, Jharkhand. We bring plants, planters and gardening essentials together in one simple online shopping experience for plant lovers across India.</p><div class="brand-badges"><span>${ic('home',14)} Balihari, Dhanbad</span><span>${ic('leaf',14)} Nursery-first approach</span><span>${ic('truck',14)} Online plant shopping</span></div></div></section>
-    <div class="brand-grid"><div class="brand-main">
-      <section class="brand-card"><div class="brand-icon-title"><span class="bi">${ic('leaf',19)}</span><div><h2>Rooted in a real nursery</h2></div></div><p>${esc((p.body||'').split('\n\n')[0]||'Green Ocean began with a simple aim: make healthy plants easier to discover, order and care for.')}</p><p>Today, our website helps customers explore indoor plants, flowering plants, succulents, planters, gardening essentials and plant gifts from one place.</p></section>
-      <div class="brand-features"><article class="brand-feature"><span class="bi">${ic('leaf',18)}</span><b>Plant-first selection</b><p>We focus on practical plants and gardening products that fit homes, balconies, workspaces and gifting needs.</p></article><article class="brand-feature"><span class="bi">${ic('box',18)}</span><b>Thoughtful packing</b><p>Living plants need different handling from ordinary parcels, so packaging and dispatch are planned with plant safety in mind.</p></article><article class="brand-feature"><span class="bi">${ic('search',18)}</span><b>Easier online discovery</b><p>Clear categories, care information and product details help shoppers compare plants, pots and accessories before ordering.</p></article><article class="brand-feature"><span class="bi">${ic('shield',18)}</span><b>Support after delivery</b><p>Our policies explain shipping, healthy-plant support, returns and how to contact us when an order needs attention.</p></article></div>
-      <section class="brand-card"><div class="brand-icon-title"><span class="bi">${ic('star',19)}</span><div><h2>What Green Ocean stands for</h2></div></div><div class="brand-timeline"><div class="brand-step"><span class="num">01</span><div><b>Make plants easier to buy online</b><p>Simple browsing, useful information and clear order support for new as well as experienced plant parents.</p></div></div><div class="brand-step"><span class="num">02</span><div><b>Keep nursery context visible</b><p>Green Ocean is not just a catalogue. Our identity is tied to our nursery in Balihari, Dhanbad and the everyday work of caring for plants.</p></div></div><div class="brand-step"><span class="num">03</span><div><b>Help customers beyond checkout</b><p>Delivery guidance, plant-care content, account tools and support pages are part of the shopping experience.</p></div></div></div></section>
-      <section class="brand-card"><h2>Find the right green for your space</h2><p>Looking to buy indoor plants online, add flowering plants to a balcony, choose planters for your home, send a plant gift or pick up gardening essentials? Explore the Green Ocean collection and use our plant-care articles to make a more informed choice.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><a class="btn btn-primary btn-sq" href="#/shop">Shop Plants</a><a class="btn btn-line btn-sq" href="#/blog">Plant Care Blog</a></div></section>
-      <div class="brand-cta"><div><h3>Questions before you order?</h3><p>Talk to Green Ocean about products, delivery, gifting or plant care.</p></div><a class="btn btn-primary btn-sq" href="#/page/contact">${ic('mail',15)} Contact Us</a></div>
-    </div><aside class="brand-side">${brandSideNav('story')}${seoDiscoveryCard()}</aside></div>
+  const paras=(p.body||'').split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+  const cats=DB.categories.filter(c=>c && c.name).slice(0,6);
+  const catImgs=['cat_indoor','cat_flowering','cat_planters','cat_gardening','cat_succulents','cat_combos'];
+  return header('story')+`<main class="story-premium"><div class="brand-wrap">
+    <section class="story-pro-hero">
+      <div class="story-pro-copy">
+        <span class="brand-kicker">${ic('leaf',14)} Our Story</span>
+        <h1>From a nursery in Dhanbad to greener homes across India.</h1>
+        <p>Green Ocean is rooted in Balihari, Dhanbad, Jharkhand. Our goal is simple: make healthy plants, useful planters and everyday gardening products easier to discover, order and care for online.</p>
+        <div class="story-pro-actions"><a class="btn btn-primary btn-sq" href="#/shop">${ic('bag',15)} Explore Plants</a><a class="btn btn-line btn-sq" href="#/blog">${ic('doc',15)} Plant Care Blog</a></div>
+        <div class="story-pro-facts"><span>${ic('home',13)} Balihari, Dhanbad</span><span>${ic('leaf',13)} Nursery-led</span><span>${ic('truck',13)} Online plant shopping</span></div>
+      </div>
+      <div class="story-pro-visual"><img class="main" src="${src('img:community')}" alt="Green Ocean nursery and plants"><div class="story-sticker"><b>A greener tomorrow</b><small>Better plant discovery, practical care guidance and clear support before and after your order.</small></div></div>
+    </section>
+
+    <section class="story-section-grid">
+      <article class="story-paper"><div class="ey">Where it began</div><h2>Built around real plants, not just product listings.</h2>
+        <p>${esc(paras[0]||'Green Ocean began with a simple idea: make healthy plants easier to discover and buy with confidence.')}</p>
+        ${paras[1]?`<p>${esc(paras[1])}</p>`:''}
+        <p>As the nursery moved online, the same plant-first thinking shaped our website: clear product categories, practical care notes, transparent policies and support that stays available after checkout.</p>
+      </article>
+      <div class="story-photo-card"><img src="${src('img:hero')}" alt="Healthy plants from Green Ocean"><div class="story-photo-caption"><b>Plants make better days.</b><span>Nursery-fresh greens for homes, balconies, workspaces and thoughtful gifting.</span></div></div>
+    </section>
+
+    <div class="blog-title-row"><div><h2>How Green Ocean works</h2><p>A simple plant journey, from selection to after-delivery support.</p></div></div>
+    <section class="story-process">
+      <article class="story-process-card"><span class="n">01</span><b>Select with clarity</b><p>Browse plants, planters and gardening essentials with useful product details and care context.</p></article>
+      <article class="story-process-card"><span class="n">02</span><b>Prepare with care</b><p>Living plants need thoughtful handling, so packing and dispatch are approached differently from ordinary parcels.</p></article>
+      <article class="story-process-card"><span class="n">03</span><b>Deliver & track</b><p>Shipping information, order status and support pages keep the journey clear after checkout.</p></article>
+      <article class="story-process-card"><span class="n">04</span><b>Keep growing</b><p>Plant-care articles and customer support help you understand watering, light, repotting and everyday care.</p></article>
+    </section>
+
+    <section class="story-paper"><div class="ey">Explore the nursery</div><h2>Find the right green for your space.</h2><p>From low-maintenance indoor plants to flowering varieties, planters, gardening essentials and plant gifts, Green Ocean brings the core nursery categories together in one online experience.</p>
+      <div class="story-shop-grid">${cats.slice(0,3).map((c,i)=>`<a class="story-shop-card" href="#/shop?cat=${encodeURIComponent(c.id)}"><img src="${src('img:'+catImgs[i])}" alt="${esc(c.name)}"><span><b>${esc(c.name)}</b><small>${esc(c.desc||'Explore this collection')}</small></span></a>`).join('')}</div>
+    </section>
+
+    <section class="story-quote"><div class="q">“A greener home starts with one plant you understand and enjoy caring for.”</div><small>Green Ocean · Balihari, Dhanbad, Jharkhand</small></section>
+
+    <div class="brand-cta"><div><h3>Ready to find your next plant?</h3><p>Browse the collection or read practical plant-care guides before choosing.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-primary btn-sq" href="#/shop">Shop Plants</a><a class="btn btn-line btn-sq" href="#/page/contact">Contact Us</a></div></div>
   </div></main>`+footer();
 }
 function viewReturnsPage(p){
@@ -2298,20 +2363,48 @@ function viewPage(slug){
         <button class="btn btn-line btn-sq" data-via="mail">${ic('mail',15)} Send by email</button>`}</div></form>`:''}
     </div></div>`+footer();
 }
+function setBlogSEO(b){
+  const isArticle=!!b;
+  const title=isArticle?`${b.title} | Green Ocean Plant Care Blog`:'Plant Care Blog | Green Ocean Online Nursery';
+  const desc=isArticle?(b.excerpt||'Practical plant care guidance from Green Ocean.'):'Practical indoor plant care guides on watering, low light, repotting and everyday plant care from Green Ocean, a plant nursery in Dhanbad, Jharkhand.';
+  document.title=title;
+  const md=document.querySelector('meta[name="description"]'); if(md)md.setAttribute('content',desc);
+  const ot=document.querySelector('meta[property="og:title"]'); if(ot)ot.setAttribute('content',title);
+  const od=document.querySelector('meta[property="og:description"]'); if(od)od.setAttribute('content',desc);
+}
+function ensureBlogSchema(b){
+  let el=document.getElementById('go-blog-schema');
+  if(!el){el=document.createElement('script');el.id='go-blog-schema';el.type='application/ld+json';document.head.appendChild(el);}
+  if(!b){el.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Blog',name:'Green Ocean Plant Care Blog',url:'https://greenocean.co.in/#/blog',description:'Practical plant care articles from Green Ocean.'});return;}
+  el.textContent=JSON.stringify({'@context':'https://schema.org','@type':'BlogPosting',headline:b.title,description:b.excerpt||'',datePublished:b.date||'',author:{'@type':'Organization',name:'Green Ocean'},publisher:{'@type':'Organization',name:'Green Ocean',logo:{'@type':'ImageObject',url:'https://greenocean.co.in/assets/img/logo.png'}},mainEntityOfPage:'https://greenocean.co.in/#/blog/'+b.id});
+}
+function blogReadTime(b){const words=String((b&&b.body)||'').trim().split(/\s+/).filter(Boolean).length;return Math.max(1,Math.ceil(words/180));}
 function viewBlog(id){
-  if(id){const b=DB.blogs.find(x=>x.id===id);
-    if(!b)return viewBlog();
-    return header('blog')+`<div class="wrap sec">${backBar('All articles','#/blog')}<div class="panel" style="max-width:720px;margin:0 auto">
-      <div style="border-radius:var(--r);overflow:hidden;margin-bottom:14px">${pic(b)}</div>
-      <h1 style="font-family:var(--serif);font-size:28px;margin:0 0 6px;font-weight:600">${esc(b.title)}</h1>
-      <p style="color:var(--muted);font-size:12.5px">${esc(b.date)}</p>
-      ${b.body.split('\n').filter(Boolean).map(t=>`<p style="max-width:70ch">${esc(t)}</p>`).join('')}
-      <a class="btn btn-line btn-sq" href="#/blog">All articles</a></div></div>`+footer();}
-  const list=DB.blogs.filter(b=>b.active);
-  return header('blog')+`<div class="wrap sec">${backBar('Back to home','#/')}<div class="sec-head"><div><h2>Plant Care Blog</h2><p>Short, practical notes from our nursery.</p></div></div>
-   <div class="grid grid-3">${list.map(b=>`<a class="card" href="#/blog/${b.id}"><span class="ph" style="aspect-ratio:1.5">${pic(b)}</span>
-     <span class="bd"><h3>${esc(b.title)}</h3><span class="sub">${esc(b.date)}</span>
-     <p style="font-size:13px;color:var(--muted);margin:6px 0 0">${esc(b.excerpt)}</p></span></a>`).join('')}</div></div>`+footer();
+  const active=DB.blogs.filter(b=>b.active);
+  if(id){
+    const b=active.find(x=>x.id===id); if(!b)return viewBlog();
+    setBlogSEO(b); ensureBlogSchema(b);
+    const rel=active.filter(x=>x.id!==b.id).slice(0,3);
+    const paras=String(b.body||'').split(/\n\s*\n|\n/).map(x=>x.trim()).filter(Boolean);
+    return header('blog')+`<main class="blog-article"><div class="article-wrap">
+      ${backBar('All plant care articles','#/blog')}
+      <article class="article-hero"><div class="article-cover">${pic(b)}</div><div class="article-head"><span class="blog-label">${ic('leaf',13)} Plant Care Guide</span><h1>${esc(b.title)}</h1><div class="blog-meta"><span>${ic('doc',13)} ${esc(b.date||'')}</span><span>${ic('clock',13)} ${blogReadTime(b)} min read</span><span>${ic('leaf',13)} Green Ocean</span></div><p class="lead">${esc(b.excerpt||'Practical plant care guidance from our nursery.')}</p></div></article>
+      <div class="article-layout"><section class="article-body">${paras.map(t=>`<p>${esc(t)}</p>`).join('')}<div class="article-callout"><b>${ic('leaf',14)} Quick takeaway</b><p>${esc(b.excerpt||'Observe the plant, light and soil before following a fixed routine.')}</p></div></section>
+      <aside class="article-side"><div class="article-side-card"><h3>More plant-care guides</h3>${rel.length?rel.map(r=>`<a class="article-related" href="#/blog/${r.id}"><span>${pic(r)}</span><span><b>${esc(r.title)}</b><small>${esc(r.date||'')}</small></span></a>`).join(''):'<p style="font-size:12px;color:var(--muted);margin:0">More guides are coming soon.</p>'}</div><div class="article-side-card"><h3>Need a plant too?</h3><p style="font-size:12.5px;color:var(--muted);line-height:1.55;margin:0 0 10px">Browse indoor plants, flowering plants, planters and gardening essentials.</p><a class="btn btn-primary btn-sq" href="#/shop">Browse Plants</a></div></aside></div>
+      <div class="blog-cta"><div><h3>Keep learning, keep growing.</h3><p>Explore more practical guides or find a plant that suits your space.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-line btn-sq" style="background:#fff" href="#/blog">All Articles</a><a class="btn btn-primary btn-sq" href="#/shop">Shop Plants</a></div></div>
+    </div></main>`+footer();
+  }
+  setBlogSEO(null); ensureBlogSchema(null);
+  const list=active, featured=list[0], rest=list.slice(1);
+  return header('blog')+`<main class="blog-page"><div class="blog-wrap">
+    <section class="blog-hero"><span class="brand-kicker">${ic('leaf',14)} Green Ocean Plant Care</span><h1>Plant care that feels simple, not complicated.</h1><p>Practical guides for indoor plants, watering, low-light rooms, repotting and everyday plant care — written to help you understand what your plant is actually asking for.</p><div class="blog-topic-row"><span>${ic('drop',13)} Watering</span><span>${ic('home',13)} Indoor Plants</span><span>${ic('sun',13)} Light</span><span>${ic('planter',13)} Repotting</span><span>${ic('leaf',13)} Beginner Care</span></div></section>
+    ${featured?`<section class="blog-featured"><a class="blog-featured-img" href="#/blog/${featured.id}">${pic(featured)}</a><div class="blog-featured-copy"><span class="blog-label">Featured guide</span><h2>${esc(featured.title)}</h2><div class="blog-meta"><span>${ic('doc',13)} ${esc(featured.date||'')}</span><span>${ic('clock',13)} ${blogReadTime(featured)} min read</span></div><p>${esc(featured.excerpt||'')}</p><a class="btn btn-primary btn-sq" href="#/blog/${featured.id}">Read guide ${ic('arrow',14)}</a></div></section>`:''}
+    <div class="blog-title-row"><div><h2>Latest plant-care guides</h2><p>Short, useful notes for healthier plants and more confident plant parents.</p></div><a class="link-more" href="#/shop">Shop plants →</a></div>
+    <section class="blog-card-grid">${(rest.length?rest:list).map(b=>`<a class="blog-card-pro" href="#/blog/${b.id}"><div class="img">${pic(b)}</div><div class="copy"><span class="blog-label">Plant care</span><h3>${esc(b.title)}</h3><div class="blog-meta"><span>${esc(b.date||'')}</span><span>${blogReadTime(b)} min read</span></div><p>${esc(b.excerpt||'')}</p><span class="more">Read article ${ic('arrow',13)}</span></div></a>`).join('')}</section>
+    <div class="blog-title-row"><div><h2>Plant-care basics</h2><p>Three habits that solve a surprising number of plant problems.</p></div></div>
+    <section class="blog-basics"><article class="blog-basic"><span class="bi">${ic('drop',18)}</span><b>Check soil before watering</b><p>Moisture changes with season, light and pot size. Let the soil guide the schedule.</p></article><article class="blog-basic"><span class="bi">${ic('sun',18)}</span><b>Match the plant to the light</b><p>Low light, bright indirect light and direct sun are different environments. Choose accordingly.</p></article><article class="blog-basic"><span class="bi">${ic('planter',18)}</span><b>Repot only when needed</b><p>Move up gradually and avoid oversizing the pot. Roots need both moisture and air.</p></article></section>
+    <div class="blog-cta"><div><h3>Need help choosing a plant?</h3><p>Browse plants by category or contact Green Ocean for product and order support.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-line btn-sq" style="background:#fff" href="#/page/contact">Contact Us</a><a class="btn btn-primary btn-sq" href="#/shop">Explore Plants</a></div></div>
+  </div></main>`+footer();
 }
 </script>
 <script>
