@@ -567,6 +567,75 @@ textarea.inp{min-height:90px;resize:vertical}
  .adm-out{padding:6px 10px;font-size:12px}
  .kpi b{font-size:18px}
 }
+
+/* ---------- Premium policy pages: Shipping / Privacy / Terms ---------- */
+.policy-page{background:linear-gradient(180deg,#f7faf7 0%,#fbfcfb 42%,#f6f8f6 100%);min-height:70vh}
+.policy-wrap{max-width:1180px;margin:0 auto;padding:30px 16px 42px}
+.policy-hero{position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(115deg,#0b3f2b 0%,#145b40 58%,#3d8b63 100%);color:#fff;padding:38px 42px;margin-bottom:20px;box-shadow:0 18px 46px rgba(12,58,40,.16)}
+.policy-hero::after{content:'';position:absolute;right:-20px;top:-45px;width:390px;height:300px;background:url('/assets/img/hero.jpg?v=5f203695') center/cover no-repeat;opacity:.18;border-radius:52% 0 0 52%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 38%);mask-image:linear-gradient(90deg,transparent,#000 38%)}
+.policy-hero>*{position:relative;z-index:1}
+.policy-kicker{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:6px 11px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.policy-hero h1{font-family:var(--serif);font-size:clamp(31px,5vw,47px);line-height:1.05;margin:15px 0 10px;font-weight:600;letter-spacing:-.025em;max-width:760px}
+.policy-hero p{margin:0;max-width:760px;color:#e9f4ed;font-size:15px;line-height:1.7}
+.policy-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:19px}
+.policy-meta span{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.1);font-size:12px;color:#f2faf5;border:1px solid rgba(255,255,255,.14)}
+.policy-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.policy-content{display:grid;gap:13px}
+.policy-intro,.policy-section,.policy-highlight,.policy-side-card{background:#fff;border:1px solid #e2e9e4;border-radius:16px;box-shadow:0 4px 20px rgba(20,63,42,.045)}
+.policy-intro{padding:22px 24px;border-left:4px solid #2b8b63}
+.policy-intro p{margin:0 0 9px;color:#4d5e55;font-size:14px;line-height:1.72}.policy-intro p:last-child{margin-bottom:0}
+.policy-section{padding:21px 24px}
+.policy-section-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.policy-section-icon{width:38px;height:38px;border-radius:10px;background:#e5f3e9;color:#13724f;display:grid;place-items:center;flex:none}
+.policy-section h2{font-family:var(--serif);font-size:20px;line-height:1.25;margin:2px 0 0;font-weight:600;color:#17231d}
+.policy-section p{margin:0 0 10px;color:#53635b;font-size:14px;line-height:1.72}.policy-section p:last-child{margin-bottom:0}
+.policy-highlight{padding:18px 20px;background:linear-gradient(135deg,#eef8f1,#f7fbf8);display:flex;gap:13px;align-items:flex-start}
+.policy-highlight .policy-section-icon{background:#fff;box-shadow:0 2px 8px rgba(20,80,50,.08)}
+.policy-highlight b{display:block;font-size:14px;color:#173d2e;margin-bottom:3px}.policy-highlight p{margin:0;color:#607168;font-size:13px;line-height:1.55}
+.policy-side{position:sticky;top:112px;display:grid;gap:13px}
+.policy-side-card{padding:18px}
+.policy-side-card h3{font-family:var(--serif);font-size:18px;margin:0 0 6px;font-weight:600}.policy-side-card>p{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.55}
+.policy-side-link{display:grid;grid-template-columns:31px 1fr 18px;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #e8ede9;font-size:13px;font-weight:600;color:#25382e}
+.policy-side-link:last-child{border-bottom:0}.policy-side-link .pi{width:31px;height:31px;border-radius:9px;background:#edf6f0;color:#1a7956;display:grid;place-items:center}.policy-side-link .arr{font-size:19px;color:#708078}
+.policy-search-copy{background:linear-gradient(135deg,#0f4632,#237657);color:#fff;border:0}
+.policy-search-copy h3{color:#fff}.policy-search-copy>p{color:#dcebe2}
+.policy-keywords{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.policy-keywords span{font-size:10.5px;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#eff8f2}
+.policy-contact{display:grid;grid-template-columns:42px 1fr;gap:11px;align-items:start}.policy-contact .pi{width:42px;height:42px;border-radius:12px;background:#e8f4ec;color:#126e4d;display:grid;place-items:center}.policy-contact b{font-size:13.5px}.policy-contact p{margin:2px 0 10px;font-size:12px;color:var(--muted)}
+.policy-related{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}.policy-related a{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border:1px solid #dfe7e1;border-radius:9px;background:#fff;font-size:12.5px;font-weight:600;color:#28513f}.policy-related a:hover{background:#f2f8f4}
+@media(max-width:900px){.policy-grid{grid-template-columns:1fr}.policy-side{position:static;grid-template-columns:1fr 1fr}.policy-hero{padding:30px 28px}.policy-hero::after{width:310px}}
+@media(max-width:650px){.policy-wrap{padding:18px 10px 30px}.policy-hero{border-radius:16px;padding:25px 20px}.policy-hero h1{font-size:31px}.policy-meta{gap:6px}.policy-meta span{font-size:11px;padding:6px 9px}.policy-section,.policy-intro{padding:17px 15px}.policy-side{grid-template-columns:1fr}.policy-section h2{font-size:18px}.policy-hero::after{opacity:.11;width:250px}.policy-related a{width:100%;justify-content:center}}
+
+
+
+/* ---------- Premium brand pages: Story / Returns / Contact ---------- */
+.brand-page{background:linear-gradient(180deg,#f7faf7 0%,#fff 44%,#f4f8f5 100%);min-height:70vh}
+.brand-wrap{max-width:1180px;margin:0 auto;padding:28px 16px 44px}
+.brand-hero{position:relative;overflow:hidden;border-radius:24px;min-height:285px;background:linear-gradient(112deg,#0c3f2c 0%,#155a40 56%,#3a8b62 100%);color:#fff;display:flex;align-items:center;box-shadow:0 18px 46px rgba(12,58,40,.16);margin-bottom:20px}
+.brand-hero::after{content:'';position:absolute;right:-30px;inset-block:-20px;width:48%;background:url('/assets/img/hero.jpg?v=5f203695') center/cover no-repeat;opacity:.25;-webkit-mask-image:linear-gradient(90deg,transparent,#000 34%);mask-image:linear-gradient(90deg,transparent,#000 34%)}
+.brand-hero.story::after{background-image:url('/assets/img/community.jpg?v=b126a202');opacity:.32}
+.brand-hero.contact::after{background-image:url('/assets/img/content2.jpg?v=d9490034');opacity:.25}
+.brand-hero.returns::after{background-image:url('/assets/img/selfwater_plant.jpg?v=aee4cbe5');opacity:.24}
+.brand-hero-inner{position:relative;z-index:1;padding:38px 42px;max-width:760px}
+.brand-kicker{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.brand-hero h1{font-family:var(--serif);font-size:clamp(34px,5vw,49px);line-height:1.05;margin:14px 0 10px;font-weight:600;letter-spacing:-.025em}
+.brand-hero p{margin:0;color:#e8f3ec;font-size:15px;line-height:1.72;max-width:720px}
+.brand-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.brand-badges span{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);font-size:11.5px;color:#f1f8f4}
+.brand-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
+.brand-main{display:grid;gap:14px}.brand-card,.brand-side-card,.brand-cta{background:#fff;border:1px solid #e1e8e3;border-radius:16px;box-shadow:0 4px 20px rgba(20,63,42,.045)}
+.brand-card{padding:22px 24px}.brand-card h2,.brand-card h3{font-family:var(--serif);margin:0 0 8px;font-weight:600;color:#17231d}.brand-card h2{font-size:22px}.brand-card h3{font-size:18px}.brand-card p{margin:0 0 10px;color:#53635b;font-size:14px;line-height:1.72}.brand-card p:last-child{margin-bottom:0}
+.brand-icon-title{display:flex;gap:12px;align-items:flex-start;margin-bottom:9px}.brand-icon-title .bi{width:40px;height:40px;border-radius:11px;background:#e6f3ea;color:#147552;display:grid;place-items:center;flex:none}.brand-icon-title h2,.brand-icon-title h3{margin:3px 0 0}
+.brand-features{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.brand-feature{background:#fff;border:1px solid #e3e9e5;border-radius:14px;padding:18px;box-shadow:0 3px 14px rgba(20,63,42,.035)}.brand-feature .bi{width:39px;height:39px;border-radius:10px;background:#e8f4ec;color:#147552;display:grid;place-items:center;margin-bottom:10px}.brand-feature b{display:block;font-size:14px;margin-bottom:4px;color:#1b3025}.brand-feature p{margin:0;color:#64736b;font-size:12.8px;line-height:1.55}
+.brand-timeline{display:grid;gap:0}.brand-step{display:grid;grid-template-columns:38px 1fr;gap:12px;position:relative;padding-bottom:17px}.brand-step:last-child{padding-bottom:0}.brand-step:not(:last-child)::before{content:'';position:absolute;left:18px;top:36px;bottom:0;width:1px;background:#d8e6dc}.brand-step .num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#dff0e5;color:#0f6c4a;font-size:12px;font-weight:800;z-index:1}.brand-step b{display:block;font-size:14px;margin:1px 0 2px}.brand-step p{margin:0;color:#65736b;font-size:12.8px;line-height:1.55}
+.brand-side{position:sticky;top:112px;display:grid;gap:13px}.brand-side-card{padding:18px}.brand-side-card h3{font-family:var(--serif);font-size:18px;margin:0 0 6px;font-weight:600}.brand-side-card>p{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.55}.brand-side-link{display:grid;grid-template-columns:31px 1fr 18px;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #e8ede9;font-size:13px;font-weight:600}.brand-side-link:last-child{border-bottom:0}.brand-side-link .bi{width:31px;height:31px;border-radius:9px;background:#edf6f0;color:#1a7956;display:grid;place-items:center}.brand-side-link .arr{font-size:19px;color:#708078}
+.brand-seo-card{background:linear-gradient(135deg,#0f4632,#237657);color:#fff;border:0}.brand-seo-card h3{color:#fff}.brand-seo-card>p{color:#dcebe2}.brand-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.brand-tags span{font-size:10.5px;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#eff8f2}
+.brand-cta{padding:20px 22px;background:linear-gradient(120deg,#edf7f0,#f9fcfa);display:flex;justify-content:space-between;gap:16px;align-items:center}.brand-cta h3{margin:0 0 3px;font-size:17px}.brand-cta p{margin:0;color:var(--muted);font-size:12.8px}.brand-cta .btn{flex:none;border-radius:9px}
+.return-rule{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:13px 0;border-bottom:1px solid #e9eeea}.return-rule:last-child{border-bottom:0;padding-bottom:0}.return-rule:first-child{padding-top:2px}.return-rule .ri{width:38px;height:38px;border-radius:10px;background:#edf6f0;color:#13724f;display:grid;place-items:center}.return-rule b{display:block;font-size:13.8px;margin-bottom:2px}.return-rule p{margin:0;font-size:12.8px;color:#67776e;line-height:1.55}
+.contact-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.contact-card{background:#fff;border:1px solid #e1e8e3;border-radius:14px;padding:17px;display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}.contact-card .ci{width:44px;height:44px;border-radius:12px;background:#e6f3ea;color:#13724f;display:grid;place-items:center}.contact-card b{display:block;font-size:13.8px}.contact-card p,.contact-card a{margin:2px 0 0;color:#617168;font-size:12.5px;line-height:1.5}.contact-card a{color:#126f4e;font-weight:600;overflow-wrap:anywhere}
+.contact-form-card{padding:22px 24px}.contact-form-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}.contact-form-head .ci{width:42px;height:42px;border-radius:11px;background:#e6f3ea;color:#147552;display:grid;place-items:center;flex:none}.contact-form-head h2{font-family:var(--serif);font-size:21px;margin:0 0 3px;font-weight:600}.contact-form-head p{margin:0;color:var(--muted);font-size:12.8px}.contact-form-card .btn{border-radius:9px}
+.brand-note{font-size:11.5px;color:#7c8981;margin-top:10px;line-height:1.55}
+@media(max-width:900px){.brand-grid{grid-template-columns:1fr}.brand-side{position:static;grid-template-columns:1fr 1fr}.brand-hero-inner{padding:32px 28px}.brand-hero::after{width:58%}}
+@media(max-width:650px){.brand-wrap{padding:18px 10px 30px}.brand-hero{border-radius:16px;min-height:250px}.brand-hero-inner{padding:27px 20px}.brand-hero h1{font-size:32px}.brand-hero::after{width:82%;opacity:.15}.brand-features,.contact-cards,.brand-side{grid-template-columns:1fr}.brand-card,.contact-form-card{padding:17px 15px}.brand-cta{align-items:flex-start;flex-direction:column}.brand-cta .btn{width:100%}.contact-card{grid-template-columns:40px 1fr;padding:15px}.contact-card .ci{width:40px;height:40px}}
+
 </style>
 </head>
 <body>
@@ -2056,18 +2125,168 @@ function viewFaq(p){
   </div></main>`+footer();
 }
 
+function policySections(body){
+  const lines=String(body||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  const intro=[]; const sections=[]; let cur=null;
+  lines.forEach(line=>{
+    if(line.startsWith('## ')){ cur={title:line.slice(3).trim(),paras:[]}; sections.push(cur); }
+    else if(cur)cur.paras.push(line); else intro.push(line);
+  });
+  return {intro,sections};
+}
+function shippingDefaultSections(){
+  return [
+    {title:'Where we deliver',paras:['Green Ocean ships nursery-fresh plants, planters and plant gifts to serviceable pincodes across India. Delivery availability can vary by pincode, plant type, parcel size and courier coverage.']},
+    {title:'Order processing & nursery dispatch',paras:['Live plants need careful preparation before travel. We inspect, hydrate and secure eligible plants before packing. Orders are normally dispatched Monday to Thursday so living plants are less likely to remain inside a courier facility over a weekend.']},
+    {title:'Estimated delivery time',paras:['Most orders are expected to arrive within 2–6 working days after dispatch. Remote areas, public holidays, severe weather, courier disruptions or temporary service restrictions can take longer. Delivery estimates are not a guaranteed arrival date.']},
+    {title:'Shipping charges',paras:[`Orders of ${money(DB.settings.freeShipAbove)} or more qualify for free standard delivery. For orders below that value, the current standard delivery charge is ${money(DB.settings.shipFee)} unless an offer or coupon changes it. The final delivery charge is shown before order confirmation.`]},
+    {title:'Plant-safe packaging',paras:['Plants are living products, so we use protective nursery packaging designed to reduce soil movement, leaf damage and moisture loss during transit. Natural variation in leaf position or minor cosmetic marks can occur after shipping and do not necessarily mean a plant is unhealthy.']},
+    {title:'Tracking your order',paras:['When tracking information is available, use Your Orders to review the latest order status. Courier tracking may take some time to update after a parcel is handed over for delivery.']},
+    {title:'Address & delivery attempts',paras:['Please enter a complete delivery address, correct pincode and reachable mobile number. A wrong or incomplete address can delay delivery or cause a parcel to be returned. Courier partners may contact you when they need directions or another delivery attempt.']},
+    {title:'Damaged or unhealthy delivery',paras:['If your plant or product reaches you damaged or unhealthy, contact Green Ocean as soon as possible and follow our Returns & Refunds policy. Photos of the plant, product and outer packaging may help us review transit damage quickly.']},
+    {title:'Need shipping help?',paras:[`For delivery questions, contact ${DB.settings.email} or use the Contact page with your order details. We can help with order status, delivery issues and plant-shipping questions.`]}
+  ];
+}
+function viewPolicyPage(slug,p){
+  const cfg={
+    shipping:{icon:'truck',kicker:'Delivery & Nursery Dispatch',title:'Shipping Policy',
+      sub:'How Green Ocean packs and delivers live plants, planters and gifts from our nursery to customers across India.',
+      chips:[['truck','Pan-India delivery'],['leaf','Plant-safe packing'],['box','Order tracking']],
+      note:'Shopping for live plants online is different from shipping ordinary products. Our process is designed around careful nursery handling, protective packing and practical delivery windows.'},
+    privacy:{icon:'shield',kicker:'Your Data & Privacy',title:'Privacy Policy',
+      sub:'How Green Ocean handles account, order, delivery and support information when you shop from our online plant nursery.',
+      chips:[['shield','Data protection'],['lock','Secure accounts'],['mail','Support privacy']],
+      note:'This page explains the information used to run your Green Ocean account, process plant and planter orders, provide delivery support and operate the website.'},
+    terms:{icon:'doc',kicker:'Shopping Terms',title:'Terms & Conditions',
+      sub:'The rules that apply when you use Green Ocean, create an account or buy live plants, planters and gifts online.',
+      chips:[['check','Clear shopping terms'],['bag','Order rules'],['leaf','Living products']],
+      note:'Plants are living products and naturally vary in size, shape and appearance. These terms explain how orders, delivery, cancellations, returns and website use are handled.'}
+  }[slug];
+  let parsed=policySections(p.body);
+  let intro=[...parsed.intro], sections=[...parsed.sections];
+  if(slug==='shipping' && !sections.length){ sections=shippingDefaultSections(); }
+  const updated=intro.length&&/^Last updated:/i.test(intro[0])?intro.shift():'';
+  const icons=['leaf','truck','shield','box','check','mail','home','doc'];
+  const related=[
+    ['shipping','Shipping Policy','truck'],['returns','Returns & Refunds','back'],['privacy','Privacy Policy','shield'],['terms','Terms & Conditions','doc']
+  ].filter(x=>x[0]!==slug);
+  return header(slug)+`<main class="policy-page"><div class="policy-wrap">
+    ${backBar('Back to home','#/')}
+    <section class="policy-hero">
+      <span class="policy-kicker">${ic(cfg.icon,14)} ${cfg.kicker}</span>
+      <h1>${cfg.title}</h1>
+      <p>${cfg.sub}</p>
+      <div class="policy-meta">${cfg.chips.map(x=>`<span>${ic(x[0],14)} ${x[1]}</span>`).join('')}${updated?`<span>${ic('doc',14)} ${esc(updated)}</span>`:''}</div>
+    </section>
+    <div class="policy-grid">
+      <section class="policy-content">
+        <div class="policy-highlight"><span class="policy-section-icon">${ic(cfg.icon,19)}</span><div><b>Green Ocean policy overview</b><p>${cfg.note}</p></div></div>
+        ${intro.length?`<div class="policy-intro">${intro.map(t=>`<p>${esc(t)}</p>`).join('')}</div>`:''}
+        ${sections.map((sec,i)=>`<article class="policy-section"><div class="policy-section-head"><span class="policy-section-icon">${ic(icons[i%icons.length],18)}</span><h2>${esc(sec.title)}</h2></div>${sec.paras.map(t=>`<p>${esc(t)}</p>`).join('')}</article>`).join('')}
+        <div class="policy-highlight"><span class="policy-section-icon">${ic('mail',18)}</span><div><b>Questions about this policy?</b><p>Contact Green Ocean at ${esc(DB.settings.email)} or use our Help Centre. For order-related questions, include your order details so we can assist faster.</p><div class="policy-related">${related.map(x=>`<a href="#/page/${x[0]}">${ic(x[2],14)} ${x[1]}</a>`).join('')}</div></div></div>
+      </section>
+      <aside class="policy-side">
+        <div class="policy-side-card"><h3>Customer information</h3><p>Quick access to the pages customers commonly need before and after buying.</p>
+          ${related.map(x=>`<a class="policy-side-link" href="#/page/${x[0]}"><span class="pi">${ic(x[2],15)}</span><span>${x[1]}</span><span class="arr">›</span></a>`).join('')}
+          <a class="policy-side-link" href="#/page/faq"><span class="pi">${ic('doc',15)}</span><span>FAQ & Help</span><span class="arr">›</span></a>
+        </div>
+        <div class="policy-side-card policy-search-copy"><h3>Green Ocean online nursery</h3><p>Nursery-fresh indoor plants, flowering plants, planters, gardening essentials and plant gifts for online shopping across India.</p><div class="policy-keywords"><span>online plant nursery</span><span>buy plants online</span><span>indoor plants</span><span>planters</span><span>plant gifts</span><span>nursery delivery</span></div></div>
+        <div class="policy-side-card"><div class="policy-contact"><span class="pi">${ic('mail',18)}</span><div><b>Need help?</b><p>Questions about an order, delivery or policy?</p><a class="btn btn-primary btn-sq btn-block btn-sm" href="#/page/contact">Contact Green Ocean</a></div></div></div>
+      </aside>
+    </div>
+  </div></main>`+footer();
+}
+
+
+/* ================= STORY / RETURNS / CONTACT PAGES ================= */
+function setGreenOceanPageSEO(slug){
+  const map={
+    story:{title:'About Green Ocean | Online Plant Nursery in Dhanbad, India',desc:'Meet Green Ocean, a plant nursery in Balihari, Dhanbad offering indoor plants, flowering plants, planters, gardening essentials and plant gifts for online shoppers across India.'},
+    returns:{title:'Returns & Refunds | Green Ocean Plant Nursery',desc:'Read Green Ocean returns, refunds and 7-day healthy plant guarantee guidance for plants, planters and nursery orders delivered across India.'},
+    contact:{title:'Contact Green Ocean | Online Plant Nursery Support',desc:'Contact Green Ocean for plant orders, delivery help, nursery questions, indoor plants, planters, plant gifts and online plant shopping support in India.'}
+  };
+  const x=map[slug]; if(!x)return;
+  document.title=x.title;
+  const md=document.querySelector('meta[name="description"]'); if(md)md.setAttribute('content',x.desc);
+  const ot=document.querySelector('meta[property="og:title"]'); if(ot)ot.setAttribute('content',x.title);
+  const od=document.querySelector('meta[property="og:description"]'); if(od)od.setAttribute('content',x.desc);
+  let robots=document.querySelector('meta[name="robots"]');
+  if(!robots){robots=document.createElement('meta');robots.name='robots';document.head.appendChild(robots);}
+  robots.content='index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1';
+}
+function ensureGreenOceanSchema(){
+  let el=document.getElementById('go-org-schema'); if(el)return;
+  el=document.createElement('script'); el.id='go-org-schema'; el.type='application/ld+json';
+  const s=DB.settings||{};
+  const same=[s.instagram,s.facebook,s.youtube].filter(Boolean);
+  el.textContent=JSON.stringify({
+    '@context':'https://schema.org','@type':'OnlineStore',name:s.store||'Green Ocean',url:'https://greenocean.co.in/',
+    logo:'https://greenocean.co.in/assets/img/logo.png',description:'Green Ocean is an online plant nursery in Balihari, Dhanbad, Jharkhand offering indoor plants, flowering plants, planters, gardening essentials and plant gifts.',
+    email:s.email||'support@greenocean.co.in',telephone:s.phone||'+91 97189 85034',areaServed:{'@type':'Country',name:'India'},
+    address:{'@type':'PostalAddress',streetAddress:'Balihari',addressLocality:'Dhanbad',addressRegion:'Jharkhand',postalCode:'828116',addressCountry:'IN'},sameAs:same
+  });
+  document.head.appendChild(el);
+}
+function brandSideNav(active){
+  const links=[['story','Our Story','leaf'],['shop','Shop Plants','bag'],['shipping','Shipping Policy','truck'],['returns','Returns & Refunds','back'],['faq','FAQ & Help','doc'],['contact','Contact','mail']];
+  return `<div class="brand-side-card"><h3>Explore Green Ocean</h3><p>Helpful pages for shopping, delivery and plant care.</p>
+    ${links.map(x=>x[0]==='shop'?`<a class="brand-side-link" href="#/shop"><span class="bi">${ic(x[2],15)}</span><span>${x[1]}</span><span class="arr">›</span></a>`:
+      `<a class="brand-side-link" href="#/page/${x[0]}"${x[0]===active?' aria-current="page"':''}><span class="bi">${ic(x[2],15)}</span><span>${x[1]}</span><span class="arr">›</span></a>`).join('')}</div>`;
+}
+function seoDiscoveryCard(){return `<div class="brand-side-card brand-seo-card"><h3>Green Ocean online nursery</h3><p>Shop nursery-fresh plants and useful gardening products with clear support before and after your order.</p><div class="brand-tags"><span>online plant nursery India</span><span>buy indoor plants online</span><span>plant nursery Dhanbad</span><span>planters online</span><span>plant gifts India</span><span>nursery delivery</span></div></div>`;}
+function viewStoryPage(p){
+  setGreenOceanPageSEO('story'); ensureGreenOceanSchema();
+  return header('story')+`<main class="brand-page"><div class="brand-wrap">
+    <section class="brand-hero story"><div class="brand-hero-inner"><span class="brand-kicker">${ic('leaf',14)} Our Story</span><h1>Growing greener homes, one plant at a time.</h1><p>Green Ocean is a plant nursery based in Balihari, Dhanbad, Jharkhand. We bring plants, planters and gardening essentials together in one simple online shopping experience for plant lovers across India.</p><div class="brand-badges"><span>${ic('home',14)} Balihari, Dhanbad</span><span>${ic('leaf',14)} Nursery-first approach</span><span>${ic('truck',14)} Online plant shopping</span></div></div></section>
+    <div class="brand-grid"><div class="brand-main">
+      <section class="brand-card"><div class="brand-icon-title"><span class="bi">${ic('leaf',19)}</span><div><h2>Rooted in a real nursery</h2></div></div><p>${esc((p.body||'').split('\n\n')[0]||'Green Ocean began with a simple aim: make healthy plants easier to discover, order and care for.')}</p><p>Today, our website helps customers explore indoor plants, flowering plants, succulents, planters, gardening essentials and plant gifts from one place.</p></section>
+      <div class="brand-features"><article class="brand-feature"><span class="bi">${ic('leaf',18)}</span><b>Plant-first selection</b><p>We focus on practical plants and gardening products that fit homes, balconies, workspaces and gifting needs.</p></article><article class="brand-feature"><span class="bi">${ic('box',18)}</span><b>Thoughtful packing</b><p>Living plants need different handling from ordinary parcels, so packaging and dispatch are planned with plant safety in mind.</p></article><article class="brand-feature"><span class="bi">${ic('search',18)}</span><b>Easier online discovery</b><p>Clear categories, care information and product details help shoppers compare plants, pots and accessories before ordering.</p></article><article class="brand-feature"><span class="bi">${ic('shield',18)}</span><b>Support after delivery</b><p>Our policies explain shipping, healthy-plant support, returns and how to contact us when an order needs attention.</p></article></div>
+      <section class="brand-card"><div class="brand-icon-title"><span class="bi">${ic('star',19)}</span><div><h2>What Green Ocean stands for</h2></div></div><div class="brand-timeline"><div class="brand-step"><span class="num">01</span><div><b>Make plants easier to buy online</b><p>Simple browsing, useful information and clear order support for new as well as experienced plant parents.</p></div></div><div class="brand-step"><span class="num">02</span><div><b>Keep nursery context visible</b><p>Green Ocean is not just a catalogue. Our identity is tied to our nursery in Balihari, Dhanbad and the everyday work of caring for plants.</p></div></div><div class="brand-step"><span class="num">03</span><div><b>Help customers beyond checkout</b><p>Delivery guidance, plant-care content, account tools and support pages are part of the shopping experience.</p></div></div></div></section>
+      <section class="brand-card"><h2>Find the right green for your space</h2><p>Looking to buy indoor plants online, add flowering plants to a balcony, choose planters for your home, send a plant gift or pick up gardening essentials? Explore the Green Ocean collection and use our plant-care articles to make a more informed choice.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><a class="btn btn-primary btn-sq" href="#/shop">Shop Plants</a><a class="btn btn-line btn-sq" href="#/blog">Plant Care Blog</a></div></section>
+      <div class="brand-cta"><div><h3>Questions before you order?</h3><p>Talk to Green Ocean about products, delivery, gifting or plant care.</p></div><a class="btn btn-primary btn-sq" href="#/page/contact">${ic('mail',15)} Contact Us</a></div>
+    </div><aside class="brand-side">${brandSideNav('story')}${seoDiscoveryCard()}</aside></div>
+  </div></main>`+footer();
+}
+function viewReturnsPage(p){
+  setGreenOceanPageSEO('returns'); ensureGreenOceanSchema();
+  return header('returns')+`<main class="brand-page"><div class="brand-wrap">
+    <section class="brand-hero returns"><div class="brand-hero-inner"><span class="brand-kicker">${ic('shield',14)} Returns & Refunds</span><h1>Plant support that is clear and practical.</h1><p>Plants are living products, so our returns process focuses first on transit damage, unhealthy arrival and genuine order issues. Read the steps below before submitting a request.</p><div class="brand-badges"><span>${ic('shield',14)} 7-Day Healthy Plant Guarantee</span><span>${ic('mail',14)} Support by email</span><span>${ic('wallet',14)} Refund or replacement after approval</span></div></div></section>
+    <div class="brand-grid"><div class="brand-main">
+      <section class="brand-card"><div class="brand-icon-title"><span class="bi">${ic('shield',19)}</span><div><h2>7-Day Healthy Plant Guarantee</h2></div></div><p>If a plant or eligible product reaches you damaged or unhealthy, contact <b>${esc(DB.settings.email)}</b> within 7 days of delivery. Please include your order details and clear photos of the plant or product and outer packaging so we can review the issue quickly.</p></section>
+      <section class="brand-card"><h2>How a return or refund request works</h2><div class="return-rule"><span class="ri">${ic('doc',18)}</span><div><b>1. Contact us within 7 days</b><p>Share the order number, registered contact details and a short description of what went wrong.</p></div></div><div class="return-rule"><span class="ri">${ic('image',18)}</span><div><b>2. Send useful photos</b><p>For transit damage or an unhealthy plant, photos of the plant, product and package help us review the condition.</p></div></div><div class="return-rule"><span class="ri">${ic('check',18)}</span><div><b>3. We review the request</b><p>If the request is approved, we will arrange the appropriate resolution based on the order and product condition.</p></div></div><div class="return-rule"><span class="ri">${ic('wallet',18)}</span><div><b>4. Replacement or refund</b><p>Approved refunds are normally processed to the original payment method within 5–7 working days. Cash-on-delivery refunds are made to a bank account or UPI.</p></div></div></section>
+      <div class="brand-features"><article class="brand-feature"><span class="bi">${ic('check',18)}</span><b>Issues we can review</b><p>Plants arriving damaged or unhealthy, wrong items, missing items, or eligible products damaged in transit.</p></article><article class="brand-feature"><span class="bi">${ic('x',18)}</span><b>What is generally not covered</b><p>Change of mind for living plants, or damage after delivery caused by over-watering, under-watering, pests, unsuitable placement or accidents.</p></article><article class="brand-feature"><span class="bi">${ic('back',18)}</span><b>Order cancellation</b><p>You can cancel an order before dispatch from Your Orders when that option is available. Once dispatched, cancellation may no longer be possible.</p></article><article class="brand-feature"><span class="bi">${ic('box',18)}</span><b>Planters and accessories</b><p>For a planter or non-living item damaged during delivery, contact us promptly with order details and photos of the item and package.</p></article></div>
+      <section class="brand-card"><div class="brand-icon-title"><span class="bi">${ic('mail',19)}</span><div><h2>Before you send a request</h2></div></div><p>Keep the damaged item and original packaging until your request has been reviewed. Do not discard a plant, planter or shipping box if we may need additional photos or information to resolve the issue.</p><p>This page should be read together with our Terms & Conditions and Shipping Policy.</p></section>
+      <div class="brand-cta"><div><h3>Need help with a delivered order?</h3><p>Send your order details and we’ll guide you through the next step.</p></div><a class="btn btn-primary btn-sq" href="#/page/contact">${ic('mail',15)} Contact Support</a></div>
+    </div><aside class="brand-side">${brandSideNav('returns')}<div class="brand-side-card"><h3>Related policies</h3><a class="brand-side-link" href="#/page/shipping"><span class="bi">${ic('truck',15)}</span><span>Shipping Policy</span><span class="arr">›</span></a><a class="brand-side-link" href="#/page/terms"><span class="bi">${ic('doc',15)}</span><span>Terms & Conditions</span><span class="arr">›</span></a><a class="brand-side-link" href="#/page/faq"><span class="bi">${ic('doc',15)}</span><span>FAQ</span><span class="arr">›</span></a></div>${seoDiscoveryCard()}</aside></div>
+  </div></main>`+footer();
+}
+function viewContactPage(p){
+  setGreenOceanPageSEO('contact'); ensureGreenOceanSchema();
+  const phone=DB.settings.phone||'+91 97189 85034', email=DB.settings.email||'support@greenocean.co.in';
+  return header('contact')+`<main class="brand-page"><div class="brand-wrap">
+    <section class="brand-hero contact"><div class="brand-hero-inner"><span class="brand-kicker">${ic('mail',14)} Contact Green Ocean</span><h1>Questions about plants or an order? Talk to us.</h1><p>Contact our nursery team for plant shopping questions, delivery support, order issues, planters, plant gifts and general Green Ocean help.</p><div class="brand-badges"><span>${ic('home',14)} Balihari, Dhanbad</span><span>${ic('phone',14)} Mon–Sat · 9 AM–7 PM</span><span>${ic('mail',14)} ${esc(email)}</span></div></div></section>
+    <div class="brand-grid"><div class="brand-main">
+      <div class="contact-cards"><article class="contact-card"><span class="ci">${ic('phone',19)}</span><div><b>Call us</b><a href="tel:${esc(phone.replace(/[^0-9+]/g,''))}">${esc(phone)}</a><p>Monday to Saturday, 9 AM to 7 PM</p></div></article><article class="contact-card"><span class="ci">${ic('mail',19)}</span><div><b>Email support</b><a href="mailto:${esc(email)}">${esc(email)}</a><p>Useful for order, return and policy questions.</p></div></article><article class="contact-card"><span class="ci">${ic('phone',19)}</span><div><b>WhatsApp</b><a href="https://wa.me/${esc(waNumber())}" target="_blank" rel="noopener">Chat with Green Ocean</a><p>Share your order number when asking about an existing order.</p></div></article><article class="contact-card"><span class="ci">${ic('home',19)}</span><div><b>Nursery</b><p>${esc(DB.settings.address||'Balihari, Dhanbad, Jharkhand 828116')}</p><p>Green Ocean plant nursery, Jharkhand.</p></div></article></div>
+      <section class="brand-card contact-form-card"><div class="contact-form-head"><span class="ci">${ic('mail',19)}</span><div><h2>Send us a message</h2><p>Tell us what you need help with. For an order issue, include your order number.</p></div></div><form data-act="contactForm" novalidate><div class="row2">${authField('Your name','name','text','name','')}${authField('Email','email','email','email','','')}</div>${authField('Mobile number','phone','tel','phone','','')}<div class="field"><label>Message</label><textarea class="inp" name="msg" data-v="msg" data-label="Message" placeholder="Order number (if any) + how we can help"></textarea></div><input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true"><div style="display:flex;gap:8px;flex-wrap:wrap">${API.on?`<button class="btn btn-primary btn-sq btn-lg" data-via="api">${ic('mail',15)} Send message</button>`:`<button class="btn btn-primary btn-sq" data-via="wa">${ic('phone',15)} Send on WhatsApp</button><button class="btn btn-line btn-sq" data-via="mail">${ic('mail',15)} Send by email</button>`}</div></form><p class="brand-note">Please do not send passwords, card PINs, CVV numbers or other sensitive payment credentials in a message.</p></section>
+      <section class="brand-card"><div class="brand-icon-title"><span class="bi">${ic('leaf',19)}</span><div><h2>What we can help with</h2></div></div><div class="brand-features"><article class="brand-feature"><span class="bi">${ic('search',18)}</span><b>Choosing plants</b><p>Questions about indoor plants, flowering plants, planters, gifting and product details.</p></article><article class="brand-feature"><span class="bi">${ic('truck',18)}</span><b>Orders & delivery</b><p>Order status, shipping questions, address issues and delivery support.</p></article><article class="brand-feature"><span class="bi">${ic('shield',18)}</span><b>Returns & plant guarantee</b><p>Help with damaged or unhealthy arrivals and eligible refund or replacement requests.</p></article><article class="brand-feature"><span class="bi">${ic('leaf',18)}</span><b>Plant care guidance</b><p>Start with our Plant Care Blog for practical watering, light and repotting guidance.</p></article></div></section>
+      <div class="brand-cta"><div><h3>Shopping for plants online?</h3><p>Browse Green Ocean’s indoor plants, flowering plants, planters, gardening essentials and plant gifts.</p></div><a class="btn btn-primary btn-sq" href="#/shop">${ic('bag',15)} Browse Plants</a></div>
+    </div><aside class="brand-side">${brandSideNav('contact')}<div class="brand-side-card"><h3>Before contacting us</h3><p>For faster order support, keep your order number, registered mobile number and delivery details ready.</p><a class="brand-side-link" href="#/orders"><span class="bi">${ic('bag',15)}</span><span>View Your Orders</span><span class="arr">›</span></a><a class="brand-side-link" href="#/page/faq"><span class="bi">${ic('doc',15)}</span><span>Read FAQ</span><span class="arr">›</span></a></div>${seoDiscoveryCard()}</aside></div>
+  </div></main>`+footer();
+}
+
 function viewPage(slug){
   const p=DB.pages.find(x=>x.slug===slug&&x.active);
   if(!p)return header()+`<div class="wrap sec panel empty"><h3>Page not found</h3><a class="btn btn-primary btn-sq" href="#/">Go home</a></div>`+footer();
   if(slug==='faq')return viewFaq(p);
+  if(slug==='shipping'||slug==='privacy'||slug==='terms')return viewPolicyPage(slug,p);
+  if(slug==='story')return viewStoryPage(p);
+  if(slug==='returns')return viewReturnsPage(p);
+  if(slug==='contact')return viewContactPage(p);
   return header(slug)+`<div class="wrap sec">${backBar('Back','#/')}<div class="panel" style="max-width:720px;margin:0 auto">
     <h1 style="font-family:var(--serif);font-size:28px;margin:0 0 14px;font-weight:600">${esc(p.title)}</h1>
     ${p.body.split('\n').filter(Boolean).map(t=>t.startsWith('## ')?
       `<h3 style="font-family:var(--serif);font-size:19px;font-weight:600;margin:22px 0 6px">${esc(t.slice(3))}</h3>`:
       `<p style="max-width:70ch;margin:0 0 10px">${esc(t)}</p>`).join('')}
-    ${slug==='privacy'||slug==='terms'?`<p style="margin-top:18px;font-size:13px;color:var(--muted)">See also:
-      ${slug==='privacy'?'<a href="#/page/terms" style="color:var(--green-700);font-weight:600">Terms & Conditions</a>':'<a href="#/page/privacy" style="color:var(--green-700);font-weight:600">Privacy Policy</a>'}
-      · <a href="#/page/returns" style="color:var(--green-700);font-weight:600">Returns & Refunds</a></p>`:''}
     ${slug==='contact'?`<form data-act="contactForm" style="margin-top:14px" novalidate>
       <div class="row2">${authField('Your name','name','text','name','')}${authField('Email','email','email','email','','')}</div>
       ${authField('Mobile number','phone','tel','phone','','')}
