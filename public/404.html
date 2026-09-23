@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,follow">
+  <meta name="theme-color" content="#f6fbf7">
+  <title>404 — Page Not Found | Green Ocean</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;min-height:100%;background:#f6fbf7}
+    body{min-height:100vh;overflow:hidden;font-family:Arial,Helvetica,sans-serif}
+    .screen{
+      display:block;
+      width:100vw;
+      height:100vh;
+      position:relative;
+      overflow:hidden;
+      background:#f6fbf7;
+      cursor:pointer;
+    }
+    .screen img{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center center;
+      display:block;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+    .sr-only{
+      position:absolute!important;
+      width:1px!important;
+      height:1px!important;
+      padding:0!important;
+      margin:-1px!important;
+      overflow:hidden!important;
+      clip:rect(0,0,0,0)!important;
+      white-space:nowrap!important;
+      border:0!important;
+    }
+    @media (max-aspect-ratio: 1/1){
+      body{overflow:auto}
+      .screen{height:auto;min-height:100vh;cursor:pointer}
+      .screen img{position:relative;width:100%;height:auto;min-height:100vh;object-fit:cover;object-position:center center}
+    }
+  </style>
+</head>
+<body>
+  <a class="screen" href="/" aria-label="Go to Green Ocean homepage">
+    <img src="/assets/img/404-page.png" alt="Green Ocean 404 Page Not Found">
+    <span class="sr-only">404 Page Not Found. Return to the Green Ocean homepage.</span>
+  </a>
+</body>
+</html>
