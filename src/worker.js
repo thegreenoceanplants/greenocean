@@ -9,6 +9,8 @@
  * Secrets (Cloudflare → Worker → Settings → Variables and Secrets):
  *   ADMIN_PASSWORD         required to change anything from the admin panel
  *   BREVO_API_KEY          optional — sends thank-you emails to customers
+ *   SUPABASE_URL                optional — e.g. https://kkuxyrwklyszargqfgzw.supabase.co, used to mark real registered customers in the admin panel
+ *   SUPABASE_SERVICE_ROLE_KEY   optional — Supabase → Settings → API → service_role key (secret, NEVER the anon key)
  * Variables:
  *   OWNER_EMAIL            where order / contact emails go (must be verified in Email Routing)
  *   FROM_EMAIL             sender address on your domain, e.g. website@greenocean.co.in
@@ -261,6 +263,18 @@ async function api(req, env, url) {
       };
       const [orders, messages, subscribers, reviews] = await Promise.all([grab("order:", 300), grab("msg:", 200), grab("sub:", 1000), grab("rev:", 200)]);
       return json({ ok: true, orders, messages, subscribers, reviews });
+    }
+    /* which customer emails have a real Supabase account (for the admin Customers "Registered" badge) */
+    if (p === "/api/admin/customers" && m === "GET") {
+      if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return json({ ok: true, emails: [] });
+      try {
+        const r = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?select=email`, {
+          headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
+        });
+        if (!r.ok) return json({ ok: true, emails: [] });
+        const rows = await r.json();
+        return json({ ok: true, emails: rows.map((x) => (x.email || "").toLowerCase()).filter(Boolean) });
+      } catch (e) { return json({ ok: true, emails: [] }); }
     }
     const km = p.match(/^\/api\/admin\/item\/(.+)$/);
     if (km) {
