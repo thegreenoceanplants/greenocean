@@ -380,6 +380,13 @@ textarea.inp{min-height:90px;resize:vertical}
 @media(max-width:860px){.checkout-page{padding-top:14px}.checkout-progress{grid-template-columns:repeat(4,minmax(92px,1fr));overflow-x:auto;padding-bottom:4px}.checkout-grid{grid-template-columns:1fr}.checkout-side-card{position:static}.checkout-payment-grid,.checkout-summary-grid{grid-template-columns:1fr}.checkout-flow{padding-left:12px;padding-right:12px}}
 @media(max-width:600px){.checkout-topline{margin-bottom:12px}.checkout-progress{gap:7px}.checkout-step{padding:9px 8px;border-radius:12px;min-width:105px}.checkout-step-dot{width:27px;height:27px;border-radius:9px}.checkout-step b{font-size:11.5px}.checkout-step small{display:none}.checkout-panel-head h1{font-size:23px}.checkout-panel-head small{font-size:11.5px}.checkout-card{padding:14px;border-radius:14px}.checkout-actions{align-items:stretch}.checkout-actions .btn{flex:1;padding-left:10px;padding-right:10px}.checkout-coupon-entry{grid-template-columns:1fr 82px}.checkout-payment-option{grid-template-columns:38px 1fr 20px;padding:11px}.checkout-payment-option .pay-icon{width:38px;height:38px}.checkout-item{grid-template-columns:46px minmax(0,1fr) auto}.checkout-item-img img,.checkout-item-img svg{width:46px;height:46px}.checkout-topline>span{display:none}}
 
+
+/* ---------- Admin media library / image size guide ---------- */
+.media-guide-note{background:#F4F8F5;border:1px solid #DCE8DF;border-radius:14px;padding:14px 16px;margin-bottom:14px;font-size:12.5px;color:#53655B;line-height:1.6}
+.media-guide-note b{color:#173D2C}.media-group{margin:18px 0}.media-group-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px}.media-group-head h3{font-family:var(--serif);font-size:19px;margin:0;color:#163A2B}.media-group-head p{margin:3px 0 0;color:var(--adm-muted);font-size:11.5px}.media-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.media-card{background:#fff;border:1px solid #E1E8E3;border-radius:16px;overflow:hidden;box-shadow:0 5px 18px rgba(15,70,50,.04)}.media-card-img{height:150px;background:#EEF4EF;display:grid;place-items:center;overflow:hidden;position:relative}.media-card-img img{width:100%;height:100%;object-fit:cover}.media-card.logo .media-card-img img{object-fit:contain;padding:18px}.media-card-body{padding:13px}.media-card-body b{font-size:13.5px;color:#19392B}.media-card-body small{display:block;color:#75847C;font-size:10.8px;line-height:1.45;margin-top:3px}.media-size{display:inline-flex;align-items:center;gap:5px;margin:8px 0 0;padding:5px 8px;border-radius:999px;background:#EAF4ED;color:#1E684A;font-size:10.5px;font-weight:750}.media-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}.media-actions .btn{font-size:11.5px;padding:7px 10px}.media-dynamic-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.media-dynamic-card{display:flex;flex-direction:column;gap:7px;background:#fff;border:1px solid #E1E8E3;border-radius:14px;padding:14px;text-align:left}.media-dynamic-card .mi{width:36px;height:36px;border-radius:10px;background:#E8F3EC;color:#1C7755;display:grid;place-items:center}.media-dynamic-card b{font-size:13px}.media-dynamic-card small{font-size:10.8px;color:#77867D;line-height:1.5}.media-dynamic-card .size{font-size:11px;font-weight:750;color:#1B694B}.media-upload-preview{display:grid;grid-template-columns:140px 1fr;gap:14px;align-items:start}.media-upload-preview .preview{height:110px;border:1px solid #E0E7E2;border-radius:12px;background:#F2F6F3;display:grid;place-items:center;overflow:hidden}.media-upload-preview .preview img{width:100%;height:100%;object-fit:cover}.media-upload-preview.logo .preview img{object-fit:contain;padding:12px}.media-spec-list{display:grid;gap:5px;font-size:12px;color:#5F7067}.media-spec-list b{color:#213F31}.media-current{font-size:10.5px;color:#6E7D75;margin-top:5px}.img-size-hint{display:block;margin-top:6px;padding:7px 9px;border-radius:9px;background:#F4F8F5;color:#627269;font-size:10.8px;line-height:1.45}
+@media(max-width:1100px){.media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.media-dynamic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.media-grid,.media-dynamic-grid{grid-template-columns:1fr}.media-upload-preview{grid-template-columns:1fr}.media-card-img{height:180px}}
+
 /* ================= ADMIN ================= */
 .adm{display:grid;grid-template-columns:238px 1fr;min-height:100vh;background:var(--page)}
 .side{background:var(--green-900);color:#CFE3D7;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:auto;
@@ -1101,7 +1108,7 @@ textarea.inp{min-height:90px;resize:vertical}
 <div id="toasts"></div>
 <div id="layer"></div>
 <script>
-const IMG={"hero": "/assets/img/hero.jpg?v=5f203695", "cat_indoor": "/assets/img/cat_indoor.jpg?v=611f7de3", "cat_flowering": "/assets/img/cat_flowering.jpg?v=60db730c", "cat_succulents": "/assets/img/cat_succulents.jpg?v=c72f2a41", "cat_planters": "/assets/img/cat_planters.jpg?v=a699d4d5", "cat_gardening": "/assets/img/cat_gardening.jpg?v=be4de214", "cat_combos": "/assets/img/cat_combos.jpg?v=51fa36c5", "prod_snake": "/assets/img/prod_snake.jpg?v=1998f728", "prod_money": "/assets/img/prod_money.jpg?v=30b0e63f", "prod_peace": "/assets/img/prod_peace.jpg?v=ac88d711", "prod_aloe": "/assets/img/prod_aloe.jpg?v=1446cc53", "prod_zz": "/assets/img/prod_zz.jpg?v=7d864a9e", "ban_planters": "/assets/img/ban_planters.jpg?v=619a704d", "ban_combos": "/assets/img/ban_combos.jpg?v=51f66a77", "selfwater": "/assets/img/selfwater.jpg?v=ed0ba259", "sp_living": "/assets/img/sp_living.jpg?v=2ebddd0b", "sp_bedroom": "/assets/img/sp_bedroom.jpg?v=ac1ed228", "sp_workspace": "/assets/img/sp_workspace.jpg?v=443a849d", "sp_balcony": "/assets/img/sp_balcony.jpg?v=37c5bf17", "sp_outdoor": "/assets/img/sp_outdoor.jpg?v=b76b92b3", "test1": "/assets/img/test1.jpg?v=dd3f08fd", "test2": "/assets/img/test2.jpg?v=65de5e12", "test3": "/assets/img/test3.jpg?v=74d07946", "community": "/assets/img/community.jpg?v=b126a202", "logo": "/assets/img/logo.png?v=e391abf0", "content1": "/assets/img/content1.jpg?v=10cafddc", "content2": "/assets/img/content2.jpg?v=d9490034", "content3": "/assets/img/content3.jpg?v=4b7408e9", "content4": "/assets/img/content4.jpg?v=6411bae5", "selfwater_plant": "/assets/img/selfwater_plant.jpg?v=aee4cbe5", "auth_leaf_a": "/assets/img/auth_leaf_a.jpg?v=463c44fc", "auth_leaf_b": "/assets/img/auth_leaf_b.jpg?v=84ab3c2f", "auth_pot": "/assets/img/auth_pot.jpg?v=ca871275", "auth_note": "/assets/img/auth_note.jpg?v=11334542", "favicon": "/assets/img/favicon.png?v=589acb91"};
+const IMG={"hero": "/assets/img/hero.jpg?v=5f203695", "cat_indoor": "/assets/img/cat_indoor.jpg?v=611f7de3", "cat_flowering": "/assets/img/cat_flowering.jpg?v=60db730c", "cat_succulents": "/assets/img/cat_succulents.jpg?v=c72f2a41", "cat_planters": "/assets/img/cat_planters.jpg?v=a699d4d5", "cat_gardening": "/assets/img/cat_gardening.jpg?v=be4de214", "cat_combos": "/assets/img/cat_combos.jpg?v=51fa36c5", "prod_snake": "/assets/img/prod_snake.jpg?v=1998f728", "prod_money": "/assets/img/prod_money.jpg?v=30b0e63f", "prod_peace": "/assets/img/prod_peace.jpg?v=ac88d711", "prod_aloe": "/assets/img/prod_aloe.jpg?v=1446cc53", "prod_zz": "/assets/img/prod_zz.jpg?v=7d864a9e", "ban_planters": "/assets/img/ban_planters.jpg?v=619a704d", "ban_combos": "/assets/img/ban_combos.jpg?v=51f66a77", "selfwater": "/assets/img/selfwater.jpg?v=ed0ba259", "sp_living": "/assets/img/sp_living.jpg?v=2ebddd0b", "sp_bedroom": "/assets/img/sp_bedroom.jpg?v=ac1ed228", "sp_workspace": "/assets/img/sp_workspace.jpg?v=443a849d", "sp_balcony": "/assets/img/sp_balcony.jpg?v=37c5bf17", "sp_outdoor": "/assets/img/sp_outdoor.jpg?v=b76b92b3", "test1": "/assets/img/test1.jpg?v=dd3f08fd", "test2": "/assets/img/test2.jpg?v=65de5e12", "test3": "/assets/img/test3.jpg?v=74d07946", "community": "/assets/img/community.jpg?v=b126a202", "logo": "/assets/img/logo.png?v=e391abf0", "content1": "/assets/img/content1.jpg?v=10cafddc", "content2": "/assets/img/content2.jpg?v=d9490034", "content3": "/assets/img/content3.jpg?v=4b7408e9", "content4": "/assets/img/content4.jpg?v=6411bae5", "selfwater_plant": "/assets/img/selfwater_plant.jpg?v=aee4cbe5", "auth_leaf_a": "/assets/img/auth_leaf_a.jpg?v=463c44fc", "auth_leaf_b": "/assets/img/auth_leaf_b.jpg?v=84ab3c2f", "auth_pot": "/assets/img/auth_pot.jpg?v=ca871275", "auth_note": "/assets/img/auth_note.jpg?v=11334542", "favicon": "/assets/img/favicon.png?v=589acb91", "home_slide_1": "/assets/img/home-slide-home.png", "home_slide_2": "/assets/img/home-slide-soft.png", "home_slide_3": "/assets/img/home-slide-balcony.png", "home_slide_4": "/assets/img/home-slide-gift.png"};
 </script>
 <script>
 /* ==========================================================
@@ -1231,7 +1238,7 @@ const ART={
 function artFor(key){return plantArt(ART[key]||ART.bush);}
 const artURI=key=>'data:image/svg+xml;utf8,'+encodeURIComponent(artFor(key));
 /* photo if admin set one, else built-in artwork. Broken photo falls back automatically. */
-function src(v){ if(!v) return ''; if(v.slice(0,4)==='img:') return (typeof IMG!=='undefined'&&IMG[v.slice(4)])||''; return v; }
+function src(v){ if(!v) return ''; if(v.slice(0,4)==='img:'){ const k=v.slice(4),ov=(typeof DB!=='undefined'&&DB&&DB.settings&&DB.settings.media&&DB.settings.media[k])||''; return ov||((typeof IMG!=='undefined'&&IMG[k])||''); } return v; }
 function pic(item,cls='',priority='auto'){
   const k=(item&&item.art)||'bush';
   const fb=artURI(k).replace(/'/g,'%27');
@@ -1374,7 +1381,7 @@ const SEED=()=>({
    codEnabled:true,upiEnabled:true,cardEnabled:true,metaTitle:'Green Ocean — Buy Indoor Plants Online',
    metaDesc:'Healthy nursery-fresh plants, planters and gifts delivered across India.',
    heroTitle:'Happier Spaces Greener Lives',heroSub:'Healthy plants for a better tomorrow. Handpicked from our nursery, delivered to your doorstep.',
-   heroKicker:'BRING NATURE HOME',heroNote:'Good Plants\nGood Days',theme:'#0F4632',adminPass:'admin123',adminEmail:'thegreenoceanplants@gmail.com'},
+   heroKicker:'BRING NATURE HOME',heroNote:'Good Plants\nGood Days',theme:'#0F4632',adminPass:'admin123',adminEmail:'thegreenoceanplants@gmail.com',media:{},homeSlides:[{id:'hs1',img:'img:home_slide_1',link:'#/shop?cat=c1',alt:'Happier Spaces Greener Lives — Green Ocean indoor plant banner'},{id:'hs2',img:'img:home_slide_2',link:'#/shop?cat=c1',alt:'Soft leaves. Softer days. — indoor plant banner'},{id:'hs3',img:'img:home_slide_3',link:'#/shop',alt:'Give your balcony a greener mood — balcony plant banner'},{id:'hs4',img:'img:home_slide_4',link:'#/shop?cat=c6',alt:'A plant gift that keeps growing — Green Ocean gifting banner'}]},
  categories:[
   {id:'c1',name:'Indoor Plants',slug:'indoor',art:'snake',desc:'Low-light friendly greens for every room.',img:'img:cat_indoor'},
   {id:'c2',name:'Flowering Plants',slug:'flowering',art:'flower',desc:'Blooms that lift the whole room.',img:'img:cat_flowering'},
@@ -1475,6 +1482,8 @@ function load(){
   if(/826004/.test(DB.settings.address))DB.settings.address=fresh.address;
   if(DB.settings.email==='care@greenocean.in')DB.settings.email=fresh.email;
   if(DB.settings.adminEmail==='admin@greenocean.in')DB.settings.adminEmail=fresh.adminEmail;
+  if(!DB.settings.media||typeof DB.settings.media!=='object')DB.settings.media={};
+  if(!Array.isArray(DB.settings.homeSlides)||DB.settings.homeSlides.length!==4)DB.settings.homeSlides=fresh.homeSlides.map(x=>({...x}));
   SEED().pages.forEach(p=>{ if(!DB.pages.some(x=>x.slug===p.slug))DB.pages.push(p); });
   DB.pages.forEach(p=>{ if(p.body)p.body=p.body.replace(/826004/g,'828116').replace(/\+91 98765 43210/g,fresh.phone).replace(/care@greenocean\.in/g,fresh.email); });
   if(!DB.subscribers)DB.subscribers=[];
@@ -1732,12 +1741,9 @@ function couponFirstOrderOnly(c){return !!(c&&(c.firstOrderOnly||String(c.code||
 function homePromoCoupon(){return (DB.coupons||[]).find(k=>k.active&&k.homePromo)||null;}
 function freeShipPromoCoupon(){return (DB.coupons||[]).find(k=>k.active&&String(k.code||'').toUpperCase()==='FREESHIP')||null;}
 function homeHeroSlides(){
-  return [
-    {id:'hs1',img:'/assets/img/home-slide-home.png',link:'#/shop?cat=c1',alt:'Happier Spaces Greener Lives — Green Ocean indoor plant banner'},
-    {id:'hs2',img:'/assets/img/home-slide-soft.png',link:'#/shop?cat=c1',alt:'Soft leaves. Softer days. — indoor plant banner'},
-    {id:'hs3',img:'/assets/img/home-slide-balcony.png',link:'#/shop',alt:'Give your balcony a greener mood — balcony plant banner'},
-    {id:'hs4',img:'/assets/img/home-slide-gift.png',link:'#/shop?cat=c6',alt:'A plant gift that keeps growing — Green Ocean gifting banner'}
-  ];
+  const defs=SEED().settings.homeSlides;
+  const saved=(DB.settings&&Array.isArray(DB.settings.homeSlides))?DB.settings.homeSlides:[];
+  return defs.map((d,i)=>Object.assign({},d,saved.find(x=>x&&x.id===d.id)||saved[i]||{}));
 }
 function initHomeHeroSlider(root=document){
   const wrap=root.querySelector('[data-home-slider]');
@@ -2335,7 +2341,7 @@ function viewHome(){
   <section class="hero"><div class="wrap home-slider" data-home-slider data-index="0">
     <div class="home-slider-stage">
       ${slides.map((sl,idx)=>`<article class="home-slide ${idx===0?'is-active':''}" data-act="heroNext" aria-label="Homepage slide ${idx+1}">
-        <img class="home-slide-img" src="${sl.img}" alt="${esc(sl.alt)}" ${idx===0?'loading="eager" fetchpriority="high"':'loading="lazy"'} decoding="async">
+        <img class="home-slide-img" src="${src(sl.img)}" alt="${esc(sl.alt)}" ${idx===0?'loading="eager" fetchpriority="high"':'loading="lazy"'} decoding="async">
         <a class="home-slide-cta" href="${sl.link}" aria-label="Open this collection"></a>
       </article>`).join('')}
     </div>
@@ -3054,7 +3060,7 @@ function ensureGreenOceanSchema(){
   const same=[s.instagram,s.facebook,s.youtube].filter(Boolean);
   el.textContent=JSON.stringify({
     '@context':'https://schema.org','@type':'OnlineStore',name:s.store||'Green Ocean',url:'https://greenocean.co.in/',
-    logo:'https://greenocean.co.in/assets/img/logo.png',description:'Green Ocean is an online plant nursery in Balihari, Dhanbad, Jharkhand offering indoor plants, flowering plants, planters, gardening essentials and plant gifts.',
+    logo:absoluteAsset('img:logo'),description:'Green Ocean is an online plant nursery in Balihari, Dhanbad, Jharkhand offering indoor plants, flowering plants, planters, gardening essentials and plant gifts.',
     email:s.email||'support@greenocean.co.in',telephone:s.phone||'+91 97189 85034',areaServed:{'@type':'Country',name:'India'},
     address:{'@type':'PostalAddress',streetAddress:'Balihari',addressLocality:'Dhanbad',addressRegion:'Jharkhand',postalCode:'828116',addressCountry:'IN'},sameAs:same
   });
@@ -3193,7 +3199,7 @@ function ensureBlogSchema(b){
   let el=document.getElementById('go-blog-schema');
   if(!el){el=document.createElement('script');el.id='go-blog-schema';el.type='application/ld+json';document.head.appendChild(el);}
   if(!b){el.textContent=JSON.stringify({'@context':'https://schema.org','@type':'Blog',name:'Green Ocean Plant Care Blog',url:'https://greenocean.co.in/#/blog',description:'Practical plant care articles from Green Ocean.'});return;}
-  el.textContent=JSON.stringify({'@context':'https://schema.org','@type':'BlogPosting',headline:b.title,description:b.excerpt||'',datePublished:b.date||'',author:{'@type':'Organization',name:'Green Ocean'},publisher:{'@type':'Organization',name:'Green Ocean',logo:{'@type':'ImageObject',url:'https://greenocean.co.in/assets/img/logo.png'}},mainEntityOfPage:'https://greenocean.co.in/#/blog/'+b.id});
+  el.textContent=JSON.stringify({'@context':'https://schema.org','@type':'BlogPosting',headline:b.title,description:b.excerpt||'',datePublished:b.date||'',author:{'@type':'Organization',name:'Green Ocean'},publisher:{'@type':'Organization',name:'Green Ocean',logo:{'@type':'ImageObject',url:absoluteAsset('img:logo')}},mainEntityOfPage:'https://greenocean.co.in/#/blog/'+b.id});
 }
 function blogReadTime(b){const words=String((b&&b.body)||'').trim().split(/\s+/).filter(Boolean).length;return Math.max(1,Math.ceil(words/180));}
 function viewBlog(id){
@@ -3231,7 +3237,7 @@ function viewBlog(id){
 const NAV=[['dashboard','Dashboard','home'],['products','Products','box'],['categories','Categories','grid'],['orders','Orders','bag'],['returns','Returns & Refunds','back'],
  ['customers','Customers','users'],['messages','Messages','mail'],['inventory','Inventory','stack'],['banners','Banners & Sliders','image'],['offers','Offers & Coupons','tag'],
  ['blog','Blog / Content','doc'],['reviews','Reviews','star'],['pages','Pages','pages'],['newsletter','Newsletter','mail'],
- ['settings','Website Settings','globe'],['appearance','Appearance','brush'],['reports','Reports','chart'],['account','Settings','gear']];
+ ['settings','Website Settings','globe'],['appearance','Appearance','brush'],['media','Media & Image Sizes','image'],['reports','Reports','chart'],['account','Settings','gear']];
 
 function adminLogin(){
   return `<div style="min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(140deg,#0C3A28,#15563D)">
@@ -3264,7 +3270,7 @@ function adminShell(page,body,title,sub,actions){
     ['Overview',['dashboard','reports']],
     ['Commerce',['orders','returns','products','categories','inventory','customers']],
     ['Customer & growth',['messages','offers','newsletter','reviews']],
-    ['Storefront',['banners','pages','blog','appearance']],
+    ['Storefront',['banners','media','pages','blog','appearance']],
     ['System',['settings','account']]
   ];
   const nav=groups.map(g=>`<div class="admin-nav-group">${g[0]}</div>${g[1].map(k=>adminNavItem(k,page)).join('')}`).join('');
@@ -3350,7 +3356,7 @@ function admDashboard(){
      <button class="admin-action" data-link="#/admin/orders"><span class="ai">${ic('bag',17)}</span><span><b>Process orders</b><small>${processing?processing+' need fulfilment':'No pending orders'}</small></span></button>
      <button class="admin-action" data-edit-product="new"><span class="ai">${ic('plus',17)}</span><span><b>Add new product</b><small>Plant, planter or gardening item</small></span></button>
      <button class="admin-action" data-link="#/admin/offers?new=1"><span class="ai">${ic('tag',17)}</span><span><b>Create offer</b><small>Coupon or free-shipping promotion</small></span></button>
-     <button class="admin-action" data-link="#/admin/banners?new=1"><span class="ai">${ic('image',17)}</span><span><b>Update storefront</b><small>Banner, campaign or seasonal event</small></span></button>
+     <button class="admin-action" data-link="#/admin/banners"><span class="ai">${ic('image',17)}</span><span><b>Update storefront</b><small>Banner, campaign or seasonal event</small></span></button>
    </div>
 
    <div class="admin-grid-main">
@@ -3373,6 +3379,7 @@ function admDashboard(){
      <button class="admin-storefront-card" data-link="#/admin/banners"><span class="ico">${ic('image',17)}</span><b>Banners & events</b><small>Seasonal campaigns, gifting, festival and event promotions.</small><span class="go">Manage banners →</span></button>
      <button class="admin-storefront-card" data-link="#/admin/offers"><span class="ico">${ic('tag',17)}</span><b>Offers & coupons</b><small>Create discounts without cluttering the shopping experience.</small><span class="go">Manage offers →</span></button>
      <button class="admin-storefront-card" data-link="#/admin/blog"><span class="ico">${ic('doc',17)}</span><b>Plant care content</b><small>Publish gardening guides that support discovery and trust.</small><span class="go">Manage blog →</span></button>
+     <button class="admin-storefront-card" data-link="#/admin/media"><span class="ico">${ic('image',17)}</span><b>Media & image sizes</b><small>Replace shared website images and see the exact dimensions for every image type.</small><span class="go">Manage images →</span></button>
    </div></section>
 
    ${topProducts.length?`<section class="panel"><div class="card-h"><div><h3>Best-selling products</h3><small style="color:var(--adm-muted);font-size:10.5px">Based on non-cancelled order history</small></div><a class="link-more" href="#/admin/products">Manage products</a></div><div class="scroll-x"><table class="tbl"><thead><tr><th>Product</th><th>Units sold</th><th>Sales value</th></tr></thead><tbody>${topProducts.map(t=>{const p=t.id?prod(t.id):null;return `<tr><td><div style="display:flex;align-items:center;gap:9px">${p?pic(p,'thumb'):''}<b>${esc(t.name||'Product')}</b></div></td><td>${t.qty}</td><td><b>${money(t.revenue)}</b></td></tr>`;}).join('')}</tbody></table></div></section>`:''}
@@ -3381,6 +3388,81 @@ function admDashboard(){
 
 </script>
 <script>
+
+const MEDIA_SPECS=[
+ {key:'logo',group:'Branding',label:'Main logo',w:948,h:472,fit:'contain',usage:'Header, footer, account header, admin panel and schema logo',format:'Transparent PNG recommended'},
+ {key:'favicon',group:'Branding',label:'Favicon / app icon',w:512,h:512,fit:'contain',usage:'Browser tab and mobile shortcut icon',format:'Square PNG recommended'},
+ {key:'hero',group:'Shared page imagery',label:'Main nursery / lifestyle image',w:1600,h:1000,fit:'cover',usage:'Plant Care featured image, Our Story, FAQ/policies and account background',format:'JPG/WebP'},
+ {key:'community',group:'Shared page imagery',label:'Our Story hero background',w:1600,h:900,fit:'cover',usage:'Our Story page decorative hero background',format:'JPG/WebP'},
+ {key:'content1',group:'Shared page imagery',label:'Our Story supporting image 1',w:1200,h:900,fit:'cover',usage:'Our Story image collage',format:'JPG/WebP'},
+ {key:'content2',group:'Shared page imagery',label:'Contact hero background',w:1600,h:900,fit:'cover',usage:'Contact page decorative hero background',format:'JPG/WebP'},
+ {key:'content3',group:'Shared page imagery',label:'Plant Care / blog background',w:1600,h:900,fit:'cover',usage:'Plant Care article hero decoration and Potting Soil product default',format:'JPG/WebP'},
+ {key:'content4',group:'Shared page imagery',label:'Our Story supporting image 2',w:1200,h:900,fit:'cover',usage:'Our Story collage and Terracotta Pot default photo',format:'JPG/WebP'},
+ {key:'ban_planters',group:'Homepage sections',label:'Planters promotional tile',w:1200,h:650,fit:'cover',usage:'Homepage split promotional section — planters',format:'JPG/WebP'},
+ {key:'ban_combos',group:'Homepage sections',label:'Combos promotional tile',w:1200,h:650,fit:'cover',usage:'Homepage split promotional section — combos',format:'JPG/WebP'},
+ {key:'selfwater_plant',group:'Homepage sections',label:'Self-watering planter feature',w:1200,h:1200,fit:'cover',usage:'Homepage feature band, account promo and default product/blog image',format:'JPG/WebP'},
+ {key:'sp_living',group:'Homepage spaces',label:'Living Room',w:1200,h:960,fit:'cover',usage:'Plants for Every Space — Living Room',format:'JPG/WebP'},
+ {key:'sp_bedroom',group:'Homepage spaces',label:'Bedroom',w:1200,h:960,fit:'cover',usage:'Plants for Every Space — Bedroom',format:'JPG/WebP'},
+ {key:'sp_workspace',group:'Homepage spaces',label:'Workspace',w:1200,h:960,fit:'cover',usage:'Plants for Every Space — Workspace',format:'JPG/WebP'},
+ {key:'sp_balcony',group:'Homepage spaces',label:'Balcony',w:1200,h:960,fit:'cover',usage:'Plants for Every Space — Balcony',format:'JPG/WebP'},
+ {key:'sp_outdoor',group:'Homepage spaces',label:'Outdoor Garden',w:1200,h:960,fit:'cover',usage:'Plants for Every Space — Outdoor Garden',format:'JPG/WebP'},
+ {key:'auth_leaf_a',group:'Login & signup',label:'Login decorative leaf',w:900,h:1200,fit:'cover',usage:'Login page left decorative image',format:'JPG/WebP'},
+ {key:'auth_leaf_b',group:'Login & signup',label:'Signup decorative leaf',w:900,h:1200,fit:'cover',usage:'Signup page left decorative image',format:'JPG/WebP'},
+ {key:'auth_pot',group:'Login & signup',label:'Login pot image',w:900,h:1200,fit:'cover',usage:'Login page right decorative image',format:'JPG/WebP'},
+ {key:'auth_note',group:'Login & signup',label:'Signup note image',w:700,h:900,fit:'cover',usage:'Signup page top-right decorative image',format:'JPG/WebP'},
+ {key:'cat_indoor',group:'Category defaults',label:'Indoor Plants default',w:1000,h:1000,fit:'cover',usage:'Default Indoor Plants category image',format:'JPG/WebP'},
+ {key:'cat_flowering',group:'Category defaults',label:'Flowering Plants default',w:1000,h:1000,fit:'cover',usage:'Default Flowering Plants category / Hibiscus image',format:'JPG/WebP'},
+ {key:'cat_succulents',group:'Category defaults',label:'Succulents default',w:1000,h:1000,fit:'cover',usage:'Default Succulents / Jade image and blog cover',format:'JPG/WebP'},
+ {key:'cat_planters',group:'Category defaults',label:'Planters default',w:1000,h:1000,fit:'cover',usage:'Default Planters category image',format:'JPG/WebP'},
+ {key:'cat_gardening',group:'Category defaults',label:'Gardening default',w:1000,h:1000,fit:'cover',usage:'Default Gardening / Areca Palm image',format:'JPG/WebP'},
+ {key:'cat_combos',group:'Category defaults',label:'Combos default',w:1000,h:1000,fit:'cover',usage:'Default Combos category / Desk Buddy image',format:'JPG/WebP'},
+ {key:'prod_snake',group:'Product defaults',label:'Snake Plant default',w:1200,h:1200,fit:'cover',usage:'Default Snake Plant product image',format:'JPG/WebP'},
+ {key:'prod_money',group:'Product defaults',label:'Money Plant default',w:1200,h:1200,fit:'cover',usage:'Default Money Plant product image',format:'JPG/WebP'},
+ {key:'prod_peace',group:'Product defaults',label:'Peace Lily default',w:1200,h:1200,fit:'cover',usage:'Default Peace Lily product image',format:'JPG/WebP'},
+ {key:'prod_aloe',group:'Product defaults',label:'Aloe Vera default',w:1200,h:1200,fit:'cover',usage:'Default Aloe Vera product image',format:'JPG/WebP'},
+ {key:'prod_zz',group:'Product defaults',label:'ZZ Plant default',w:1200,h:1200,fit:'cover',usage:'Default ZZ Plant and featured Plant Care article image',format:'JPG/WebP'},
+ {key:'test1',group:'Review defaults',label:'Review avatar 1',w:600,h:600,fit:'cover',usage:'Homepage published review avatar',format:'JPG/WebP'},
+ {key:'test2',group:'Review defaults',label:'Review avatar 2',w:600,h:600,fit:'cover',usage:'Homepage published review avatar',format:'JPG/WebP'},
+ {key:'test3',group:'Review defaults',label:'Review avatar 3',w:600,h:600,fit:'cover',usage:'Homepage published review avatar',format:'JPG/WebP'}
+];
+function mediaSpec(key){return MEDIA_SPECS.find(x=>x.key===key)||null;}
+function mediaOverrides(){DB.settings.media=DB.settings.media&&typeof DB.settings.media==='object'?DB.settings.media:{};return DB.settings.media;}
+function mediaReset(key){const m=mediaOverrides();delete m[key];save();applyMediaAssets();paint();toast('Original website image restored');}
+function readManagedMedia(file,spec,done){
+  if(!file||!/^image\//.test(file.type)){toast('Please choose an image file',true);return;}
+  const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{
+    const tw=spec.w,th=spec.h,cv=document.createElement('canvas');cv.width=tw;cv.height=th;const cx=cv.getContext('2d');
+    if(spec.fit==='contain'){cx.clearRect(0,0,tw,th);const sc=Math.min(tw/img.width,th/img.height),w=img.width*sc,h=img.height*sc;cx.drawImage(img,(tw-w)/2,(th-h)/2,w,h);done(cv.toDataURL('image/png'),img.width,img.height);return;}
+    cx.fillStyle='#fff';cx.fillRect(0,0,tw,th);const sc=Math.max(tw/img.width,th/img.height),w=img.width*sc,h=img.height*sc;cx.drawImage(img,(tw-w)/2,(th-h)/2,w,h);done(cv.toDataURL('image/webp',0.88),img.width,img.height);
+  };img.onerror=()=>toast('That image could not be read',true);img.src=fr.result;};fr.readAsDataURL(file);
+}
+function applyMediaAssets(){
+  const get=k=>src('img:'+k),q=u=>'url("'+String(u||'').replace(/"/g,'%22')+'")';
+  let st=document.getElementById('go-media-overrides');if(!st){st=document.createElement('style');st.id='go-media-overrides';document.head.appendChild(st);}
+  st.textContent=`.account-welcome::after,.faq-hero::before,.policy-hero::after,.brand-hero::after,.admin-hero-preview-art{background-image:${q(get('hero'))}!important}.account-promo::after,.brand-hero.returns::after{background-image:${q(get('selfwater_plant'))}!important}.brand-hero.story::after{background-image:${q(get('community'))}!important}.brand-hero.contact::after{background-image:${q(get('content2'))}!important}.blog-hero::after,.blog-article-hero::after{background-image:${q(get('content3'))}!important}`;
+  document.querySelectorAll('link[rel="icon"],link[rel="apple-touch-icon"]').forEach(x=>x.href=get('favicon'));
+  const og=document.querySelector('meta[property="og:image"]');if(og)og.setAttribute('content',absoluteAsset('img:hero'));
+}
+function mediaForm(key){
+  const m=mediaSpec(key);if(!m)return;const custom=!!mediaOverrides()[key];
+  openModal('Replace — '+m.label,`<div class="media-upload-preview ${m.fit==='contain'?'logo':''}"><div class="preview"><img src="${src('img:'+m.key)}" alt="${esc(m.label)}"></div><div><div class="media-spec-list"><span><b>Recommended size:</b> ${m.w} × ${m.h} px</span><span><b>Aspect:</b> ${m.w}:${m.h}</span><span><b>Used in:</b> ${esc(m.usage)}</span><span><b>File:</b> ${esc(m.format)}</span></div><div class="field" style="margin-top:12px"><label>Choose replacement image</label><input class="inp" id="mediaFile" type="file" accept="image/*"><small class="img-size-hint">For the cleanest result, upload exactly ${m.w} × ${m.h} px. If the ratio differs, the website will centre-crop the photo to this size automatically.</small></div></div></div>`,`${custom?`<button class="btn btn-danger btn-sq" id="mediaRestore">Restore original</button>`:''}<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="mediaSave" disabled>Save image</button>`);
+  let ready=null,orig='';const fi=$('#mediaFile'),sv=$('#mediaSave');fi.onchange=e=>{const f=e.target.files[0];if(!f)return;readManagedMedia(f,m,(u,w,h)=>{ready=u;orig=w+' × '+h;sv.disabled=false;toast('Image ready — press Save image');});};
+  sv.onclick=()=>{if(!ready)return;mediaOverrides()[key]=ready;save();applyMediaAssets();closeLayer();paint();toast(m.label+' updated');};
+  const rr=$('#mediaRestore');if(rr)rr.onclick=()=>{closeLayer();mediaReset(key);};
+}
+function admMedia(){
+  const groups=[...new Set(MEDIA_SPECS.map(x=>x.group))];
+  const groupHtml=groups.map(g=>`<section class="media-group"><div class="media-group-head"><div><h3>${esc(g)}</h3><p>These are shared website images. Changing one updates every place that uses the same asset.</p></div></div><div class="media-grid">${MEDIA_SPECS.filter(x=>x.group===g).map(m=>`<article class="media-card ${m.fit==='contain'?'logo':''}"><div class="media-card-img"><img src="${src('img:'+m.key)}" alt="${esc(m.label)}" loading="lazy"></div><div class="media-card-body"><b>${esc(m.label)}</b><small>${esc(m.usage)}</small><span class="media-size">${ic('image',11)} ${m.w} × ${m.h} px</span><div class="media-actions"><button class="btn btn-line btn-sq" data-edit-media="${m.key}">${ic('edit',12)} Replace</button>${mediaOverrides()[m.key]?`<button class="btn btn-danger btn-sq" data-reset-media="${m.key}">Original</button>`:''}</div></div></article>`).join('')}</div></section>`).join('');
+  const dyn=[
+    ['products','Product photos','1200 × 1200 px','Square product cards + product detail page','box'],
+    ['categories','Category photos','1000 × 1000 px','Homepage category circles + category browsing','grid'],
+    ['blog','Blog cover photos','1200 × 800 px','Plant Care article cards and article covers','doc'],
+    ['reviews','Customer review photos','900 × 900 px','Review gallery / customer photo evidence','star'],
+    ['banners','Homepage slider images','979 × 322 px','Exact homepage slider artwork — keep this exact size','image']
+  ];
+  return adminShell('media',`<div class="media-guide-note"><b>Image size guide:</b> Replace images using the dimensions shown below. Keeping the same dimensions/aspect ratio prevents unwanted cropping, height changes and mobile layout shifts. Homepage slider artwork must stay exactly <b>979 × 322 px</b>.</div><section class="media-group"><div class="media-group-head"><div><h3>Images managed in their own sections</h3><p>These images belong to individual products/content, so edit them from the linked admin page.</p></div></div><div class="media-dynamic-grid">${dyn.map(x=>`<button class="media-dynamic-card" data-link="#/admin/${x[0]}"><span class="mi">${ic(x[4],16)}</span><b>${x[1]}</b><span class="size">${x[2]}</span><small>${x[3]}</small></button>`).join('')}</div></section>${groupHtml}`,'Media & Image Sizes','Change every shared website image from one place, with the correct replacement dimensions.');
+}
+
 /* ---------- admin: products ---------- */
 function admProducts(q){
   const term=(new URLSearchParams(q||'')).get('q')||'';
@@ -3418,7 +3500,7 @@ function productForm(id){
     <div class="field"><label>Photo</label>
       <div style="display:flex;gap:10px;align-items:center">${pic(p,'thumb')}
         <input class="inp" type="file" accept="image/*" id="pFile"></div>
-      <small style="color:var(--muted);font-size:11.5px">Upload your own photo, or leave it to keep the current one.</small></div>
+      <small class="img-size-hint">Recommended product photo: <b>1200 × 1200 px</b> (1:1 square). Upload your own photo, or leave it to keep the current one.</small></div>
     <label style="display:flex;gap:8px;align-items:center;font-size:13.5px"><input type="checkbox" name="active" ${p.active?'checked':''}> Show on website</label>
     <input type="hidden" name="id" value="${esc(p.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="pSave">${id==='new'?'Add product':'Save changes'}</button>`);
@@ -3450,7 +3532,7 @@ function catForm(id){
     <div class="field"><label>Name</label><input class="inp" name="name" data-v="name" data-label="Category name" value="${esc(c.name)}"></div>
     <div class="field"><label>Short description</label><input class="inp" name="desc" value="${esc(c.desc||'')}"></div>
     <div class="field"><label>Photo</label><div style="display:flex;gap:10px;align-items:center">${pic(c,'thumb')}
-      <input class="inp" type="file" accept="image/*" id="cFile"></div></div>
+      <input class="inp" type="file" accept="image/*" id="cFile"></div><small class="img-size-hint">Recommended category image: <b>1000 × 1000 px</b> (1:1 square).</small></div>
     <input type="hidden" name="id" value="${esc(c.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="cSave">Save</button>`);
   let ni=null; $('#cFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readImage(f,u=>{ni=u;toast('Photo ready — press save');});};
@@ -3564,37 +3646,18 @@ function admReviews(){
 <script>
 /* ---------- banners / offers / blog / pages ---------- */
 function admBanners(){
-  return adminShell('banners',`<div class="mgrid" style="grid-template-columns:repeat(3,1fr)">${DB.banners.map(b=>`<div class="mtile">
-    <span class="ph" style="aspect-ratio:1.8;position:relative">${pic(b)}
-      <span style="position:absolute;left:12px;bottom:12px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6)">
-      <small style="font-size:10px;letter-spacing:.1em">${esc(b.sub||'')}</small><br><b style="font-family:var(--serif);font-size:17px">${esc(b.title)}</b></span></span>
-    <span class="bd"><span style="display:flex;justify-content:space-between;align-items:center">
-      <span class="pill ${b.active?'green':'grey'}">${b.active?'Live':'Hidden'}</span><small>${esc(b.cta)}</small></span>
-      <span style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-sm btn-line btn-sq" data-edit-banner="${b.id}">Edit</button>
-      <button class="btn btn-sm btn-line btn-sq" data-toggle-banner="${b.id}">${b.active?'Hide':'Show'}</button>
-      <button class="btn btn-sm btn-danger btn-sq" data-del-banner="${b.id}">${ic('trash',13)}</button></span></span></div>`).join('')}</div>`,
-   'Banners & Sliders','The first banner marked live is what the homepage shows.',
-   `<button class="btn btn-primary btn-sq" data-edit-banner="new">${ic('plus',15)} Add New Banner</button>`);
+  const slides=homeHeroSlides();
+  return adminShell('banners',`<div class="media-guide-note"><b>Homepage slider:</b> All 4 slide images should be exactly <b>979 × 322 px</b>. This is the exact current banner dimension, so replacing with the same size keeps the homepage height and crop unchanged.</div><div class="mgrid" style="grid-template-columns:repeat(2,minmax(0,1fr))">${slides.map((b,i)=>`<div class="mtile"><span class="ph" style="aspect-ratio:979/322;background:#EEF4EF">${`<img src="${src(b.img)}" alt="${esc(b.alt||'Homepage slide')}" style="width:100%;height:100%;object-fit:cover">`}</span><span class="bd"><b>Slide ${i+1}</b><small>979 × 322 px · ${esc(b.link||'#/shop')}</small><span style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-sm btn-line btn-sq" data-edit-banner="${b.id}">${ic('edit',13)} Replace image / link</button></span></span></div>`).join('')}</div>`,'Homepage Slider','These are the exact 4 homepage slides customers see. Replace each one without changing the slider layout.');
+}
+function readHomeSlide(file,done){
+  if(!file||!/^image\//.test(file.type)){toast('Please choose an image file',true);return;}
+  const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{if(img.width!==979||img.height!==322){toast('Homepage slide must be exactly 979 × 322 px. Selected: '+img.width+' × '+img.height,true);return;}const cv=document.createElement('canvas');cv.width=979;cv.height=322;cv.getContext('2d').drawImage(img,0,0,979,322);done(cv.toDataURL('image/webp',0.92));};img.onerror=()=>toast('That image could not be read',true);img.src=fr.result;};fr.readAsDataURL(file);
 }
 function bannerForm(id){
-  const b=id==='new'?{id:'',title:'',sub:'',cta:'Shop now',link:'#/shop',art:'bush',img:'',active:true}:DB.banners.find(x=>x.id===id);
-  if(!b)return;
-  openModal(id==='new'?'Add banner':'Edit banner',`<form id="bForm" novalidate>
-    <div class="field"><label>Headline</label><input class="inp" name="title" data-v="text" data-label="Headline" value="${esc(b.title)}"></div>
-    <div class="field"><label>Small line above</label><input class="inp" name="sub" value="${esc(b.sub||'')}"></div>
-    <div class="row2"><div class="field"><label>Button text</label><input class="inp" name="cta" value="${esc(b.cta)}"></div>
-      <div class="field"><label>Button link</label><input class="inp" name="link" value="${esc(b.link)}"></div></div>
-    <div class="field"><label>Photo</label><div style="display:flex;gap:10px;align-items:center">${pic(b,'thumb')}
-      <input class="inp" type="file" accept="image/*" id="bFile"></div></div>
-    <label style="display:flex;gap:8px;align-items:center;font-size:13.5px"><input type="checkbox" name="active" ${b.active?'checked':''}> Show on homepage</label>
-    <input type="hidden" name="id" value="${esc(b.id)}"></form>`,
-    `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="bSave">Save banner</button>`);
-  let ni=null; $('#bFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readImage(f,u=>{ni=u;toast('Photo ready — press save');});};
-  $('#bSave').onclick=()=>{const f=$('#bForm'); if(!validateForm(f))return;
-    const d=Object.fromEntries(new FormData(f).entries());
-    const obj={id:d.id||uid('b'),title:d.title,sub:d.sub,cta:d.cta,link:d.link,active:!!d.active,art:b.art||'bush',img:ni||b.img||''};
-    if(d.id)Object.assign(DB.banners.find(x=>x.id===d.id),obj); else DB.banners.unshift(obj);
-    save();closeLayer();paint();toast('Banner saved');};
+  const slides=homeHeroSlides(),b=slides.find(x=>x.id===id);if(!b)return;
+  openModal('Edit homepage '+id.toUpperCase(),`<form id="bForm" novalidate><div class="field"><label>Current slide</label><div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#EEF4EF;aspect-ratio:979/322"><img src="${src(b.img)}" alt="${esc(b.alt||'Homepage slide')}" style="width:100%;height:100%;object-fit:cover"></div><small class="img-size-hint">Required replacement size: <b>979 × 322 px</b>. Keep the design/text inside this image exactly how you want it shown.</small></div><div class="field"><label>Slide image</label><input class="inp" type="file" accept="image/*" id="bFile"></div><div class="field"><label>Click destination</label><input class="inp" name="link" value="${esc(b.link||'#/shop')}" placeholder="#/shop"></div><div class="field"><label>Image description (SEO / accessibility)</label><input class="inp" name="alt" value="${esc(b.alt||'')}"></div><input type="hidden" name="id" value="${esc(b.id)}"></form>`, `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="bSave">Save slide</button>`);
+  let ni=null;$('#bFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readHomeSlide(f,u=>{ni=u;toast('979 × 322 slide ready — press save');});};
+  $('#bSave').onclick=()=>{const f=$('#bForm'),d=Object.fromEntries(new FormData(f).entries());const arr=DB.settings.homeSlides||SEED().settings.homeSlides.map(x=>({...x}));const i=arr.findIndex(x=>x.id===id);const cur=i>=0?arr[i]:{...b};const obj={...cur,id,img:ni||cur.img||b.img,link:d.link||'#/shop',alt:d.alt||b.alt||''};if(i>=0)arr[i]=obj;else arr.push(obj);DB.settings.homeSlides=arr;save();closeLayer();paint();toast('Homepage slide saved');};
 }
 function admOffers(){
   return adminShell('offers',`<div class="panel"><div class="scroll-x"><table class="tbl">
@@ -3650,7 +3713,7 @@ function blogForm(id){
     <div class="field"><label>One-line summary</label><input class="inp" name="excerpt" value="${esc(b.excerpt)}"></div>
     <div class="field"><label>Body</label><textarea class="inp" name="body" data-v="msg" data-label="Body" style="min-height:140px">${esc(b.body)}</textarea></div>
     <div class="field"><label>Cover photo</label><div style="display:flex;gap:10px;align-items:center">${pic(b,'thumb')}
-      <input class="inp" type="file" accept="image/*" id="gFile"></div></div>
+      <input class="inp" type="file" accept="image/*" id="gFile"></div><small class="img-size-hint">Recommended blog cover: <b>1200 × 800 px</b> (3:2 landscape).</small></div>
     <label style="display:flex;gap:8px;align-items:center;font-size:13.5px"><input type="checkbox" name="active" ${b.active?'checked':''}> Published</label>
     <input type="hidden" name="id" value="${esc(b.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="gSave">Save post</button>`);
@@ -3725,41 +3788,17 @@ function admSettings(){
    'Website Settings','These details show across the website and on invoices.');
 }
 function admAppearance(){
-  const s=DB.settings;
-  const snap={kicker:s.heroKicker||'',title:s.heroTitle||'',sub:s.heroSub||''};
+  const s=DB.settings,first=homeHeroSlides()[0];
   return adminShell('appearance',`
-   <div class="admin-preview-shell">
-    <div class="admin-preview-head"><div><h3>Storefront preview</h3><p>Compare the saved homepage with the text you are editing before you publish it.</p></div><a href="https://www.greenocean.co.in/" target="_blank" rel="noopener">Open live store ↗</a></div>
-    <div class="admin-preview-grid">
-      <div class="admin-preview-pane"><div class="admin-preview-label"><span>Before</span><span>Currently saved</span></div>
-        <div class="admin-hero-preview"><div class="admin-hero-preview-copy"><small>${esc(snap.kicker)}</small><h4>${esc(snap.title)}</h4><p>${esc(snap.sub)}</p></div><div class="admin-hero-preview-art"></div></div>
-      </div>
-      <div class="admin-preview-pane"><div class="admin-preview-label"><span>After</span><span>Live editing preview</span></div>
-        <div class="admin-hero-preview" id="appearanceAfterPreview"><div class="admin-hero-preview-copy"><small id="apKicker">${esc(snap.kicker)}</small><h4 id="apTitle">${esc(snap.title)}</h4><p id="apSub">${esc(snap.sub)}</p></div><div class="admin-hero-preview-art"></div></div>
-      </div>
-    </div>
-   </div>
-   <form id="appForm" class="two" novalidate>
-   <div class="panel"><div class="card-h"><h3>Homepage hero</h3></div>
-     <div class="field"><label>Small line above headline</label><input class="inp" name="heroKicker" value="${esc(s.heroKicker)}"></div>
-     <div class="field"><label>Headline</label><input class="inp" name="heroTitle" data-v="text" data-label="Headline" value="${esc(s.heroTitle)}"></div>
-     <div class="field"><label>Sub text</label><textarea class="inp" name="heroSub">${esc(s.heroSub)}</textarea></div>
-     <button class="btn btn-primary btn-sq">Save homepage</button></div>
+   <div class="admin-preview-shell"><div class="admin-preview-head"><div><h3>Storefront preview</h3><p>This is the current first homepage slide. The slider artwork already contains its own text and button design.</p></div><a href="https://www.greenocean.co.in/" target="_blank" rel="noopener">Open live store ↗</a></div><div style="border-radius:14px;overflow:hidden;border:1px solid #E0E7E2;background:#EEF4EF;aspect-ratio:979/322"><img src="${src(first.img)}" alt="Homepage first slide" style="width:100%;height:100%;object-fit:cover"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><a class="btn btn-primary btn-sq" href="#/admin/banners">${ic('image',15)} Edit 4 homepage slides</a><a class="btn btn-line btn-sq" href="#/admin/media">${ic('grid',15)} Media & image sizes</a></div></div>
+   <div class="two">
+   <div><div class="panel" style="margin-bottom:14px"><div class="card-h"><h3>Homepage slider artwork</h3></div><p style="font-size:13px;color:var(--muted);margin:0 0 10px">The homepage uses four complete banner images. Replace each banner in <b>Homepage Slider</b> using exactly <b>979 × 322 px</b>. Text shown inside those banners is part of the image itself.</p><a class="btn btn-line btn-sq" href="#/admin/banners">Open Homepage Slider</a></div><div class="panel"><div class="card-h"><h3>Website images</h3></div><p style="font-size:13px;color:var(--muted);margin:0 0 10px">Replace shared photos, logo, page backgrounds and see the exact recommended dimensions from one place.</p><a class="btn btn-line btn-sq" href="#/admin/media">${ic('image',15)} Open Media & Image Sizes</a></div></div>
    <div>
-     <div class="panel" style="margin-bottom:14px"><div class="card-h"><h3>Brand colour</h3></div>
-       <div style="display:flex;gap:10px;flex-wrap:wrap">${['#0F4632','#14563C','#1D5E4A','#215C3C','#2F7D5B','#1B4332'].map(c=>
-         `<button type="button" data-brand="${c}" style="width:40px;height:40px;border-radius:9px;background:${c};border:3px solid ${s.theme===c?'#111':'transparent'}" aria-label="Use ${c}"></button>`).join('')}</div>
-       <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Changes the header, buttons and footer shade across the website.</p></div>
-     <div class="panel"><div class="card-h"><h3>Danger zone</h3></div>
-       ${API.on?`<p style="font-size:13px;color:var(--muted);margin:0 0 10px">Throw away changes in this browser and load exactly what customers see on the live website.</p>
-       <button class="btn btn-danger btn-sq" type="button" data-act="reset">Reload live website data</button></div>`:
-       `<p style="font-size:13px;color:var(--muted);margin:0 0 10px">Reset everything back to the demo content. Orders and products you added will be lost.</p>
-       <button class="btn btn-danger btn-sq" type="button" data-act="reset">Reset store to demo data</button></div>`}
-     <div class="panel" style="margin-top:14px;border-color:#CFE3D6;background:var(--green-50)"><div class="card-h"><h3>Ready to launch?</h3></div>
-       <p style="font-size:13px;color:var(--muted);margin:0 0 10px">Removes the sample orders, customers, accounts, reviews and subscribers, and resets every product's star rating to zero. Your products, photos, banners, coupons, blog and pages stay.</p>
-       <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Showing made-up reviews or ratings to real buyers is not allowed under Indian consumer rules, so do this before you start selling.</p>
-       <button class="btn btn-primary btn-sq" type="button" data-act="launch">${ic('check',15)} Remove sample data</button></div></div></form>`,
-   'Appearance','Edit your storefront and review changes before publishing.');
+     <div class="panel" style="margin-bottom:14px"><div class="card-h"><h3>Brand colour</h3></div><div style="display:flex;gap:10px;flex-wrap:wrap">${['#0F4632','#14563C','#1D5E4A','#215C3C','#2F7D5B','#1B4332'].map(c=>`<button type="button" data-brand="${c}" style="width:40px;height:40px;border-radius:9px;background:${c};border:3px solid ${s.theme===c?'#111':'transparent'}" aria-label="Use ${c}"></button>`).join('')}</div><p style="font-size:12px;color:var(--muted);margin:10px 0 0">Changes the header, buttons and footer shade across the website.</p></div>
+     <div class="panel"><div class="card-h"><h3>Danger zone</h3></div>${API.on?`<p style="font-size:13px;color:var(--muted);margin:0 0 10px">Throw away changes in this browser and load exactly what customers see on the live website.</p><button class="btn btn-danger btn-sq" type="button" data-act="reset">Reload live website data</button>`:`<p style="font-size:13px;color:var(--muted);margin:0 0 10px">Reset everything back to the demo content. Orders and products you added will be lost.</p><button class="btn btn-danger btn-sq" type="button" data-act="reset">Reset store to demo data</button>`}</div>
+     <div class="panel" style="margin-top:14px;border-color:#CFE3D6;background:var(--green-50)"><div class="card-h"><h3>Ready to launch?</h3></div><p style="font-size:13px;color:var(--muted);margin:0 0 10px">Removes the sample orders, customers, accounts, reviews and subscribers, and resets every product's star rating to zero. Your products, photos, homepage slides, coupons, blog and pages stay.</p><p style="font-size:13px;color:var(--muted);margin:0 0 12px">Showing made-up reviews or ratings to real buyers is not allowed under Indian consumer rules, so do this before you start selling.</p><button class="btn btn-primary btn-sq" type="button" data-act="launch">${ic('check',15)} Remove sample data</button></div>
+   </div></div>`,
+   'Appearance','Brand styling, homepage slider access and media controls.');
 }
 function admReports(){
   const done=DB.orders.filter(o=>o.status!=='Cancelled');
@@ -3877,7 +3916,7 @@ function paint(){
       const page=seg[1]||'dashboard';
       const map={dashboard:admDashboard,products:()=>admProducts(query),categories:admCategories,orders:()=>admOrders(query),returns:admReturns,
         customers:admCustomers,inventory:admInventory,banners:admBanners,offers:admOffers,blog:admBlog,reviews:admReviews,
-        pages:admPages,newsletter:admNewsletter,messages:admMessages,settings:admSettings,appearance:admAppearance,reports:admReports,account:admAccount};
+        pages:admPages,newsletter:admNewsletter,messages:admMessages,settings:admSettings,appearance:admAppearance,media:admMedia,reports:admReports,account:admAccount};
       html=(map[page]||admDashboard)();
     }
   } else {
@@ -3902,6 +3941,7 @@ function paint(){
   root.innerHTML=html;
   upgradeInternalLinks(root);
   document.documentElement.style.setProperty('--green-800',DB.settings.theme||'#0F4632');
+  applyMediaAssets();
   applyPageSEO(seg,query);
   if(seg[0]!=='admin')requestAnimationFrame(()=>{initPremiumMotion(root);initHomeHeroSlider(root);});
   if(seg[0]==='admin'&&DB.admin&&query.includes('new=1')){
@@ -3922,7 +3962,7 @@ document.addEventListener('click',e=>{
   if(e.target.classList&&e.target.classList.contains('ov')){closeLayer();return;}
   const internal=e.target.closest&&e.target.closest('a[href^="/"]');
   if(internal&&internal.target!=='_blank'&&!internal.hasAttribute('download')){e.preventDefault();if(internal.dataset.close!==undefined)closeLayer();go(internal.getAttribute('href'));return;}
-  const t=e.target.closest('[data-close]:not(.ov),[data-add],[data-buy],[data-wish],[data-qty],[data-rm],[data-link],[data-act],[data-edit-product],[data-del-product],[data-toggle-product],[data-edit-cat],[data-del-cat],[data-view-order],[data-fulfill-order],[data-request-return],[data-view-return],[data-return-status],[data-advance],[data-cancel-admin],[data-cancel],[data-reorder],[data-view-cust],[data-del-cust],[data-adjust-stock],[data-stock-save],[data-edit-banner],[data-del-banner],[data-toggle-banner],[data-edit-coupon],[data-del-coupon],[data-toggle-coupon],[data-edit-blog],[data-del-blog],[data-edit-page],[data-del-page],[data-pub-review],[data-hide-review],[data-del-review],[data-del-sub],[data-brand],[data-msg-read],[data-msg-del]');
+  const t=e.target.closest('[data-close]:not(.ov),[data-add],[data-buy],[data-wish],[data-qty],[data-rm],[data-link],[data-act],[data-edit-product],[data-del-product],[data-toggle-product],[data-edit-cat],[data-del-cat],[data-view-order],[data-fulfill-order],[data-request-return],[data-view-return],[data-return-status],[data-advance],[data-cancel-admin],[data-cancel],[data-reorder],[data-view-cust],[data-del-cust],[data-adjust-stock],[data-stock-save],[data-edit-banner],[data-del-banner],[data-toggle-banner],[data-edit-media],[data-reset-media],[data-edit-coupon],[data-del-coupon],[data-toggle-coupon],[data-edit-blog],[data-del-blog],[data-edit-page],[data-del-page],[data-pub-review],[data-hide-review],[data-del-review],[data-del-sub],[data-brand],[data-msg-read],[data-msg-del]');
   if(!t)return;
   const d=t.dataset;
   if(d.close!==undefined){closeLayer(); if(t.tagName!=='A')return; return;}
@@ -3977,6 +4017,8 @@ document.addEventListener('click',e=>{
       if(API.on){const r=await API.call('/api/admin/stock/'+encodeURIComponent(p.id),{method:'PATCH',admin:true,body:{stock:next,reason}});btn.disabled=false;btn.textContent=label;if(!r.ok){toast(r.error,true);return;}p.stock=next;DB.storeVer=r.updatedAt||DB.storeVer;closeLayer();save();paint();toast(p.name+' stock updated');loadInbox(true);}
       else{p.stock=next;save();closeLayer();paint();toast(p.name+' stock adjusted locally');}};return;}
   if(d.editBanner){bannerForm(d.editBanner);return;}
+  if(d.editMedia){mediaForm(d.editMedia);return;}
+  if(d.resetMedia){confirmBox('Restore the original website image?',()=>mediaReset(d.resetMedia));return;}
   if(d.delBanner){confirmBox('Delete this banner?',()=>{DB.banners=DB.banners.filter(x=>x.id!==d.delBanner);save();paint();toast('Banner deleted');});return;}
   if(d.toggleBanner){const b=DB.banners.find(x=>x.id===d.toggleBanner);b.active=!b.active;save();paint();return;}
   if(d.editCoupon){couponForm(d.editCoupon);return;}
