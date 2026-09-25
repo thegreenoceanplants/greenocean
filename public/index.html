@@ -151,6 +151,16 @@ button svg,a svg{pointer-events:none}
 @media(max-width:980px){.home-slide{grid-template-columns:1fr;gap:18px}.home-copy{padding:28px 24px 24px}.home-title{font-size:clamp(32px,8vw,46px)}.hero-visual{min-height:340px}.hero-note{right:14px;top:14px;max-width:180px}.hero-feature{max-width:calc(100% - 28px)}}
 @media(max-width:680px){.home-slider{padding:24px 0 28px}.home-copy{padding:24px 18px 20px;border-radius:22px}.home-kicker{margin-bottom:16px}.home-desc{font-size:14px}.home-quote{padding:14px}.hero-visual{min-height:285px;border-radius:22px}.hero-note{padding:12px 14px;border-radius:18px;max-width:145px}.hero-note .script{font-size:22px}.hero-feature{left:12px;right:12px;bottom:12px;max-width:none;padding:14px 15px;border-radius:18px}.home-slider-nav{flex-direction:column;align-items:flex-start}.home-slider-ctrls{width:100%;justify-content:space-between}}
 
+
+/* V14 — ONLY desktop hero height correction: keep all slides the same compact height as the plant image */
+@media(min-width:981px){
+  .home-slider{padding:20px 0 22px}
+  .home-slider-stage,.home-slide{height:420px!important;min-height:420px!important;max-height:420px!important}
+  .home-slide{align-items:center;overflow:hidden}
+  .home-copy{width:121.951%;transform:scale(.82);transform-origin:left center}
+  .hero-visual{height:420px!important;min-height:420px!important;max-height:420px!important}
+}
+
 /* ---------- Trust bar ---------- */
 .trust{background:#fff;border-bottom:1px solid var(--line)}
 .trust-in{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 0}
@@ -1774,7 +1784,7 @@ function initHomeHeroSlider(root=document){
   const slides=[...wrap.querySelectorAll('.home-slide')];
   const dots=[...wrap.querySelectorAll('.home-dot')];
   let i=+wrap.dataset.index||0;
-  const fit=()=>{if(!stage||!slides.length)return;const h=Math.max(...slides.map(s=>s.scrollHeight||s.offsetHeight||0));if(h)stage.style.height=h+'px';};
+  const fit=()=>{if(!stage||!slides.length)return;if(window.matchMedia('(min-width:981px)').matches){stage.style.height='420px';return;}const h=Math.max(...slides.map(s=>s.scrollHeight||s.offsetHeight||0));if(h)stage.style.height=h+'px';};
   const set=(next)=>{
     i=(next+slides.length)%slides.length;
     wrap.dataset.index=i;
