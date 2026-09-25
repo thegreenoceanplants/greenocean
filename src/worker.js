@@ -73,6 +73,28 @@ async function findOrder(env, id) {
   }
   return null;
 }
+
+const firstOrderOnly = (c) => !!(c && (c.firstOrderOnly || String(c.code || "").toUpperCase() === "FREESHIP"));
+async function hasPriorOrder(env, email) {
+  email = String(email || "").trim().toLowerCase();
+  if (!email) return false;
+  const marker = "ordered:" + email;
+  if (await env.DATA.get(marker)) return true;
+  let cursor;
+  do {
+    const l = await env.DATA.list({ prefix: "order:", limit: 1000, ...(cursor ? { cursor } : {}) });
+    for (const k of l.keys) {
+      const order = await env.DATA.get(k.name, "json");
+      if (order && String(order.email || "").trim().toLowerCase() === email) {
+        await env.DATA.put(marker, "1");
+        return true;
+      }
+    }
+    if (l.list_complete) break;
+    cursor = l.cursor;
+  } while (cursor);
+  return false;
+}
 function pushOrderEvent(order, status, note = "") {
   order.events = Array.isArray(order.events) ? order.events : [];
   order.events.push({ status, note: String(note || "").slice(0, 180), at: new Date().toISOString() });
@@ -210,6 +232,25 @@ async function api(req, env, url) {
     return isAdmin(req, env) ? json({ ok: true }) : bad("Wrong admin password.", 401);
   }
 
+  /* coupon validation — used by checkout before the customer proceeds to payment */
+  if (p === "/api/coupons/validate" && m === "POST") {
+    let d; try { d = await readJSON(req); } catch { return bad("Could not read the coupon request."); }
+    const store = (await getStore(env)) || {};
+    const code = String(d.code || "").trim().toUpperCase();
+    const coupon = (store.coupons || []).find((c) => c && String(c.code || "").toUpperCase() === code);
+    if (!code) return bad("Please enter a coupon code.");
+    if (!coupon) return bad(`“${code}” is not a valid coupon code.`);
+    if (!coupon.active) return bad(`“${code}” is not active right now.`);
+    const sub = Math.max(0, Number(d.subtotal || 0));
+    if (sub < Number(coupon.min || 0)) return bad(`“${code}” works on orders of ${inr(coupon.min || 0)} or more.`);
+    if (firstOrderOnly(coupon)) {
+      const email = String(d.email || "").trim().toLowerCase();
+      if (!RULES.email(email)) return bad("Enter your delivery email before applying this first-order coupon.");
+      if (await hasPriorOrder(env, email)) return bad(`“${code}” is a one-time first-order offer and cannot be used again.`);
+    }
+    return json({ ok: true, code: coupon.code, firstOrderOnly: firstOrderOnly(coupon) });
+  }
+
   /* orders */
   if (p === "/api/orders" && m === "POST") {
     if (await limited(env, req, "order", 10, 600)) return bad("Too many orders from this connection. Please try again in a few minutes.", 429);
@@ -239,8 +280,15 @@ async function api(req, env, url) {
     const sub = items.reduce((x, i) => x + i.price * i.qty, 0);
     let off = 0, ship = sub >= (s.freeShipAbove ?? 499) ? 0 : (s.shipFee ?? 59), coupon = "";
     if (d.coupon) {
-      const c = (store.coupons || []).find((k) => k.active && k.code === String(d.coupon).toUpperCase());
-      if (c && sub >= (c.min || 0)) { coupon = c.code; if (c.type === "percent") off = Math.round((sub * c.value) / 100); if (c.type === "ship") ship = 0; }
+      const code = String(d.coupon).trim().toUpperCase();
+      const c = (store.coupons || []).find((k) => k && String(k.code || "").toUpperCase() === code);
+      if (!c) return bad(`“${code}” is not a valid coupon code.`);
+      if (!c.active) return bad(`“${code}” is not active right now.`);
+      if (sub < Number(c.min || 0)) return bad(`“${code}” works on orders of ${inr(c.min || 0)} or more.`);
+      if (firstOrderOnly(c) && await hasPriorOrder(env, String(d.email).trim().toLowerCase())) return bad(`“${code}” is a one-time first-order offer and cannot be used again.`);
+      coupon = String(c.code || code).toUpperCase();
+      if (c.type === "percent") off = Math.round((sub * Number(c.value || 0)) / 100);
+      if (c.type === "ship") ship = 0;
     }
     const id = "GO" + todayIST().slice(2).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000);
     const createdAt = new Date().toISOString();
@@ -252,6 +300,7 @@ async function api(req, env, url) {
     const orderKey = "order:" + order.createdAt + ":" + id;
     await env.DATA.put(orderKey, JSON.stringify(order));
     await env.DATA.put("orderid:" + id, orderKey);
+    await env.DATA.put("ordered:" + order.email, "1");
     // Inventory is reserved immediately when the order is accepted.
     if (Array.isArray(store.products)) {
       const logs = [];
@@ -388,7 +437,9 @@ async function api(req, env, url) {
     let d; try { d = await readJSON(req); } catch { return bad("Could not read the review."); }
     const rating = parseInt(d.rating, 10);
     if (!RULES.name(d.name) || !RULES.text(d.text, 3, 1000) || !(rating >= 1 && rating <= 5) || !RULES.text(d.product, 2, 80)) return bad("Please fill the review correctly.");
-    const rv = { id: "r" + Date.now().toString(36), product: String(d.product), name: String(d.name).trim(), rating, text: String(d.text).trim(), date: todayIST(), status: "Pending" };
+    const photo = String(d.photo || "");
+    if (photo && (!/^data:image\/jpeg;base64,/i.test(photo) || photo.length > 160000)) return bad("That review photo is too large or is not a supported image.");
+    const rv = { id: "r" + Date.now().toString(36), product: String(d.product), name: String(d.name).trim(), rating, text: String(d.text).trim(), ...(photo ? { photo } : {}), date: todayIST(), status: "Pending" };
     await env.DATA.put("rev:" + rv.id, JSON.stringify(rv));
     return json({ ok: true });
   }
@@ -503,6 +554,92 @@ async function api(req, env, url) {
   return bad("Not found.", 404);
 }
 
+
+/* ---------- Clean routes, crawlable metadata & structured data ---------- */
+const xmlEsc = (v) => String(v == null ? "" : v).replace(/[<>&"']/g, (c) => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&apos;"}[c]));
+function siteBase(store, url) {
+  const d = String(store?.settings?.domain || "").trim().replace(/\/+$/, "");
+  if (/^https?:\/\//i.test(d)) return d;
+  if (/(^|\.)greenocean\.co\.in$/i.test(url.hostname)) return "https://www.greenocean.co.in";
+  return url.origin;
+}
+function cleanPathname(p) { p = String(p || "/").replace(/\/{2,}/g, "/"); return p !== "/" ? p.replace(/\/+$/, "") : p; }
+function isAppRoute(path) {
+  path = cleanPathname(path);
+  return path === "/" || /^\/(shop|product(?:\/[^/]+)?|blog(?:\/[^/]+)?|page(?:\/[^/]+)?|cart|wishlist|checkout|thanks(?:\/[^/]+)?|orders|account|login|signup|sitemap|admin(?:\/[^/]+)?)$/.test(path);
+}
+function pageParts(store, url) {
+  const path = cleanPathname(url.pathname), seg = path.split("/").filter(Boolean), base = siteBase(store, url);
+  const builtinImages={"img:prod_snake":"/assets/img/prod_snake.jpg?v=1998f728","img:prod_money":"/assets/img/prod_money.jpg?v=30b0e63f","img:prod_peace":"/assets/img/prod_peace.jpg?v=ac88d711","img:prod_aloe":"/assets/img/prod_aloe.jpg?v=1446cc53","img:prod_zz":"/assets/img/prod_zz.jpg?v=7d864a9e","img:hero":"/assets/img/hero.jpg?v=5f203695"};
+  let title = store?.settings?.metaTitle || "Green Ocean — Plants, Planters & Gifts";
+  let desc = store?.settings?.metaDesc || "Healthy nursery-fresh plants, planters and gifts delivered across India.";
+  let robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
+  const schemas = [];
+  const abs = (v) => { if (!v) return ""; const raw=builtinImages[String(v)]||String(v); if(/^data:/i.test(raw))return ""; try { return new URL(raw, base).href; } catch { return ""; } };
+  const biz = {"@context":"https://schema.org","@type":"LocalBusiness","@id":base+"/#business",name:store?.settings?.store||"Green Ocean",url:base+"/",image:base+"/assets/img/hero.jpg",logo:base+"/assets/img/logo.png",telephone:store?.settings?.phone||"",email:store?.settings?.email||"",address:{"@type":"PostalAddress",streetAddress:"Balihari",addressLocality:"Dhanbad",addressRegion:"Jharkhand",postalCode:"828116",addressCountry:"IN"},priceRange:"₹₹"};
+  const crumbs = (items) => ({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:items.map((x,i)=>({"@type":"ListItem",position:i+1,name:x[0],item:base+x[1]}))});
+  const privatePage = ["admin","account","orders","cart","checkout","thanks","login","signup","wishlist"].includes(seg[0]||"");
+  if (privatePage) robots = "noindex,follow"; else schemas.push(biz);
+  if (!seg.length) {
+    title = "Green Ocean — Buy Indoor Plants, Planters & Plant Gifts Online";
+    schemas.push(crumbs([["Home","/"]]));
+  } else if (seg[0] === "product" && seg[1]) {
+    const product = (store?.products||[]).find(x=>String(x.id)===seg[1]);
+    if (product) {
+      const category=(store?.categories||[]).find(c=>c.id===product.cat);
+      title = `${product.name} | Buy Online at Green Ocean`; desc = product.desc || product.sub || desc;
+      const revs=(store?.reviews||[]).filter(r=>r.status==="Published"&&r.product===product.name);
+      const ps={"@context":"https://schema.org","@type":"Product","@id":base+path+"#product",name:product.name,description:product.desc||product.sub||"",image:[abs(product.img)||base+"/assets/img/hero.jpg"],sku:String(product.id),brand:{"@type":"Brand",name:"Green Ocean"},offers:{"@type":"Offer",url:base+path,priceCurrency:"INR",price:Number(product.price||0).toFixed(2),availability:Number(product.stock||0)>0?"https://schema.org/InStock":"https://schema.org/OutOfStock",itemCondition:"https://schema.org/NewCondition",seller:{"@id":base+"/#business"}}};
+      if(revs.length){const avg=revs.reduce((a,r)=>a+Number(r.rating||0),0)/revs.length;ps.aggregateRating={"@type":"AggregateRating",ratingValue:avg.toFixed(1),reviewCount:revs.length};ps.review=revs.slice(0,8).map(r=>({"@type":"Review",author:{"@type":"Person",name:r.name},datePublished:r.date,reviewBody:r.text,reviewRating:{"@type":"Rating",ratingValue:Number(r.rating||0),bestRating:5,worstRating:1},...(r.photo?{image:r.photo}:{})}));}
+      schemas.push(ps,crumbs([["Home","/"],["Shop","/shop"],[category?.name||"Category","/shop?cat="+encodeURIComponent(product.cat)],[product.name,path]]));
+    }
+  } else if (seg[0] === "shop") {
+    const catId=url.searchParams.get("cat"),category=(store?.categories||[]).find(c=>c.id===catId),items=(store?.products||[]).filter(p=>p.active!==false&&(!category||p.cat===category.id));
+    title=category?`${category.name} | Green Ocean Online Nursery`:"Shop Plants, Planters & Gardening | Green Ocean";desc=category?(category.desc||`Shop ${category.name} from Green Ocean.`):"Shop nursery-fresh plants, planters, gardening essentials and plant gifts from Green Ocean.";
+    schemas.push({"@context":"https://schema.org","@type":"CollectionPage",name:category?.name||"Plants, Planters & Gardening",url:base+path+(url.search||""),mainEntity:{"@type":"ItemList",itemListElement:items.slice(0,24).map((p,i)=>({"@type":"ListItem",position:i+1,url:base+"/product/"+encodeURIComponent(p.id),name:p.name}))}},crumbs(category?[["Home","/"],["Shop","/shop"],[category.name,"/shop?cat="+encodeURIComponent(category.id)]]:[["Home","/"],["Shop","/shop"]]));
+  } else if (seg[0] === "page" && seg[1]) {
+    const pg=(store?.pages||[]).find(x=>x.slug===seg[1]); if(pg){title=`${pg.title} | Green Ocean`;desc=String(pg.body||"").replace(/\s+/g," ").slice(0,155)||desc;schemas.push(crumbs([["Home","/"],[pg.title,path]]));
+      if(pg.slug==="faq"){const blocks=String(pg.body||"").split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean),qa=blocks.map(block=>{const m=block.match(/^(.+?)\s+[—–-]\s+([\s\S]+)$/);return m?{q:m[1].trim(),a:m[2].trim()}:null;}).filter(Boolean);if(qa.length)schemas.push({"@context":"https://schema.org","@type":"FAQPage",mainEntity:qa.map(x=>({"@type":"Question",name:x.q,acceptedAnswer:{"@type":"Answer",text:x.a}}))});}
+    }
+  } else if (seg[0] === "blog") {
+    const post=seg[1]&&(store?.blogs||[]).find(x=>String(x.id)===seg[1]);title=post?`${post.title} | Green Ocean Plant Care`:"Green Ocean Plant Care — Guides & Tips";desc=post?String(post.excerpt||post.body||"").replace(/\s+/g," ").slice(0,155):"Practical plant care guides for watering, light, repotting and healthier indoor plants.";schemas.push(crumbs(post?[["Home","/"],["Plant Care","/blog"],[post.title,path]]:[["Home","/"],["Plant Care","/blog"]]));
+  }
+  let canonical = base + path;
+  if (seg[0] === "shop") { const c=url.searchParams.get("cat"); if(c) canonical += "?cat="+encodeURIComponent(c); }
+  return { title, desc, robots, canonical, schemas };
+}
+function replaceTag(html, re, replacement) { return re.test(html) ? html.replace(re, replacement) : html.replace("</head>", replacement+"\n</head>"); }
+function injectSEO(html, parts) {
+  html = replaceTag(html, /<title>[\s\S]*?<\/title>/i, `<title>${esc(parts.title)}</title>`);
+  html = replaceTag(html, /<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${esc(parts.desc)}">`);
+  html = replaceTag(html, /<meta\s+name=["']robots["'][^>]*>/i, `<meta name="robots" content="${esc(parts.robots)}">`);
+  html = replaceTag(html, /<link\s+rel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${esc(parts.canonical)}">`);
+  html = replaceTag(html, /<meta\s+property=["']og:title["'][^>]*>/i, `<meta property="og:title" content="${esc(parts.title)}">`);
+  html = replaceTag(html, /<meta\s+property=["']og:description["'][^>]*>/i, `<meta property="og:description" content="${esc(parts.desc)}">`);
+  html = replaceTag(html, /<meta\s+property=["']og:url["'][^>]*>/i, `<meta property="og:url" content="${esc(parts.canonical)}">`);
+  const jsonld=(parts.schemas||[]).filter(Boolean).map((x,i)=>`<script type="application/ld+json" data-ssr-schema="${i}">${JSON.stringify(x).replace(/</g,"\\u003c")}</script>`).join("\n");
+  if(jsonld)html=html.replace("</head>",jsonld+"\n</head>");
+  return html;
+}
+async function serveApp(req, env, url) {
+  const store=(await getStore(env))||{};
+  const indexURL=new URL("/index.html",url.origin);
+  const ar=await env.ASSETS.fetch(new Request(indexURL,{method:"GET",headers:req.headers}));
+  if(!ar.ok)return ar;
+  const html=injectSEO(await ar.text(),pageParts(store,url));
+  const h=new Headers(ar.headers);h.set("content-type","text/html; charset=UTF-8");h.set("cache-control","no-cache");
+  return new Response(html,{status:200,headers:h});
+}
+async function serveSitemap(env,url){
+  const store=(await getStore(env))||{},base=siteBase(store,url),paths=["/","/shop","/blog","/page/story","/page/contact","/page/faq","/page/shipping","/page/returns","/page/privacy","/page/terms"];
+  for(const c of (store.categories||[]))paths.push("/shop?cat="+encodeURIComponent(c.id));
+  for(const p of (store.products||[]).filter(x=>x.active!==false))paths.push("/product/"+encodeURIComponent(p.id));
+  for(const b of (store.blogs||[]).filter(x=>x.active!==false))paths.push("/blog/"+encodeURIComponent(b.id));
+  const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(paths)].map(p=>`  <url><loc>${xmlEsc(base+p)}</loc></url>`).join("\n")}\n</urlset>`;
+  return new Response(xml,{headers:{"content-type":"application/xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
+}
+async function serveRobots(env,url){const store=(await getStore(env))||{},base=siteBase(store,url);return new Response(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /checkout\nDisallow: /account\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nSitemap: ${base}/sitemap.xml\n`,{headers:{"content-type":"text/plain; charset=UTF-8","cache-control":"public, max-age=3600"}});}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
@@ -510,6 +647,17 @@ export default {
       try { return await api(req, env, url); }
       catch (e) { return bad("Something went wrong on our side. Please try again.", 500); }
     }
-    return env.ASSETS.fetch(req);
+    if (req.method === "GET" && cleanPathname(url.pathname) === "/sitemap.xml") return serveSitemap(env, url);
+    if (req.method === "GET" && cleanPathname(url.pathname) === "/robots.txt") return serveRobots(env, url);
+    if (req.method === "GET" && isAppRoute(url.pathname)) {
+      try { return await serveApp(req, env, url); }
+      catch (e) { return bad("The website could not be loaded right now.", 500); }
+    }
+    const asset = await env.ASSETS.fetch(req);
+    if (asset.ok && /\/assets\//.test(url.pathname)) {
+      const h = new Headers(asset.headers); h.set("cache-control", url.searchParams.has("v") ? "public, max-age=31536000, immutable" : "public, max-age=86400");
+      return new Response(asset.body, { status: asset.status, headers: h });
+    }
+    return asset;
   },
 };
