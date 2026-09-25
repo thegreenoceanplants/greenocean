@@ -9,8 +9,6 @@
  * Secrets (Cloudflare → Worker → Settings → Variables and Secrets):
  *   ADMIN_PASSWORD         required to change anything from the admin panel
  *   BREVO_API_KEY          optional — sends thank-you emails to customers
- *   SUPABASE_URL                optional — e.g. https://kkuxyrwklyszargqfgzw.supabase.co, used to mark real registered customers in the admin panel
- *   SUPABASE_SERVICE_ROLE_KEY   optional — Supabase → Settings → API → service_role key (secret, NEVER the anon key)
  * Variables:
  *   OWNER_EMAIL            where order / contact emails go (must be verified in Email Routing)
  *   FROM_EMAIL             sender address on your domain, e.g. website@greenocean.co.in
@@ -48,6 +46,51 @@ async function readJSON(req, limit = 200000) {
   return JSON.parse(text || "{}");
 }
 async function getStore(env) { return (await env.DATA.get("store", "json")) || null; }
+
+async function saveStore(env, store, origin = "") {
+  if (!store || !Array.isArray(store.products)) return null;
+  store.updatedAt = new Date().toISOString();
+  await env.DATA.put("store", JSON.stringify(store));
+  await env.DATA.put("ver", store.updatedAt);
+  if (origin && typeof caches !== "undefined") {
+    try { await caches.default.delete(new Request(origin + "/api/version")); } catch (e) {}
+  }
+  return store.updatedAt;
+}
+async function logInventory(env, { productId, productName, before, after, reason, ref = "", actor = "system" }) {
+  const at = new Date().toISOString();
+  const entry = { id: crypto.randomUUID(), productId, productName, before: Number(before || 0), after: Number(after || 0),
+    delta: Number(after || 0) - Number(before || 0), reason: String(reason || "Stock update").slice(0, 140), ref: String(ref || "").slice(0, 80), actor, at, date: todayIST() };
+  await env.DATA.put(`invlog:${at}:${entry.id}`, JSON.stringify(entry));
+  return entry;
+}
+async function findOrder(env, id) {
+  const idx = await env.DATA.get("orderid:" + id);
+  if (idx) { const order = await env.DATA.get(idx, "json"); if (order) return { key: idx, order }; }
+  const l = await env.DATA.list({ prefix: "order:", limit: 1000 });
+  for (const k of l.keys) {
+    if (k.name.endsWith(":" + id)) { const order = await env.DATA.get(k.name, "json"); if (order) return { key: k.name, order }; }
+  }
+  return null;
+}
+function pushOrderEvent(order, status, note = "") {
+  order.events = Array.isArray(order.events) ? order.events : [];
+  order.events.push({ status, note: String(note || "").slice(0, 180), at: new Date().toISOString() });
+  if (order.events.length > 40) order.events = order.events.slice(-40);
+}
+function orderItemsAmount(order, reqItems) {
+  const wanted = Array.isArray(reqItems) ? reqItems : [];
+  let total = 0;
+  const items = [];
+  for (const w of wanted) {
+    const oi = (order.items || []).find((i) => String(i.id) === String(w.id));
+    if (!oi) continue;
+    const qty = Math.max(1, Math.min(Number(oi.qty || 1), parseInt(w.qty, 10) || 1));
+    items.push({ id: oi.id, name: oi.name, qty, price: Number(oi.price || 0) });
+    total += Number(oi.price || 0) * qty;
+  }
+  return { items, total };
+}
 
 /* strip anything private before the store is published */
 function publicStore(s) {
@@ -121,6 +164,14 @@ function shell(title, inner, env) {
 }
 const row = (k, v) => `<tr><td style="padding:6px 0;color:#6B7A72;width:130px;vertical-align:top">${esc(k)}</td><td style="padding:6px 0">${esc(v)}</td></tr>`;
 
+async function mailOrderUpdate(env, order, title, message) {
+  if (!order || !RULES.email(order.email)) return { sent: false };
+  const track = order.trackingUrl ? `<p style="margin:14px 0"><a href="${esc(order.trackingUrl)}" style="display:inline-block;background:#0F4632;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px">Track shipment</a></p>` : "";
+  const ship = order.awb || order.courier ? `<table style="width:100%;font-size:14px">${order.courier ? row("Courier", order.courier) : ""}${order.awb ? row("AWB / Tracking", order.awb) : ""}</table>` : "";
+  return mailCustomer(env, { to: order.email, name: order.name, subject: `${title} — ${order.id}`,
+    html: shell(title, `<p style="font-size:15px;line-height:1.65">${esc(message)}</p>${ship}${track}<p style="font-size:13px;color:#6B7A72">Order ${esc(order.id)} · ${inr(order.total)}</p>`, env) });
+}
+
 /* ---------- API ---------- */
 async function api(req, env, url) {
   const p = url.pathname.replace(/\/+$/, "");
@@ -179,7 +230,9 @@ async function api(req, env, url) {
       const price = pr ? Number(pr.price) : Number(it.price);
       if (!pr && !store.products) { /* store not published yet — accept browser price */ }
       else if (!pr) return bad(`“${String(it.name || it.id).slice(0, 40)}” is no longer available.`);
+      if (pr && pr.active === false) return bad(`“${String(pr.name || it.id).slice(0, 40)}” is currently unavailable.`);
       if (!(price > 0)) return bad("A product in your basket has no price.");
+      if (pr && Number(pr.stock || 0) < qty) return bad(`Only ${Math.max(0, Number(pr.stock || 0))} of “${String(pr.name || it.id).slice(0, 40)}” is left in stock.`);
       items.push({ id: String(it.id), name: pr ? pr.name : String(it.name || "").slice(0, 80), price, qty, art: pr ? pr.art : it.art || "", img: pr && pr.img && pr.img.startsWith("img:") ? pr.img : "" });
     }
     const s = store.settings || {};
@@ -190,11 +243,26 @@ async function api(req, env, url) {
       if (c && sub >= (c.min || 0)) { coupon = c.code; if (c.type === "percent") off = Math.round((sub * c.value) / 100); if (c.type === "ship") ship = 0; }
     }
     const id = "GO" + todayIST().slice(2).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000);
+    const createdAt = new Date().toISOString();
     const order = { id, name: String(d.name).trim(), phone: String(d.phone).replace(/[^0-9]/g, ""), email: String(d.email).trim().toLowerCase(),
       address: `${String(d.address).trim()}, ${String(d.city).trim()} ${String(d.pin).trim()}`, items, subtotal: sub, discount: off, delivery: ship,
       total: sub - off + ship, coupon, pay: ["UPI", "Card", "COD"].includes(d.pay) ? d.pay : "COD", note: String(d.note || "").slice(0, 200),
-      via: d.via === "WhatsApp" ? "WhatsApp" : "Website", status: "Processing", date: todayIST(), createdAt: new Date().toISOString() };
-    await env.DATA.put("order:" + order.createdAt + ":" + id, JSON.stringify(order));
+      via: d.via === "WhatsApp" ? "WhatsApp" : "Website", status: "Processing", fulfillmentStatus: "Unfulfilled", courier: "", awb: "", trackingUrl: "", adminNote: "",
+      stockRestored: false, refundStatus: "", returnStatus: "", date: todayIST(), createdAt, events: [{ status: "Processing", note: "Order received", at: createdAt }] };
+    const orderKey = "order:" + order.createdAt + ":" + id;
+    await env.DATA.put(orderKey, JSON.stringify(order));
+    await env.DATA.put("orderid:" + id, orderKey);
+    // Inventory is reserved immediately when the order is accepted.
+    if (Array.isArray(store.products)) {
+      const logs = [];
+      for (const it of items) {
+        const pr = store.products.find((x) => x.id === it.id); if (!pr) continue;
+        const before = Number(pr.stock || 0), after = Math.max(0, before - it.qty); pr.stock = after;
+        logs.push({ productId: pr.id, productName: pr.name, before, after, reason: "Website order", ref: id, actor: "system" });
+      }
+      await saveStore(env, store, url.origin);
+      await Promise.all(logs.map((x) => logInventory(env, x)));
+    }
     const lines = items.map((i) => `<tr><td style="padding:6px 0">${esc(i.name)} × ${i.qty}</td><td style="padding:6px 0;text-align:right">${inr(i.price * i.qty)}</td></tr>`).join("");
     const table = `<table style="width:100%;border-collapse:collapse;font-size:14px">${lines}
       <tr><td style="padding:6px 0;color:#6B7A72">Delivery</td><td style="text-align:right">${ship ? inr(ship) : "Free"}</td></tr>
@@ -207,8 +275,81 @@ async function api(req, env, url) {
     });
     const first = order.name.split(" ")[0];
     const custMail = await mailCustomer(env, { to: order.email, name: order.name, subject: `Thank you, ${first}! Your Green Ocean order ${id} is received 🌿`,
-      html: shell(`Thank you, ${first}! 🌿`, `<p style="font-size:15px;line-height:1.6">We have received your order and our nursery team is already picking the healthiest plants for you. We will call or WhatsApp you on <b>${esc(order.phone)}</b> to confirm payment and delivery.</p>${table}<p style="font-size:14px;color:#6B7A72;margin-top:14px">Delivering to: ${esc(order.address)}</p><p style="font-size:14px;line-height:1.6">Questions? Just reply to this email.<br>— Team Green Ocean</p>`, env) });
+      html: shell(`Thank you, ${first}! 🌿`, `<p style="font-size:15px;line-height:1.6">We have received your order and our nursery team is already picking the healthiest plants for you. Your payment method is <b>${esc(order.pay)}</b>. We will contact you on <b>${esc(order.phone)}</b> only if we need to confirm a delivery detail.</p>${table}<p style="font-size:14px;color:#6B7A72;margin-top:14px">Delivering to: ${esc(order.address)}</p><p style="font-size:14px;line-height:1.6">Questions? Just reply to this email.<br>— Team Green Ocean</p>`, env) });
     return json({ ok: true, id, total: order.total, subtotal: sub, discount: off, delivery: ship, coupon, ownerMailed: ownerMail.sent, customerMailed: custMail.sent });
+  }
+
+
+
+  /* signed-in browser order refresh */
+  if (p === "/api/orders/status" && m === "POST") {
+    let d; try { d = await readJSON(req); } catch { return bad("Could not read that request."); }
+    const email = String(d.email || "").trim().toLowerCase(), ids = Array.isArray(d.ids) ? d.ids.slice(0, 30).map(String) : [];
+    if (!RULES.email(email) || !ids.length) return bad("Account email and order numbers are required.");
+    const out = [];
+    for (const id of ids) {
+      const found = await findOrder(env, id); if (!found) continue;
+      if (String(found.order.email || "").toLowerCase() !== email) continue;
+      out.push({ ...found.order, _key: undefined });
+    }
+    return json({ ok: true, orders: out });
+  }
+
+  /* customer order cancellation — only before shipment */
+  if (p === "/api/orders/cancel" && m === "POST") {
+    if (await limited(env, req, "cancel", 8, 600)) return bad("Too many requests. Please try again in a few minutes.", 429);
+    let d; try { d = await readJSON(req); } catch { return bad("Could not read that request."); }
+    const id = String(d.id || "").trim(), email = String(d.email || "").trim().toLowerCase();
+    if (!id || !RULES.email(email)) return bad("Order number and account email are required.");
+    const found = await findOrder(env, id); if (!found) return bad("Order not found.", 404);
+    const order = found.order;
+    if (String(order.email || "").toLowerCase() !== email) return bad("This order does not match that account.", 403);
+    if (!["Processing", "Packed"].includes(order.status)) return bad("This order can no longer be cancelled online. Please contact support.");
+    const store = await getStore(env);
+    if (store && Array.isArray(store.products) && !order.stockRestored) {
+      const logs = [];
+      for (const it of order.items || []) {
+        const pr = store.products.find((x) => x.id === it.id); if (!pr) continue;
+        const before = Number(pr.stock || 0), after = before + Number(it.qty || 0); pr.stock = after;
+        logs.push({ productId: pr.id, productName: pr.name, before, after, reason: "Customer cancellation", ref: order.id, actor: "customer" });
+      }
+      await saveStore(env, store, url.origin); await Promise.all(logs.map((x) => logInventory(env, x))); order.stockRestored = true;
+    }
+    order.status = "Cancelled"; order.cancelledAt = new Date().toISOString(); pushOrderEvent(order, "Cancelled", "Cancelled by customer");
+    await env.DATA.put(found.key, JSON.stringify(order));
+    await mailOrderUpdate(env, order, "Order cancelled", "Your order has been cancelled. Any reserved stock has been released.");
+    return json({ ok: true, order });
+  }
+
+  /* customer return / refund request */
+  if (p === "/api/returns" && m === "POST") {
+    if (await limited(env, req, "return", 6, 900)) return bad("Too many return requests. Please try again later.", 429);
+    let d; try { d = await readJSON(req, 400000); } catch { return bad("Could not read the return request."); }
+    const orderId = String(d.orderId || "").trim(), email = String(d.email || "").trim().toLowerCase();
+    if (!orderId || !RULES.email(email) || !RULES.text(d.reason, 2, 100) || !RULES.text(d.details, 8, 1600)) return bad("Please complete the return request.");
+    const found = await findOrder(env, orderId); if (!found) return bad("Order not found.", 404);
+    const order = found.order;
+    if (String(order.email || "").toLowerCase() !== email) return bad("This order does not match that account.", 403);
+    if (order.status !== "Delivered") return bad("A return can be requested after the order is delivered.");
+    const delivered = new Date(order.deliveredAt || order.createdAt || order.date); const age = (Date.now() - delivered.getTime()) / 86400000;
+    if (Number.isFinite(age) && age > 7.99) return bad("The 7-day return request window for this order has ended.");
+    const selected = orderItemsAmount(order, d.items);
+    if (!selected.items.length) return bad("Select at least one item from the order.");
+    const existingList = await env.DATA.list({ prefix: "return:", limit: 1000 });
+    for (const k of existingList.keys) { const r = await env.DATA.get(k.name, "json"); if (r && r.orderId === orderId && !["Rejected", "Closed"].includes(r.status)) return bad("A return request for this order is already open."); }
+    const at = new Date().toISOString(), id = "RET" + todayIST().replace(/-/g, "").slice(2) + "-" + Math.floor(1000 + Math.random() * 9000);
+    const rr = { id, orderId, orderKey: found.key, name: order.name, email: order.email, phone: order.phone, items: selected.items,
+      amount: selected.total, reason: String(d.reason).trim().slice(0, 100), details: String(d.details).trim().slice(0, 1600),
+      preferred: ["Refund", "Replacement"].includes(d.preferred) ? d.preferred : "Refund", status: "Requested", resolution: "", adminNote: "",
+      replacementStockCommitted: false, createdAt: at, updatedAt: at, date: todayIST(), events: [{ status: "Requested", at, note: "Customer submitted request" }] };
+    const key = `return:${at}:${id}`; await env.DATA.put(key, JSON.stringify(rr));
+    order.returnStatus = "Requested"; await env.DATA.put(found.key, JSON.stringify(order));
+    await mailOwner(env, { subject: `↩️ Return request ${id} — order ${orderId}`, replyTo: order.email,
+      text: `${rr.name} requested a ${rr.preferred.toLowerCase()} for ${orderId}.\nReason: ${rr.reason}\n${rr.details}`,
+      html: shell(`Return request ${id}`, `<table style="width:100%;font-size:14px">${row("Order", orderId)}${row("Customer", rr.name)}${row("Preferred", rr.preferred)}${row("Reason", rr.reason)}${row("Requested value", inr(rr.amount))}</table><p style="white-space:pre-wrap;line-height:1.6">${esc(rr.details)}</p>`, env) });
+    await mailCustomer(env, { to: rr.email, name: rr.name, subject: `We received your return request ${id}`,
+      html: shell(`Return request received`, `<p style="font-size:15px;line-height:1.65">We received your request for order <b>${esc(orderId)}</b>. Our team will review it and update you by email.</p><p style="font-size:13px;color:#6B7A72">Request ${esc(id)} · ${esc(rr.preferred)} · ${inr(rr.amount)}</p>`, env) });
+    return json({ ok: true, id, status: rr.status, amount: rr.amount });
   }
 
   /* contact */
@@ -252,29 +393,70 @@ async function api(req, env, url) {
     return json({ ok: true });
   }
 
-  /* ---------- admin inbox ---------- */
+  /* ---------- admin commerce ---------- */
   if (p.startsWith("/api/admin/")) {
     if (!isAdmin(req, env)) return bad("Wrong admin password.", 401);
+    const grab = async (prefix, limit) => {
+      const l = await env.DATA.list({ prefix, limit: 1000 });
+      const keys = l.keys.map((k) => k.name).sort().reverse().slice(0, limit);
+      const vals = await Promise.all(keys.map((k) => env.DATA.get(k, "json")));
+      return vals.map((v, i) => v ? ({ ...v, _key: keys[i] }) : null).filter(Boolean);
+    };
     if (p === "/api/admin/inbox" && m === "GET") {
-      const grab = async (prefix, limit) => {
-        const l = await env.DATA.list({ prefix, limit: 1000 });
-        const keys = l.keys.map((k) => k.name).sort().reverse().slice(0, limit);
-        return (await Promise.all(keys.map((k) => env.DATA.get(k, "json")))).filter(Boolean).map((v, i) => ({ ...v, _key: keys[i] }));
-      };
-      const [orders, messages, subscribers, reviews] = await Promise.all([grab("order:", 300), grab("msg:", 200), grab("sub:", 1000), grab("rev:", 200)]);
-      return json({ ok: true, orders, messages, subscribers, reviews });
+      const [orders, messages, subscribers, reviews, returns, inventoryLogs] = await Promise.all([
+        grab("order:", 400), grab("msg:", 200), grab("sub:", 1000), grab("rev:", 200), grab("return:", 250), grab("invlog:", 300)
+      ]);
+      return json({ ok: true, orders, messages, subscribers, reviews, returns, inventoryLogs });
     }
-    /* which customer emails have a real Supabase account (for the admin Customers "Registered" badge) */
     if (p === "/api/admin/customers" && m === "GET") {
-      if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return json({ ok: true, emails: [] });
-      try {
-        const r = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?select=email`, {
-          headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
-        });
-        if (!r.ok) return json({ ok: true, emails: [] });
-        const rows = await r.json();
-        return json({ ok: true, emails: rows.map((x) => (x.email || "").toLowerCase()).filter(Boolean) });
-      } catch (e) { return json({ ok: true, emails: [] }); }
+      // Registered-account discovery belongs to Supabase. This endpoint intentionally returns an empty list
+      // unless you later connect a server-side Supabase admin integration.
+      return json({ ok: true, emails: [] });
+    }
+    const sm = p.match(/^\/api\/admin\/stock\/(.+)$/);
+    if (sm && m === "PATCH") {
+      const productId = decodeURIComponent(sm[1]); const d = await readJSON(req);
+      const store = await getStore(env); if (!store || !Array.isArray(store.products)) return bad("Store data is not published yet.", 409);
+      const pr = store.products.find((x) => String(x.id) === productId); if (!pr) return bad("Product not found.", 404);
+      const next = Math.max(0, Math.floor(Number(d.stock))); if (!Number.isFinite(next)) return bad("Enter a valid stock quantity.");
+      const before = Number(pr.stock || 0); pr.stock = next;
+      const ver = await saveStore(env, store, url.origin);
+      await logInventory(env, { productId: pr.id, productName: pr.name, before, after: next, reason: String(d.reason || "Manual stock adjustment"), ref: String(d.ref || ""), actor: "admin" });
+      return json({ ok: true, product: { id: pr.id, stock: next }, updatedAt: ver });
+    }
+    const rm = p.match(/^\/api\/admin\/return\/(.+)$/);
+    if (rm && m === "PATCH") {
+      const key = decodeURIComponent(rm[1]); if (!key.startsWith("return:")) return bad("Unknown return request.");
+      const rr = await env.DATA.get(key, "json"); if (!rr) return bad("Return request not found.", 404);
+      const d = await readJSON(req); const allowed = ["Requested", "Under review", "Approved", "Replacement approved", "Refund approved", "Rejected", "Closed"];
+      if (d.status && !allowed.includes(d.status)) return bad("Unknown return status.");
+      const prev = rr.status; if (d.status) rr.status = d.status;
+      if (typeof d.adminNote === "string") rr.adminNote = d.adminNote.slice(0, 800);
+      if (typeof d.resolution === "string") rr.resolution = d.resolution.slice(0, 200);
+      rr.updatedAt = new Date().toISOString(); rr.events = Array.isArray(rr.events) ? rr.events : [];
+      if (rr.status !== prev) rr.events.push({ status: rr.status, at: rr.updatedAt, note: rr.adminNote || "Admin updated request" });
+      const found = await findOrder(env, rr.orderId); const order = found && found.order;
+      if (rr.status === "Replacement approved" && !rr.replacementStockCommitted) {
+        const store = await getStore(env); if (!store || !Array.isArray(store.products)) return bad("Store inventory is unavailable.", 409);
+        for (const it of rr.items || []) { const pr = store.products.find((x) => x.id === it.id); if (!pr || Number(pr.stock || 0) < Number(it.qty || 0)) return bad(`Not enough stock for replacement: ${it.name}`); }
+        const logs=[];
+        for (const it of rr.items || []) { const pr = store.products.find((x) => x.id === it.id); const before=Number(pr.stock||0), after=before-Number(it.qty||0); pr.stock=after; logs.push({productId:pr.id,productName:pr.name,before,after,reason:"Replacement approved",ref:rr.id,actor:"admin"}); }
+        await saveStore(env, store, url.origin); await Promise.all(logs.map((x)=>logInventory(env,x))); rr.replacementStockCommitted=true;
+      }
+      if (order && found) {
+        order.returnStatus = rr.status;
+        if (rr.status === "Refund approved") { order.refundStatus = "Approved"; order.refundAmount = Number(rr.amount || 0); }
+        await env.DATA.put(found.key, JSON.stringify(order));
+      }
+      await env.DATA.put(key, JSON.stringify(rr));
+      if (rr.status !== prev && RULES.email(rr.email)) {
+        const msg = rr.status === "Refund approved" ? `Your refund request for order ${rr.orderId} has been approved. Our team will process ${inr(rr.amount)} using the applicable refund method.` :
+          rr.status === "Replacement approved" ? `A replacement for your approved items from order ${rr.orderId} has been approved. We will prepare fresh replacement stock.` :
+          rr.status === "Rejected" ? `We reviewed your request for order ${rr.orderId}. It could not be approved. ${rr.adminNote || "Please contact support if you need more help."}` :
+          `Your return request for order ${rr.orderId} is now: ${rr.status}.`;
+        await mailCustomer(env,{to:rr.email,name:rr.name,subject:`Return ${rr.id}: ${rr.status}`,html:shell(`Return request update`, `<p style="font-size:15px;line-height:1.65">${esc(msg)}</p>${rr.adminNote?`<p style="font-size:13px;color:#6B7A72">Note: ${esc(rr.adminNote)}</p>`:""}`, env)});
+      }
+      return json({ ok: true, item: rr });
     }
     const km = p.match(/^\/api\/admin\/item\/(.+)$/);
     if (km) {
@@ -284,7 +466,35 @@ async function api(req, env, url) {
       if (m === "PATCH") {
         const cur = await env.DATA.get(key, "json"); if (!cur) return bad("Not found.", 404);
         const d = await readJSON(req);
-        if (key.startsWith("order:") && ["Processing", "Shipped", "Delivered", "Cancelled"].includes(d.status)) cur.status = d.status;
+        if (key.startsWith("order:")) {
+          const allowed = ["Processing", "Packed", "Shipped", "Out for delivery", "Delivered", "Cancelled"];
+          const prev = cur.status;
+          if (d.status && !allowed.includes(d.status)) return bad("Unknown order status.");
+          if (typeof d.courier === "string") cur.courier = d.courier.slice(0, 80);
+          if (typeof d.awb === "string") cur.awb = d.awb.slice(0, 100);
+          if (typeof d.trackingUrl === "string") cur.trackingUrl = /^https?:\/\//i.test(d.trackingUrl) ? d.trackingUrl.slice(0, 500) : "";
+          if (typeof d.adminNote === "string") cur.adminNote = d.adminNote.slice(0, 800);
+          if (d.status && d.status !== prev) {
+            if (d.status === "Cancelled" && ["Shipped","Out for delivery","Delivered"].includes(prev)) return bad("A shipped or delivered order cannot be cancelled here. Use Returns & Refunds instead.");
+            if (d.status === "Cancelled" && !cur.stockRestored && Array.isArray(cur.items)) {
+              const store = await getStore(env); if (store && Array.isArray(store.products)) {
+                const logs=[];
+                for (const it of cur.items) { const pr=store.products.find((x)=>x.id===it.id); if(!pr)continue; const before=Number(pr.stock||0),after=before+Number(it.qty||0);pr.stock=after;logs.push({productId:pr.id,productName:pr.name,before,after,reason:"Admin cancellation",ref:cur.id,actor:"admin"}); }
+                await saveStore(env,store,url.origin);await Promise.all(logs.map((x)=>logInventory(env,x)));cur.stockRestored=true;
+              }
+            }
+            if (prev === "Cancelled" && d.status !== "Cancelled" && cur.stockRestored && Array.isArray(cur.items)) {
+              const store=await getStore(env); if(!store||!Array.isArray(store.products))return bad("Inventory unavailable.",409);
+              for(const it of cur.items){const pr=store.products.find((x)=>x.id===it.id);if(!pr||Number(pr.stock||0)<Number(it.qty||0))return bad(`Not enough stock to reopen order ${cur.id}.`);}
+              const logs=[];for(const it of cur.items){const pr=store.products.find((x)=>x.id===it.id);const before=Number(pr.stock||0),after=before-Number(it.qty||0);pr.stock=after;logs.push({productId:pr.id,productName:pr.name,before,after,reason:"Order reopened",ref:cur.id,actor:"admin"});}
+              await saveStore(env,store,url.origin);await Promise.all(logs.map((x)=>logInventory(env,x)));cur.stockRestored=false;
+            }
+            cur.status=d.status; const at=new Date().toISOString(); pushOrderEvent(cur,d.status,cur.adminNote||"");
+            if(d.status==="Packed")cur.packedAt=at;if(d.status==="Shipped")cur.shippedAt=at;if(d.status==="Out for delivery")cur.outForDeliveryAt=at;if(d.status==="Delivered")cur.deliveredAt=at;if(d.status==="Cancelled")cur.cancelledAt=at;
+            const messages={Packed:"Your order has been packed by our nursery team and is being prepared for dispatch.",Shipped:"Your Green Ocean order has been shipped.","Out for delivery":"Your order is out for delivery today.",Delivered:"Your order has been marked delivered. We hope your plants arrived healthy and happy.",Cancelled:"Your order has been cancelled and reserved stock has been released."};
+            if(messages[d.status]) await mailOrderUpdate(env,cur,`Order ${d.status}`,messages[d.status]);
+          }
+        }
         if (key.startsWith("msg:") && typeof d.read === "boolean") cur.read = d.read;
         await env.DATA.put(key, JSON.stringify(cur)); return json({ ok: true, item: cur });
       }
