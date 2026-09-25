@@ -111,25 +111,45 @@ button svg,a svg{pointer-events:none}
 @media(max-width:350px){.hdr .logo img{height:34px!important}}
 
 /* ---------- Hero ---------- */
-.hero{background:linear-gradient(105deg,#F3EFE3 0%,#F6F2E8 45%,#E9F0E6 100%);border-bottom:1px solid var(--line);position:relative;overflow:hidden}
-.hero-slider{position:relative}
-.hero-slider-stage{position:relative;display:grid}
-.hero-slide{grid-area:1/1;position:relative;display:grid;grid-template-columns:1fr 1.05fr;gap:28px;align-items:center;padding:44px 0 40px;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(12px);transition:opacity .45s ease,transform .45s ease,visibility .45s}
-.hero-slide.is-active{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
+.hero{background:linear-gradient(115deg,#F4F1E7 0%,#F7F4EC 42%,#EAF2E7 100%);border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 18%,rgba(122,166,112,.13),transparent 28%),radial-gradient(circle at 84% 12%,rgba(78,138,98,.10),transparent 24%);pointer-events:none}
 .eyebrow{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--green-500);margin:0 0 12px}
-.hero h1{font-family:var(--serif);font-size:clamp(34px,6vw,54px);line-height:1.04;margin:0 0 16px;font-weight:600;letter-spacing:-.02em;color:var(--green-900);white-space:pre-line}
-.hero p{max-width:46ch;color:var(--muted);margin:0 0 22px;font-size:15.5px}
-.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
-.hero-art{position:relative;min-height:280px;border-radius:26px;overflow:hidden;background:var(--green-50);border:0;padding:0;width:100%;text-align:initial;cursor:pointer}
-.hero-art img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s ease}
-.hero-slide.is-active .hero-art img{transform:scale(1.018)}
 .script{font-family:var(--script);font-size:26px;color:var(--green-700);line-height:1.15;transform:rotate(-4deg)}
-.hero-note{position:absolute;right:6px;top:10px;text-align:center;z-index:3}
-.hero-slider-dots{position:absolute;left:50%;bottom:11px;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:7px}
-.hero-slider-dot{width:8px;height:8px;border-radius:50%;background:rgba(15,70,50,.24);border:0;padding:0;transition:width .2s ease,background .2s ease}
-.hero-slider-dot.is-active{width:22px;border-radius:999px;background:var(--green-700)}
-@media(max-width:860px){.hero-slide{grid-template-columns:1fr;padding:30px 0 38px}.hero-art{min-height:230px}.hero-slider-dots{bottom:10px}}
-@media(prefers-reduced-motion:reduce){.hero-slide{transition:none}.hero-slide.is-active .hero-art img{transform:none}}
+.home-slider{position:relative;padding:34px 0 38px}
+.home-slider-stage{position:relative}
+.home-slide{position:absolute;inset:0;display:grid;grid-template-columns:.94fr 1.06fr;gap:28px;align-items:center;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(18px) scale(.985);transition:opacity .55s ease,transform .55s ease,visibility .55s}
+.home-slide.is-active{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0) scale(1)}
+.home-copy{position:relative;z-index:2;padding:34px 34px 30px;background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.68);backdrop-filter:blur(10px);border-radius:28px;box-shadow:0 22px 50px rgba(15,70,50,.09)}
+.home-kicker{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:rgba(15,70,50,.06);border:1px solid rgba(15,70,50,.14);font-size:12px;font-weight:800;letter-spacing:.14em;color:#315347;text-transform:uppercase;margin-bottom:20px}
+.home-title{font-family:var(--serif);font-size:clamp(34px,6vw,58px);line-height:.98;margin:0 0 16px;font-weight:600;letter-spacing:-.03em;color:var(--green-900);white-space:pre-line}
+.home-desc{max-width:44ch;color:#3f5d52;margin:0 0 18px;font-size:15.5px;line-height:1.7}
+.home-quote{display:flex;gap:10px;align-items:flex-start;padding:16px 18px;margin:0 0 18px;border-radius:20px;background:#fff;border:1px solid rgba(15,70,50,.1);box-shadow:0 10px 25px rgba(15,70,50,.06)}
+.home-quote-mark{font-family:var(--serif);font-size:38px;line-height:1;color:var(--green-700);opacity:.9}
+.home-quote b{display:block;font-size:14px;color:var(--green-900);margin-bottom:4px}
+.home-quote span:last-child{font-size:13px;color:#51685f;line-height:1.6}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero-pill-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.hero-pill-row span{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid rgba(15,70,50,.12);font-size:12.5px;color:#315347}
+.hero-visual{position:relative;min-height:420px;border-radius:30px;overflow:hidden;box-shadow:var(--shadow-lg);background:var(--green-50)}
+.hero-visual img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 1.2s ease}
+.home-slide.is-active .hero-visual img{transform:scale(1.04)}
+.hero-visual::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.15));pointer-events:none}
+.hero-note{position:absolute;right:18px;top:18px;text-align:center;z-index:3;padding:16px 18px;border-radius:22px;background:rgba(255,255,255,.84);backdrop-filter:blur(8px);box-shadow:0 12px 28px rgba(15,70,50,.10);max-width:220px}
+.hero-note .script{font-size:28px;color:var(--green-800);line-height:1.08;white-space:pre-line;display:block;transform:none}
+.hero-feature{position:absolute;left:18px;bottom:18px;z-index:3;display:flex;gap:12px;align-items:center;padding:16px 18px;border-radius:22px;background:rgba(15,70,50,.82);color:#fff;backdrop-filter:blur(6px);max-width:320px}
+.hero-feature .cc{flex:0 0 42px;width:42px;height:42px;background:rgba(255,255,255,.16);border:none;color:#fff}
+.hero-feature b{display:block;font-size:14px;margin-bottom:4px}
+.hero-feature small{display:block;color:rgba(255,255,255,.78);font-size:12.5px;line-height:1.5}
+.home-slider-nav{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px}
+.home-slider-meta{font-size:12.5px;color:#648276}
+.home-slider-ctrls{display:flex;align-items:center;gap:10px}
+.home-dots{display:flex;align-items:center;gap:8px}
+.home-dot{width:11px;height:11px;border-radius:50%;border:none;background:#D3DED5;transition:all .25s ease;cursor:pointer}
+.home-dot.is-active{width:26px;border-radius:999px;background:var(--green-700)}
+.home-arrow{width:42px;height:42px;border-radius:50%;border:1px solid rgba(15,70,50,.14);background:#fff;color:var(--green-800);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 24px rgba(15,70,50,.07)}
+.home-arrow:hover{transform:translateY(-1px)}
+@media(max-width:980px){.home-slide{grid-template-columns:1fr;gap:18px}.home-copy{padding:28px 24px 24px}.home-title{font-size:clamp(32px,8vw,46px)}.hero-visual{min-height:340px}.hero-note{right:14px;top:14px;max-width:180px}.hero-feature{max-width:calc(100% - 28px)}}
+@media(max-width:680px){.home-slider{padding:24px 0 28px}.home-copy{padding:24px 18px 20px;border-radius:22px}.home-kicker{margin-bottom:16px}.home-desc{font-size:14px}.home-quote{padding:14px}.hero-visual{min-height:285px;border-radius:22px}.hero-note{padding:12px 14px;border-radius:18px;max-width:145px}.hero-note .script{font-size:22px}.hero-feature{left:12px;right:12px;bottom:12px;max-width:none;padding:14px 15px;border-radius:18px}.home-slider-nav{flex-direction:column;align-items:flex-start}.home-slider-ctrls{width:100%;justify-content:space-between}}
 
 /* ---------- Trust bar ---------- */
 .trust{background:#fff;border-bottom:1px solid var(--line)}
@@ -1739,28 +1759,35 @@ function homePromoCoupon(){return (DB.coupons||[]).find(k=>k.active&&k.homePromo
 function freeShipPromoCoupon(){return (DB.coupons||[]).find(k=>k.active&&String(k.code||'').toUpperCase()==='FREESHIP')||null;}
 function homeHeroSlides(){
   return [
-    {id:'hs1',sub:'BRING NATURE HOME',title:'Happier Spaces\nGreener Lives',desc:'Healthy plants for a better tomorrow. Handpicked from our nursery, delivered to your doorstep.',cta:'Shop Plants',link:'#/shop',img:'img:hero'},
-    {id:'hs2',sub:'GREEN YOUR EVERYDAY',title:'Calm Corners\nHappier Homes',desc:'A little greenery can make every room feel lighter, calmer and more alive.',cta:'Explore Indoor Plants',link:'#/shop?cat=c1',img:'img:sp_living'},
-    {id:'hs3',sub:'MAKE ROOM FOR GREEN',title:'Small Spaces\nBig Green Energy',desc:'Turn balconies and compact corners into refreshing little escapes with the right plants.',cta:'Explore Planters',link:'#/shop?cat=c4',img:'img:sp_balcony'},
-    {id:'hs4',sub:'GIFT SOMETHING LIVING',title:'Gifts That\nKeep Growing',desc:'Thoughtful plant gifts and curated combos for celebrations, desks and everyday happiness.',cta:'Shop Combos',link:'#/shop?cat=c6',img:'img:ban_combos'}
+    {id:'hs1',sub:'BRING NATURE HOME',title:'Happier Spaces\nGreener Lives',desc:'Healthy plants for a better tomorrow. Handpicked from our nursery and delivered with care for homes, desks and balconies.',quote:'A little greenery can change the whole mood of a room.',quoteBy:'Start with easy, beautiful indoor plants for everyday living.',cta:'Shop Plants',link:'#/shop',img:'img:hero',note:'Good Plants\nGood Days',featureTitle:'Nursery-fresh indoor greens',featureText:'Thoughtfully selected plants that look beautiful and settle well at home.',tags:['Indoor plants','Low maintenance','Fresh from nursery']},
+    {id:'hs2',sub:'CALM CORNERS & COZY HOMES',title:'Soft leaves.\nSofter days.',desc:'Create a slow, welcoming home with leafy favourites for bedrooms, living rooms and reading corners.',quote:'Plants turn empty corners into comforting spaces you want to spend time in.',quoteBy:'Style your home with easy-care greens and elegant planters.',cta:'Explore Indoor Plants',link:'#/shop?cat=c1',img:'img:sp_living',note:'Plants\nmake life\nbetter',featureTitle:'Beautiful styling for modern spaces',featureText:'Balanced plant photography, clean compositions and decor-friendly picks.',tags:['Living room','Bedroom','Airy styling']},
+    {id:'hs3',sub:'BALCONY & OUTDOOR JOY',title:'Give your balcony\na greener mood.',desc:'From compact corners to brighter sit-outs, find plants that instantly lift outdoor spaces with fresh colour and texture.',quote:'Even a small balcony can feel like a personal garden with the right plants.',quoteBy:'Build your mini green retreat with nursery-picked favourites.',cta:'Shop Planters',link:'#/shop?cat=c4',img:'img:sp_balcony',note:'Fresh greens\nfor small\nspaces',featureTitle:'Perfect for compact city homes',featureText:'Planters, foliage and combinations chosen for neat, premium-looking balconies.',tags:['Balcony ready','Compact homes','Outdoor feel']},
+    {id:'hs4',sub:'GIFTS, COMBOS & EVERYDAY GREENS',title:'A plant gift\nthat keeps growing.',desc:'Send living gifts, curated combos and cheerful plants that make celebrations feel more personal and memorable.',quote:'The best gifts keep growing long after the occasion is over.',quoteBy:'Shop curated plant combos for gifting, decor and happy desks.',cta:'Shop Combos',link:'#/shop?cat=c6',img:'img:sp_workspace',note:'Grow joy\none leaf\nat a time',featureTitle:'Curated combos for gifting and decor',featureText:'Thoughtful bundles that look premium online and feel special when delivered.',tags:['Gift combos','Plant decor','Easy gifting']}
   ];
 }
 function initHomeHeroSlider(root=document){
   const wrap=root.querySelector('[data-home-slider]');
   if(window.__homeHeroTimer){clearInterval(window.__homeHeroTimer);window.__homeHeroTimer=null;}
+  if(window.__homeHeroFit){window.removeEventListener('resize',window.__homeHeroFit);window.__homeHeroFit=null;}
   if(!wrap)return;
-  const slides=[...wrap.querySelectorAll('.hero-slide')], dots=[...wrap.querySelectorAll('.hero-slider-dot')];
-  let i=+wrap.dataset.index||0, touchX=null, touchY=null;
-  const set=(next,userAction=true)=>{
-    i=(next+slides.length)%slides.length; wrap.dataset.index=i;
+  const stage=wrap.querySelector('.home-slider-stage');
+  const slides=[...wrap.querySelectorAll('.home-slide')];
+  const dots=[...wrap.querySelectorAll('.home-dot')];
+  let i=+wrap.dataset.index||0;
+  const fit=()=>{if(!stage||!slides.length)return;const h=Math.max(...slides.map(s=>s.scrollHeight||s.offsetHeight||0));if(h)stage.style.height=h+'px';};
+  const set=(next)=>{
+    i=(next+slides.length)%slides.length;
+    wrap.dataset.index=i;
     slides.forEach((el,idx)=>el.classList.toggle('is-active',idx===i));
     dots.forEach((el,idx)=>el.classList.toggle('is-active',idx===i));
-    if(userAction){if(window.__homeHeroTimer)clearInterval(window.__homeHeroTimer);window.__homeHeroTimer=setInterval(()=>set(i+1,false),5200);}
+    fit();
   };
-  wrap.__setHomeHero=set; set(i,false);
-  window.__homeHeroTimer=setInterval(()=>set(i+1,false),5200);
-  wrap.addEventListener('touchstart',e=>{const p=e.touches&&e.touches[0];if(!p)return;touchX=p.clientX;touchY=p.clientY;},{passive:true});
-  wrap.addEventListener('touchend',e=>{const p=e.changedTouches&&e.changedTouches[0];if(!p||touchX===null)return;const dx=p.clientX-touchX,dy=p.clientY-touchY;touchX=touchY=null;if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)*1.2)set(i+(dx<0?1:-1));},{passive:true});
+  wrap.__setHomeHero=set;
+  set(i);
+  window.__homeHeroTimer=setInterval(()=>set(i+1),5200);
+  window.__homeHeroFit=fit;
+  setTimeout(fit,80);
+  window.addEventListener('resize',fit,{passive:true});
 }
 function couponPromoText(k){
   if(!k)return '';
@@ -2263,11 +2290,10 @@ function navOn(key){
 }
 function header(active){
   const s=DB.settings;
-  const items=`<span>${ic('truck',14)} Free Pan-India Delivery on Orders Above ${money(s.freeShipAbove)}</span>
-    <span>${ic('shield',14)} 7-Day Healthy Plant Guarantee</span>
-    <span>${ic('tag',14)} <b>Use FREESHIP - Free shipping - First order only</b></span>
-    <span>${ic('leaf',14)} Plants Make Better Days</span>`;
-  const dur=window.innerWidth<=760?24:32, delay=-((Date.now()/1000)%dur);
+  const freeship=(DB.coupons||[]).find(k=>k.active&&String(k.code||'').toUpperCase()==='FREESHIP');
+  const promoLine=freeship?'Use FREESHIP - Free shipping - First order only':'Plants Make Better Days';
+  const items=`<span>${ic('tag',14)} <b>${esc(promoLine)}</b></span>`;
+  const dur=window.innerWidth<=760?18:24, delay=-((Date.now()/1000)%dur);
   return `<div class="strip" role="region" aria-label="Offers">
     <div class="strip-track" style="animation-delay:${delay.toFixed(2)}s">
       <div class="strip-set">${items}</div><div class="strip-set" aria-hidden="true">${items}</div></div></div>
@@ -2330,23 +2356,37 @@ const TRUST=[['heart','Healthy Plants','7-Day Guarantee'],['truck','Pan-India De
 
 function viewHome(){
   const s=DB.settings, live=DB.products.filter(p=>p.active);
-  const best=live.slice(0,5), promo=homePromoCoupon(), slides=homeHeroSlides();
+  const best=live.slice(0,5), promo=freeShipPromoCoupon()||homePromoCoupon(), slides=homeHeroSlides();
   const spaces=[['Living Room','sp_living'],['Bedroom','sp_bedroom'],['Workspace','sp_workspace'],['Balcony','sp_balcony'],['Outdoor Garden','sp_outdoor']];
   const revs=DB.reviews.filter(r=>r.status==='Published').slice(0,3);
   return header('home')+`
-  <section class="hero"><div class="wrap hero-slider" data-home-slider data-index="0">
-    <div class="hero-slider-stage">
-      ${slides.map((sl,idx)=>`<div class="hero-slide ${idx===0?'is-active':''}">
-        <div><p class="eyebrow">${esc(sl.sub)}</p>
-          <h1>${esc(sl.title)}</h1>
-          <p>${esc(sl.desc)}</p>
-          ${promo?`<div class="home-offer-badge"><span>${ic('tag',14)}</span><span><b>${esc(promo.code)}</b> · ${promo.type==='percent'?esc(promo.value+'% off'):'Free delivery'}${couponFirstOrderOnly(promo)?' · First order only':''}${promo.min?` · Min ${money(promo.min)}`:''}</span></div>`:''}
-          <div class="hero-cta"><a class="btn btn-primary btn-lg" href="${esc(sl.link)}">${esc(sl.cta)} ${ic('arrow',16)}</a>
-            <a class="btn btn-ghost btn-lg" href="#/shop?cat=c6">Explore Collection</a></div></div>
-        <button class="hero-art" type="button" data-act="heroNext" aria-label="Show next slide"><img src="${src(sl.img)}" alt="${esc(sl.title)}" ${idx===0?'loading="eager" fetchpriority="high"':'loading="lazy"'} decoding="async"></button>
-      </div>`).join('')}
+  <section class="hero"><div class="wrap home-slider" data-home-slider data-index="0">
+    <div class="home-slider-stage">
+      ${slides.map((sl,idx)=>`<article class="home-slide ${idx===0?'is-active':''}">
+        <div class="home-copy">
+          <span class="home-kicker">${ic('leaf',14)} ${esc(sl.sub)}</span>
+          <h1 class="home-title">${esc(sl.title)}</h1>
+          <p class="home-desc">${esc(sl.desc)}</p>
+          ${promo?`<div class="home-offer-badge"><span>${ic('tag',14)}</span><span><b>${esc(promo.code)}</b> · ${promo.type==='percent'?esc(promo.value+'% off'):'Free shipping'}${couponFirstOrderOnly(promo)?' · First order only':''}${promo.min?` · Min ${money(promo.min)}`:''}</span></div>`:''}
+          <div class="home-quote"><span class="home-quote-mark">“</span><span><b>${esc(sl.quote)}</b><span>${esc(sl.quoteBy)}</span></span></div>
+          <div class="hero-cta"><a class="btn btn-primary btn-lg" href="${esc(sl.link)}">${esc(sl.cta)} ${ic('arrow',16)}</a><a class="btn btn-ghost btn-lg" href="#/shop?cat=c6">Explore Collection</a></div>
+          <div class="hero-pill-row">${(sl.tags||[]).map(tag=>`<span>${ic('sparkle',12)} ${esc(tag)}</span>`).join('')}</div>
+        </div>
+        <div class="hero-visual">
+          <img src="${src(sl.img)}" alt="${esc(sl.title)}" ${idx===0?'loading="eager"':'loading="lazy"'}>
+          <div class="hero-note"><span class="script">${esc(sl.note)}</span></div>
+          <div class="hero-feature"><span class="cc">${ic('leaf',18)}</span><span><b>${esc(sl.featureTitle)}</b><small>${esc(sl.featureText)}</small></span></div>
+        </div>
+      </article>`).join('')}
     </div>
-    <div class="hero-slider-dots" aria-label="Homepage slides">${slides.map((_,idx)=>`<button class="hero-slider-dot ${idx===0?'is-active':''}" data-act="heroDot" data-i="${idx}" aria-label="Show slide ${idx+1}"></button>`).join('')}</div>
+    <div class="home-slider-nav">
+      <div class="home-slider-meta">4 rotating homepage slides · premium nursery look</div>
+      <div class="home-slider-ctrls">
+        <button class="home-arrow" data-act="heroPrev" aria-label="Previous slide">${ic('back',16)}</button>
+        <div class="home-dots">${slides.map((_,idx)=>`<button class="home-dot ${idx===0?'is-active':''}" data-act="heroDot" data-i="${idx}" aria-label="Go to slide ${idx+1}"></button>`).join('')}</div>
+        <button class="home-arrow" data-act="heroNext" aria-label="Next slide">${ic('arrow',16)}</button>
+      </div>
+    </div>
   </div></section>
 
   <div class="trust"><div class="wrap trust-in">${TRUST.map(t=>`<div class="trust-i"><span class="cc">${ic(t[0],17)}</span>
