@@ -17,6 +17,8 @@
 import { EmailMessage } from "cloudflare:email";
 
 const MAX_STORE_BYTES = 20 * 1024 * 1024;
+const MAX_MEDIA_JSON_BYTES = 9 * 1024 * 1024;
+const MAX_MEDIA_BYTES = 6 * 1024 * 1024;
 // Same public Supabase project details used by the storefront. No service-role key is required.
 // The Worker verifies a customer's access token against Supabase before marking an account Registered.
 const SUPABASE_URL = "https://kkuxyrwklyszargqfgzw.supabase.co";
@@ -138,6 +140,37 @@ function orderItemsAmount(order, reqItems) {
   return { items, total };
 }
 
+/* ---------- managed admin media ---------- */
+function mediaPathId(v) {
+  try { const u = new URL(String(v || ""), "https://local.invalid"); const m = u.pathname.match(/^\/media\/([A-Za-z0-9-]+)$/); return m ? m[1] : ""; } catch { return ""; }
+}
+function collectManagedMedia(value, out = new Set()) {
+  if (typeof value === "string") { const id = mediaPathId(value); if (id) out.add(id); return out; }
+  if (Array.isArray(value)) { for (const x of value) collectManagedMedia(x, out); return out; }
+  if (value && typeof value === "object") for (const x of Object.values(value)) collectManagedMedia(x, out);
+  return out;
+}
+function decodeDataUrl(dataUrl) {
+  const m = String(dataUrl || "").match(/^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=\r\n]+)$/i);
+  if (!m) throw new Error("Unsupported image format");
+  const bin = atob(m[2].replace(/\s+/g, ""));
+  if (bin.length > MAX_MEDIA_BYTES) throw new Error("Image is too large");
+  const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return { bytes, type: m[1].toLowerCase() };
+}
+async function serveManagedMedia(env, id) {
+  const key = "media:" + id;
+  const got = await env.DATA.getWithMetadata(key, "arrayBuffer");
+  if (!got || !got.value) return new Response("Not found", { status: 404 });
+  const type = (got.metadata && got.metadata.contentType) || "application/octet-stream";
+  return new Response(got.value, { headers: { "content-type": type, "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" } });
+}
+async function deleteUnreferencedOldMedia(env, oldStore, newStore) {
+  const oldRefs = collectManagedMedia(oldStore), newRefs = collectManagedMedia(newStore);
+  const jobs = []; for (const id of oldRefs) if (!newRefs.has(id)) jobs.push(env.DATA.delete("media:" + id));
+  if (jobs.length) await Promise.all(jobs);
+}
+
 /* strip anything private before the store is published */
 function publicStore(s) {
   if (!s || typeof s !== "object") return {};
@@ -226,6 +259,21 @@ async function api(req, env, url) {
 
   if (p === "/api/health") return json({ ok: true, kv: true, mail: !!(env.MAIL && env.OWNER_EMAIL && env.FROM_EMAIL), admin: !!env.ADMIN_PASSWORD, customerMail: !!env.BREVO_API_KEY });
 
+  /* admin-managed image upload. Files live in KV; store data only keeps /media/<id> URLs. */
+  if (p === "/api/admin/media" && m === "POST") {
+    if (!isAdmin(req, env)) return bad("Wrong admin password.", 401);
+    let d; try { d = await readJSON(req, MAX_MEDIA_JSON_BYTES); } catch { return bad("Image upload is too large or broken."); }
+    let decoded; try { decoded = decodeDataUrl(d.dataUrl); } catch (e) { return bad(String(e && e.message || "Invalid image")); }
+    const id = crypto.randomUUID();
+    await env.DATA.put("media:" + id, decoded.bytes.buffer, { metadata: { contentType: decoded.type, createdAt: new Date().toISOString() } });
+    return json({ ok: true, url: "/media/" + id });
+  }
+  if (p.startsWith("/api/admin/media/") && m === "DELETE") {
+    if (!isAdmin(req, env)) return bad("Wrong admin password.", 401);
+    const id = p.slice("/api/admin/media/".length); if (!/^[A-Za-z0-9-]+$/.test(id)) return bad("Invalid media id.");
+    await env.DATA.delete("media:" + id); return json({ ok: true });
+  }
+
   /* public store */
   if (p === "/api/store" && m === "GET") {
     const s = await getStore(env);
@@ -246,8 +294,10 @@ async function api(req, env, url) {
     let body; try { body = await readJSON(req, MAX_STORE_BYTES); } catch { return bad("Store data is too large or broken."); }
     const pub = publicStore(body);
     if (!Array.isArray(pub.products)) return bad("Store data is missing products.");
+    const oldStore = await getStore(env);
     await env.DATA.put("store", JSON.stringify(pub));
     await env.DATA.put("ver", pub.updatedAt);
+    try { await deleteUnreferencedOldMedia(env, oldStore, pub); } catch (e) {}
     if (typeof caches !== "undefined") { try { await caches.default.delete(new Request(url.origin + "/api/version")); } catch (e) {} }
     return json({ ok: true, updatedAt: pub.updatedAt });
   }
@@ -685,6 +735,7 @@ export default {
       try { return await api(req, env, url); }
       catch (e) { return bad("Something went wrong on our side. Please try again.", 500); }
     }
+    if (req.method === "GET" && /^\/media\/[A-Za-z0-9-]+$/.test(url.pathname)) return serveManagedMedia(env, url.pathname.split("/").pop());
     if (req.method === "GET" && cleanPathname(url.pathname) === "/sitemap.xml") return serveSitemap(env, url);
     if (req.method === "GET" && cleanPathname(url.pathname) === "/robots.txt") return serveRobots(env, url);
     if (req.method === "GET" && isAppRoute(url.pathname)) {
