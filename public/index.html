@@ -1515,10 +1515,22 @@ function cleanRouteTarget(target){
   if(!target.startsWith('/'))target='/'+target.replace(/^#?\/?/,'');
   return target;
 }
-function appPath(){return (location.pathname||'/')+(location.search||'');}
+function adminHashPath(){
+  const h=String(location.hash||'');
+  return h.startsWith('#/admin')?h.slice(1):'';
+}
+function appPath(){return adminHashPath()||((location.pathname||'/')+(location.search||''));}
 function go(target,opt={}){
   const href=cleanRouteTarget(target);
   if(/^https?:\/\//i.test(href)){location.href=href;return;}
+  /* Admin stays on a hash route so Cloudflare/static hosting never receives /admin/... as a page request. */
+  if(href==='/admin'||href.startsWith('/admin/')){
+    const next='#'+href;
+    FORM_DIRTY=false;closeLayer();window.scrollTo(0,0);
+    if(location.hash!==next){location.hash=next;}
+    else paint();
+    return;
+  }
   if(opt.replace)history.replaceState({},'',href);else history.pushState({},'',href);
   if(typeof NAV_DEPTH!=='undefined')NAV_DEPTH++;
   FORM_DIRTY=false;closeLayer();window.scrollTo(0,0);paint();
@@ -1626,6 +1638,25 @@ const API={on:false,key:null,storeMissing:false,lastPub:'',timer:null,status:'lo
     window.addEventListener('focus',tick);
   }
 };
+
+/* ---------- managed website media ----------
+   Admin uploads are stored by the Worker in KV and referenced by /media/<id>.
+   When the published store stops referencing an older managed image, the Worker deletes it. */
+function isManagedMediaUrl(u){
+  try{const x=new URL(String(u||''),location.origin);return /^\/media\/[A-Za-z0-9-]+$/.test(x.pathname);}catch(e){return false;}
+}
+async function uploadManagedMedia(dataUrl){
+  if(!dataUrl)return '';
+  if(!API.on||!DB.admin||!API.key)return dataUrl; // local preview fallback
+  const r=await API.call('/api/admin/media',{method:'POST',admin:true,body:{dataUrl},timeout:60000});
+  if(!r.ok)throw new Error(r.error||'Image upload failed');
+  return r.url||'';
+}
+async function storeImageValue(dataUrl,currentUrl){
+  if(!dataUrl)return currentUrl||'';
+  return uploadManagedMedia(dataUrl);
+}
+
 /* repaint in place: keep the scroll position, never interrupt someone typing or a popup */
 let REPAINT_WAITING=false, FORM_DIRTY=false;
 document.addEventListener('input',e=>{ 
@@ -2268,10 +2299,11 @@ function navOn(key){
 }
 function header(active){
   const s=DB.settings;
-  const freeship=(DB.coupons||[]).find(k=>k.active&&String(k.code||'').toUpperCase()==='FREESHIP');
-  const promoLine=freeship?'Use FREESHIP - Free shipping - First order only':'Plants Make Better Days';
-  const items=`<span>${ic('tag',14)} <b>${esc(promoLine)}</b></span>`;
-  const dur=window.innerWidth<=760?18:24, delay=-((Date.now()/1000)%dur);
+  const items=`<span>${ic('truck',14)} Free Pan-India Delivery on Orders Above ${money(s.freeShipAbove)}</span>
+    <span>${ic('shield',14)} 7-Day Healthy Plant Guarantee</span>
+    <span>${ic('tag',14)} <b>Use FREESHIP - Free shipping - First order only</b></span>
+    <span>${ic('leaf',14)} Plants Make Better Days</span>`;
+  const dur=window.innerWidth<=760?24:32, delay=-((Date.now()/1000)%dur);
   return `<div class="strip" role="region" aria-label="Offers">
     <div class="strip-track" style="animation-delay:${delay.toFixed(2)}s">
       <div class="strip-set">${items}</div><div class="strip-set" aria-hidden="true">${items}</div></div></div>
@@ -3427,7 +3459,7 @@ const MEDIA_SPECS=[
 ];
 function mediaSpec(key){return MEDIA_SPECS.find(x=>x.key===key)||null;}
 function mediaOverrides(){DB.settings.media=DB.settings.media&&typeof DB.settings.media==='object'?DB.settings.media:{};return DB.settings.media;}
-function mediaReset(key){const m=mediaOverrides();delete m[key];save();applyMediaAssets();paint();toast('Original website image restored');}
+function mediaReset(key){const m=mediaOverrides();delete m[key];save();applyMediaAssets();paint();toast('Original website image restored — previous uploaded file will be removed after publish');}
 function readManagedMedia(file,spec,done){
   if(!file||!/^image\//.test(file.type)){toast('Please choose an image file',true);return;}
   const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{
@@ -3447,7 +3479,7 @@ function mediaForm(key){
   const m=mediaSpec(key);if(!m)return;const custom=!!mediaOverrides()[key];
   openModal('Replace — '+m.label,`<div class="media-upload-preview ${m.fit==='contain'?'logo':''}"><div class="preview"><img src="${src('img:'+m.key)}" alt="${esc(m.label)}"></div><div><div class="media-spec-list"><span><b>Recommended size:</b> ${m.w} × ${m.h} px</span><span><b>Aspect:</b> ${m.w}:${m.h}</span><span><b>Used in:</b> ${esc(m.usage)}</span><span><b>File:</b> ${esc(m.format)}</span></div><div class="field" style="margin-top:12px"><label>Choose replacement image</label><input class="inp" id="mediaFile" type="file" accept="image/*"><small class="img-size-hint">For the cleanest result, upload exactly ${m.w} × ${m.h} px. If the ratio differs, the website will centre-crop the photo to this size automatically.</small></div></div></div>`,`${custom?`<button class="btn btn-danger btn-sq" id="mediaRestore">Restore original</button>`:''}<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="mediaSave" disabled>Save image</button>`);
   let ready=null,orig='';const fi=$('#mediaFile'),sv=$('#mediaSave');fi.onchange=e=>{const f=e.target.files[0];if(!f)return;readManagedMedia(f,m,(u,w,h)=>{ready=u;orig=w+' × '+h;sv.disabled=false;toast('Image ready — press Save image');});};
-  sv.onclick=()=>{if(!ready)return;mediaOverrides()[key]=ready;save();applyMediaAssets();closeLayer();paint();toast(m.label+' updated');};
+  sv.onclick=async()=>{if(!ready)return;const oldLabel=sv.textContent;sv.disabled=true;sv.textContent='Uploading…';try{const u=await storeImageValue(ready,mediaOverrides()[key]||'');mediaOverrides()[key]=u;save();applyMediaAssets();closeLayer();paint();toast(m.label+' updated — old uploaded file will be removed automatically');}catch(e){sv.disabled=false;sv.textContent=oldLabel;toast(e.message||'Image upload failed',true);}};
   const rr=$('#mediaRestore');if(rr)rr.onclick=()=>{closeLayer();mediaReset(key);};
 }
 function admMedia(){
@@ -3460,7 +3492,7 @@ function admMedia(){
     ['reviews','Customer review photos','900 × 900 px','Review gallery / customer photo evidence','star'],
     ['banners','Homepage slider images','979 × 322 px','Exact homepage slider artwork — keep this exact size','image']
   ];
-  return adminShell('media',`<div class="media-guide-note"><b>Image size guide:</b> Replace images using the dimensions shown below. Keeping the same dimensions/aspect ratio prevents unwanted cropping, height changes and mobile layout shifts. Homepage slider artwork must stay exactly <b>979 × 322 px</b>.</div><section class="media-group"><div class="media-group-head"><div><h3>Images managed in their own sections</h3><p>These images belong to individual products/content, so edit them from the linked admin page.</p></div></div><div class="media-dynamic-grid">${dyn.map(x=>`<button class="media-dynamic-card" data-link="#/admin/${x[0]}"><span class="mi">${ic(x[4],16)}</span><b>${x[1]}</b><span class="size">${x[2]}</span><small>${x[3]}</small></button>`).join('')}</div></section>${groupHtml}`,'Media & Image Sizes','Change every shared website image from one place, with the correct replacement dimensions.');
+  return adminShell('media',`<div class="media-guide-note"><b>Image size guide:</b> Replace images using the dimensions shown below. Keeping the same dimensions/aspect ratio prevents unwanted cropping, height changes and mobile layout shifts. Homepage slider artwork must stay exactly <b>979 × 322 px</b>.<br><b>Automatic replacement:</b> after a new admin-uploaded image is published, the previous admin-uploaded file is removed from server storage automatically.</div><section class="media-group"><div class="media-group-head"><div><h3>Images managed in their own sections</h3><p>These images belong to individual products/content, so edit them from the linked admin page.</p></div></div><div class="media-dynamic-grid">${dyn.map(x=>`<button class="media-dynamic-card" data-link="#/admin/${x[0]}"><span class="mi">${ic(x[4],16)}</span><b>${x[1]}</b><span class="size">${x[2]}</span><small>${x[3]}</small></button>`).join('')}</div></section>${groupHtml}`,'Media & Image Sizes','Change every shared website image from one place, with the correct replacement dimensions.');
 }
 
 /* ---------- admin: products ---------- */
@@ -3506,14 +3538,16 @@ function productForm(id){
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="pSave">${id==='new'?'Add product':'Save changes'}</button>`);
   let newImg=null;
   $('#pFile').onchange=e=>{const f=e.target.files[0]; if(!f)return; readImage(f,u=>{newImg=u;toast('Photo ready — press save');});};
-  $('#pSave').onclick=()=>{
+  $('#pSave').onclick=async()=>{
     const f=$('#pForm'); if(!validateForm(f))return;
-    const d=Object.fromEntries(new FormData(f).entries());
+    const btn=$('#pSave'),label=btn.textContent,d=Object.fromEntries(new FormData(f).entries());btn.disabled=true;btn.textContent=newImg?'Uploading…':'Saving…';
+    try{const img=newImg?await storeImageValue(newImg,p.img||''):(p.img||'');
     const obj={id:d.id||uid('p'),name:d.name,sub:d.sub,cat:d.cat,price:+d.price,mrp:+d.mrp||+d.price,stock:+d.stock,
-      badge:d.badge,desc:d.desc,active:!!d.active,art:p.art||'bush',img:newImg||p.img||'',
+      badge:d.badge,desc:d.desc,active:!!d.active,art:p.art||'bush',img,
       rating:p.rating||4.5,reviews:p.reviews||0,care:{light:d.light,water:d.water,pet:d.pet}};
     if(d.id){Object.assign(prod(d.id),obj);} else DB.products.unshift(obj);
-    save(); closeLayer(); paint(); toast(d.id?'Product updated':'Product added');
+    save(); closeLayer(); paint(); toast(d.id?'Product updated':'Product added');}
+    catch(e){btn.disabled=false;btn.textContent=label;toast(e.message||'Photo upload failed',true);}
   };
 }
 /* ---------- categories ---------- */
@@ -3536,11 +3570,13 @@ function catForm(id){
     <input type="hidden" name="id" value="${esc(c.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="cSave">Save</button>`);
   let ni=null; $('#cFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readImage(f,u=>{ni=u;toast('Photo ready — press save');});};
-  $('#cSave').onclick=()=>{const f=$('#cForm'); if(!validateForm(f))return;
-    const d=Object.fromEntries(new FormData(f).entries());
-    const obj={id:d.id||uid('c'),name:d.name,desc:d.desc,slug:d.name.toLowerCase().replace(/\W+/g,'-'),art:c.art||'bush',img:ni||c.img||''};
+  $('#cSave').onclick=async()=>{const f=$('#cForm'); if(!validateForm(f))return;
+    const btn=$('#cSave'),label=btn.textContent,d=Object.fromEntries(new FormData(f).entries());btn.disabled=true;btn.textContent=ni?'Uploading…':'Saving…';
+    try{const img=ni?await storeImageValue(ni,c.img||''):(c.img||'');
+    const obj={id:d.id||uid('c'),name:d.name,desc:d.desc,slug:d.name.toLowerCase().replace(/\W+/g,'-'),art:c.art||'bush',img};
     if(d.id)Object.assign(cat(d.id),obj); else DB.categories.push(obj);
-    save();closeLayer();paint();toast('Category saved');};
+    save();closeLayer();paint();toast('Category saved');}
+    catch(e){btn.disabled=false;btn.textContent=label;toast(e.message||'Photo upload failed',true);}};
 }
 /* ---------- orders ---------- */
 function admOrders(q){
@@ -3647,7 +3683,7 @@ function admReviews(){
 /* ---------- banners / offers / blog / pages ---------- */
 function admBanners(){
   const slides=homeHeroSlides();
-  return adminShell('banners',`<div class="media-guide-note"><b>Homepage slider:</b> All 4 slide images should be exactly <b>979 × 322 px</b>. This is the exact current banner dimension, so replacing with the same size keeps the homepage height and crop unchanged.</div><div class="mgrid" style="grid-template-columns:repeat(2,minmax(0,1fr))">${slides.map((b,i)=>`<div class="mtile"><span class="ph" style="aspect-ratio:979/322;background:#EEF4EF">${`<img src="${src(b.img)}" alt="${esc(b.alt||'Homepage slide')}" style="width:100%;height:100%;object-fit:cover">`}</span><span class="bd"><b>Slide ${i+1}</b><small>979 × 322 px · ${esc(b.link||'#/shop')}</small><span style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-sm btn-line btn-sq" data-edit-banner="${b.id}">${ic('edit',13)} Replace image / link</button></span></span></div>`).join('')}</div>`,'Homepage Slider','These are the exact 4 homepage slides customers see. Replace each one without changing the slider layout.');
+  return adminShell('banners',`<div class="media-guide-note"><b>Homepage slider:</b> All 4 slide images should be exactly <b>979 × 322 px</b>. This is the exact current banner dimension, so replacing with the same size keeps the homepage height and crop unchanged.<br><b>Replace safely:</b> saving a new slide updates the live website, and the previous admin-uploaded slide file is removed from server storage after publish.</div><div class="mgrid" style="grid-template-columns:repeat(2,minmax(0,1fr))">${slides.map((b,i)=>`<div class="mtile"><span class="ph" style="aspect-ratio:979/322;background:#EEF4EF">${`<img src="${src(b.img)}" alt="${esc(b.alt||'Homepage slide')}" style="width:100%;height:100%;object-fit:cover">`}</span><span class="bd"><b>Slide ${i+1}</b><small>979 × 322 px · ${esc(b.link||'#/shop')}</small><span style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-sm btn-line btn-sq" data-edit-banner="${b.id}">${ic('edit',13)} Replace image / link</button></span></span></div>`).join('')}</div>`,'Homepage Slider','These are the exact 4 homepage slides customers see. Replace each one without changing the slider layout.');
 }
 function readHomeSlide(file,done){
   if(!file||!/^image\//.test(file.type)){toast('Please choose an image file',true);return;}
@@ -3657,7 +3693,7 @@ function bannerForm(id){
   const slides=homeHeroSlides(),b=slides.find(x=>x.id===id);if(!b)return;
   openModal('Edit homepage '+id.toUpperCase(),`<form id="bForm" novalidate><div class="field"><label>Current slide</label><div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#EEF4EF;aspect-ratio:979/322"><img src="${src(b.img)}" alt="${esc(b.alt||'Homepage slide')}" style="width:100%;height:100%;object-fit:cover"></div><small class="img-size-hint">Required replacement size: <b>979 × 322 px</b>. Keep the design/text inside this image exactly how you want it shown.</small></div><div class="field"><label>Slide image</label><input class="inp" type="file" accept="image/*" id="bFile"></div><div class="field"><label>Click destination</label><input class="inp" name="link" value="${esc(b.link||'#/shop')}" placeholder="#/shop"></div><div class="field"><label>Image description (SEO / accessibility)</label><input class="inp" name="alt" value="${esc(b.alt||'')}"></div><input type="hidden" name="id" value="${esc(b.id)}"></form>`, `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="bSave">Save slide</button>`);
   let ni=null;$('#bFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readHomeSlide(f,u=>{ni=u;toast('979 × 322 slide ready — press save');});};
-  $('#bSave').onclick=()=>{const f=$('#bForm'),d=Object.fromEntries(new FormData(f).entries());const arr=DB.settings.homeSlides||SEED().settings.homeSlides.map(x=>({...x}));const i=arr.findIndex(x=>x.id===id);const cur=i>=0?arr[i]:{...b};const obj={...cur,id,img:ni||cur.img||b.img,link:d.link||'#/shop',alt:d.alt||b.alt||''};if(i>=0)arr[i]=obj;else arr.push(obj);DB.settings.homeSlides=arr;save();closeLayer();paint();toast('Homepage slide saved');};
+  $('#bSave').onclick=async()=>{const btn=$('#bSave'),label=btn.textContent,f=$('#bForm'),d=Object.fromEntries(new FormData(f).entries());const arr=DB.settings.homeSlides||SEED().settings.homeSlides.map(x=>({...x}));const i=arr.findIndex(x=>x.id===id);const cur=i>=0?arr[i]:{...b};btn.disabled=true;btn.textContent=ni?'Uploading…':'Saving…';try{const img=ni?await storeImageValue(ni,cur.img||b.img):cur.img||b.img;const obj={...cur,id,img,link:d.link||'#/shop',alt:d.alt||b.alt||''};if(i>=0)arr[i]=obj;else arr.push(obj);DB.settings.homeSlides=arr;save();closeLayer();paint();toast('Homepage slide saved — old uploaded file will be removed automatically');}catch(e){btn.disabled=false;btn.textContent=label;toast(e.message||'Slide upload failed',true);}};
 }
 function admOffers(){
   return adminShell('offers',`<div class="panel"><div class="scroll-x"><table class="tbl">
@@ -3718,11 +3754,13 @@ function blogForm(id){
     <input type="hidden" name="id" value="${esc(b.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="gSave">Save post</button>`);
   let ni=null; $('#gFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readImage(f,u=>{ni=u;toast('Photo ready — press save');});};
-  $('#gSave').onclick=()=>{const f=$('#gForm'); if(!validateForm(f))return;
-    const d=Object.fromEntries(new FormData(f).entries());
-    const obj={id:d.id||uid('g'),title:d.title,excerpt:d.excerpt,body:d.body,active:!!d.active,date:b.date||today(),art:b.art||'bush',img:ni||b.img||''};
+  $('#gSave').onclick=async()=>{const f=$('#gForm'); if(!validateForm(f))return;
+    const btn=$('#gSave'),label=btn.textContent,d=Object.fromEntries(new FormData(f).entries());btn.disabled=true;btn.textContent=ni?'Uploading…':'Saving…';
+    try{const img=ni?await storeImageValue(ni,b.img||''):(b.img||'');
+    const obj={id:d.id||uid('g'),title:d.title,excerpt:d.excerpt,body:d.body,active:!!d.active,date:b.date||today(),art:b.art||'bush',img};
     if(d.id)Object.assign(DB.blogs.find(x=>x.id===d.id),obj); else DB.blogs.unshift(obj);
-    save();closeLayer();paint();toast('Post saved');};
+    save();closeLayer();paint();toast('Post saved');}
+    catch(e){btn.disabled=false;btn.textContent=label;toast(e.message||'Cover upload failed',true);}};
 }
 function admPages(){
   return adminShell('pages',`<div class="panel"><div class="scroll-x"><table class="tbl">
@@ -3843,19 +3881,38 @@ function admAccount(){
 <script>
 /* ================= ROUTER ================= */
 function migrateLegacyHashRoute(){
+  if(location.hash&&location.hash.startsWith('#/admin'))return false;
   if(location.hash&&location.hash.startsWith('#/')){
     const target=location.hash.slice(1)||'/';history.replaceState({},'',target);return true;
   }
   return false;
 }
+function normalizeDirectAdminRoute(){
+  const p=location.pathname||'/';
+  if(p==='/admin'||p.startsWith('/admin/')){
+    const q=location.search||'';
+    history.replaceState({},'', '/#'+p+q);
+  }
+}
 function route(){
+  const ah=adminHashPath();
+  if(ah){
+    const cut=ah.indexOf('?');
+    const path=cut>=0?ah.slice(0,cut):ah;
+    const query=cut>=0?ah.slice(cut+1):'';
+    return {seg:path.split('/').filter(Boolean),query,path};
+  }
   const path=location.pathname||'/';
   const query=(location.search||'').replace(/^\?/,'');
   const seg=path.split('/').filter(Boolean);
   return {seg,query,path};
 }
 function upgradeInternalLinks(scope){
-  (scope||document).querySelectorAll('a[href^="#/"]').forEach(a=>a.setAttribute('href',cleanRouteTarget(a.getAttribute('href'))));
+  (scope||document).querySelectorAll('a[href^="#/"]').forEach(a=>{
+    const raw=a.getAttribute('href')||'';
+    if(raw.startsWith('#/admin'))return;
+    a.setAttribute('href',cleanRouteTarget(raw));
+  });
 }
 function seoBase(){
   const d=String((DB.settings&&DB.settings.domain)||'').trim().replace(/\/+$/,'');
@@ -3955,7 +4012,10 @@ function paint(){
 }
 let NAV_DEPTH=0;
 window.addEventListener('popstate',()=>{FORM_DIRTY=false;closeLayer();window.scrollTo(0,0);paint();});
-window.addEventListener('hashchange',()=>{if(migrateLegacyHashRoute()){FORM_DIRTY=false;closeLayer();window.scrollTo(0,0);paint();}});
+window.addEventListener('hashchange',()=>{
+  if(location.hash&&location.hash.startsWith('#/admin')){FORM_DIRTY=false;closeLayer();window.scrollTo(0,0);paint();return;}
+  if(migrateLegacyHashRoute()){FORM_DIRTY=false;closeLayer();window.scrollTo(0,0);paint();}
+});
 
 /* ================= EVENTS ================= */
 document.addEventListener('click',e=>{
@@ -4315,6 +4375,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){const f=document.ge
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='cpn'&&CPN_MSG){ CPN_MSG=null; const m=document.getElementById('cpnMsg'); if(m){m.textContent='';m.className='cpn-msg';} e.target.classList.remove('bad'); } });
 document.addEventListener('change',e=>{if(e.target&&e.target.closest&&e.target.closest('#shopFilters'))shopFilterPreviewCount();});
 /* ---------- boot ---------- */
+normalizeDirectAdminRoute();
 migrateLegacyHashRoute();
 load(); paint(); API.init(); SB.init();
 // Keep merchant data fresh while the admin is open. Inventory updates from new orders
