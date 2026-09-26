@@ -562,7 +562,8 @@ textarea.inp{min-height:90px;resize:vertical}
 .thanks-card h3{font-family:var(--serif);font-size:26px;margin:6px 0 8px;color:var(--green-900);font-weight:600}
 .thanks-card p{margin:0 auto 10px;max-width:46ch;color:#2E4238;line-height:1.6}
 .thanks-card .thanks-small{font-size:13px;color:var(--muted)}
-.thanks-leaf{display:inline-grid;place-items:center;width:58px;height:58px;border-radius:50%;background:#fff;font-size:30px;box-shadow:0 6px 18px rgba(20,70,45,.15)}
+.thanks-leaf{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#fff;padding:10px;box-shadow:0 6px 18px rgba(20,70,45,.15)}
+.thanks-leaf img{width:100%;height:100%;object-fit:contain}
 .news .thanks-card{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff;padding:14px;text-align:left}
 .news .thanks-card h3{color:#fff;font-size:20px;margin:0 0 4px}.news .thanks-card p{color:#E4F1E8;margin:0}.news .thanks-leaf{display:none}
 .cpn-msg{font-size:12.5px;margin:-6px 0 10px;line-height:1.4}.cpn-msg.bad{color:var(--red)}.cpn-msg.good{color:#1F7A4D;font-weight:600}
