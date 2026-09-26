@@ -252,7 +252,7 @@ async function mailOrderUpdate(env, order, title, message) {
 }
 
 /* ---------- API ---------- */
-async function api(req, env, url) {
+async function api(req, env, url, ctx) {
   const p = url.pathname.replace(/\/+$/, "");
   const m = req.method;
   if (!env.DATA) return bad("Storage is not connected yet (KV binding DATA missing).", 503);
@@ -498,13 +498,15 @@ async function api(req, env, url) {
     const msg = { id: crypto.randomUUID(), name: String(d.name).trim(), email: String(d.email).trim().toLowerCase(), phone: String(d.phone).replace(/[^0-9]/g, ""),
       msg: String(d.msg).trim(), date: todayIST(), createdAt: new Date().toISOString(), read: false };
     await env.DATA.put("msg:" + msg.createdAt + ":" + msg.id, JSON.stringify(msg));
-    const owner = await mailOwner(env, { subject: `✉️ Website message from ${msg.name}`, replyTo: msg.email,
-      text: `${msg.name} (${msg.email}, ${msg.phone}) wrote:\n\n${msg.msg}`,
-      html: shell(`New message from ${msg.name}`, `<table style="width:100%;font-size:14px">${row("Name", msg.name)}${row("Email", msg.email)}${row("Mobile", msg.phone)}</table><div style="background:#F1F7F3;border-radius:10px;padding:14px;margin-top:12px;font-size:15px;line-height:1.6;white-space:pre-wrap">${esc(msg.msg)}</div><p style="font-size:13px;color:#6B7A72">Press Reply to answer ${esc(msg.name)} directly.</p>`, env) });
     const first = msg.name.split(" ")[0];
-    const cust = await mailCustomer(env, { to: msg.email, name: msg.name, subject: `Thank you for writing to Green Ocean, ${first} 🌿`,
-      html: shell(`Hi ${first}, we got your message 🌿`, `<p style="font-size:15px;line-height:1.6">Thank you for reaching out. A real person from our nursery will read it and reply within one working day.</p><div style="background:#F1F7F3;border-radius:10px;padding:14px;font-size:14px;color:#445;white-space:pre-wrap">${esc(msg.msg)}</div><p style="font-size:14px;line-height:1.6;margin-top:14px">Warm regards,<br>Team Green Ocean</p>`, env) });
-    return json({ ok: true, ownerMailed: owner.sent, customerMailed: cust.sent });
+    ctx.waitUntil(Promise.all([
+      mailOwner(env, { subject: `✉️ Website message from ${msg.name}`, replyTo: msg.email,
+        text: `${msg.name} (${msg.email}, ${msg.phone}) wrote:\n\n${msg.msg}`,
+        html: shell(`New message from ${msg.name}`, `<table style="width:100%;font-size:14px">${row("Name", msg.name)}${row("Email", msg.email)}${row("Mobile", msg.phone)}</table><div style="background:#F1F7F3;border-radius:10px;padding:14px;margin-top:12px;font-size:15px;line-height:1.6;white-space:pre-wrap">${esc(msg.msg)}</div><p style="font-size:13px;color:#6B7A72">Press Reply to answer ${esc(msg.name)} directly.</p>`, env) }),
+      mailCustomer(env, { to: msg.email, name: msg.name, subject: `Thank you for writing to Green Ocean, ${first} 🌿`,
+        html: shell(`Hi ${first}, we got your message 🌿`, `<p style="font-size:15px;line-height:1.6">Thank you for reaching out. A real person from our nursery will read it and reply within one working day.</p><div style="background:#F1F7F3;border-radius:10px;padding:14px;font-size:14px;color:#445;white-space:pre-wrap">${esc(msg.msg)}</div><p style="font-size:14px;line-height:1.6;margin-top:14px">Warm regards,<br>Team Green Ocean</p>`, env) }),
+    ]).catch(()=>{}));
+    return json({ ok: true });
   }
 
   /* newsletter */
@@ -733,7 +735,7 @@ export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (url.pathname.startsWith("/api/")) {
-      try { return await api(req, env, url); }
+      try { return await api(req, env, url, ctx); }
       catch (e) { return bad("Something went wrong on our side. Please try again.", 500); }
     }
     if (req.method === "GET" && /^\/media\/[A-Za-z0-9-]+$/.test(url.pathname)) return serveManagedMedia(env, url.pathname.split("/").pop());
