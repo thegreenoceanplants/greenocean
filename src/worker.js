@@ -664,7 +664,8 @@ function pageParts(store, url) {
   let robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
   const schemas = [];
   const abs = (v) => { if (!v) return ""; const raw=builtinImages[String(v)]||String(v); if(/^data:/i.test(raw))return ""; try { return new URL(raw, base).href; } catch { return ""; } };
-  const biz = {"@context":"https://schema.org","@type":"LocalBusiness","@id":base+"/#business",name:store?.settings?.store||"Green Ocean",url:base+"/",image:base+"/assets/img/hero.jpg",logo:base+"/assets/img/logo.png",telephone:store?.settings?.phone||"",email:store?.settings?.email||"",address:{"@type":"PostalAddress",streetAddress:"Balihari",addressLocality:"Dhanbad",addressRegion:"Jharkhand",postalCode:"828116",addressCountry:"IN"},priceRange:"₹₹"};
+  const media=store?.settings?.media||{};
+  const biz = {"@context":"https://schema.org","@type":"LocalBusiness","@id":base+"/#business",name:store?.settings?.store||"Green Ocean",url:base+"/",image:media.hero?base+media.hero:base+"/assets/img/hero.jpg",logo:media.logo?base+media.logo:base+"/assets/img/logo.png",telephone:store?.settings?.phone||"",email:store?.settings?.email||"",address:{"@type":"PostalAddress",streetAddress:"Balihari",addressLocality:"Dhanbad",addressRegion:"Jharkhand",postalCode:"828116",addressCountry:"IN"},priceRange:"₹₹"};
   const crumbs = (items) => ({"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:items.map((x,i)=>({"@type":"ListItem",position:i+1,name:x[0],item:base+x[1]}))});
   const privatePage = ["admin","account","orders","cart","checkout","thanks","login","signup","wishlist"].includes(seg[0]||"");
   if (privatePage) robots = "noindex,follow"; else schemas.push(biz);
