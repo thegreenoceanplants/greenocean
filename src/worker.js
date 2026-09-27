@@ -405,14 +405,15 @@ async function api(req, env, url, ctx) {
       <tr><td style="padding:6px 0;color:#6B7A72">Delivery</td><td style="text-align:right">${ship ? inr(ship) : "Free"}</td></tr>
       ${off ? `<tr><td style="padding:6px 0;color:#6B7A72">Discount (${esc(coupon)})</td><td style="text-align:right">− ${inr(off)}</td></tr>` : ""}
       <tr><td style="padding:10px 0;font-weight:bold;border-top:1px solid #E2E7E3">Total</td><td style="text-align:right;font-weight:bold;border-top:1px solid #E2E7E3">${inr(order.total)}</td></tr></table>`;
-    const ownerMail = await mailOwner(env, {
-      subject: `🛒 New order ${id} — ${order.name} — ${inr(order.total)}`, replyTo: order.email,
-      text: `New order ${id}\n${order.name}, ${order.phone}, ${order.email}\n${order.address}\n\n${items.map((i) => `${i.name} x ${i.qty} = ${inr(i.price * i.qty)}`).join("\n")}\nTotal ${inr(order.total)} (${order.pay})`,
-      html: shell(`New order ${id}`, `<table style="width:100%;font-size:14px">${row("Customer", order.name)}${row("Mobile", order.phone)}${row("Email", order.email)}${row("Address", order.address)}${row("Payment", order.pay)}${row("Came via", order.via)}${order.note ? row("Gift note", order.note) : ""}</table><hr style="border:0;border-top:1px solid #E2E7E3;margin:14px 0">${table}`, env),
-    });
-    const first = order.name.split(" ")[0];
-    const custMail = await mailCustomer(env, { to: order.email, name: order.name, subject: `Thank you, ${first}! Your Green Ocean order ${id} is received 🌿`,
-      html: shell(`Thank you, ${first}! 🌿`, `<p style="font-size:15px;line-height:1.6">We have received your order and our nursery team is already picking the healthiest plants for you. Your payment method is <b>${esc(order.pay)}</b>. We will contact you on <b>${esc(order.phone)}</b> only if we need to confirm a delivery detail.</p>${table}<p style="font-size:14px;color:#6B7A72;margin-top:14px">Delivering to: ${esc(order.address)}</p><p style="font-size:14px;line-height:1.6">Questions? Just reply to this email.<br>— Team Green Ocean</p>`, env) });
+    const [ownerMail, custMail] = await Promise.all([
+      mailOwner(env, {
+        subject: `🛒 New order ${id} — ${order.name} — ${inr(order.total)}`, replyTo: order.email,
+        text: `New order ${id}\n${order.name}, ${order.phone}, ${order.email}\n${order.address}\n\n${items.map((i) => `${i.name} x ${i.qty} = ${inr(i.price * i.qty)}`).join("\n")}\nTotal ${inr(order.total)} (${order.pay})`,
+        html: shell(`New order ${id}`, `<table style="width:100%;font-size:14px">${row("Customer", order.name)}${row("Mobile", order.phone)}${row("Email", order.email)}${row("Address", order.address)}${row("Payment", order.pay)}${row("Came via", order.via)}${order.note ? row("Gift note", order.note) : ""}</table><hr style="border:0;border-top:1px solid #E2E7E3;margin:14px 0">${table}`, env),
+      }),
+      mailCustomer(env, { to: order.email, name: order.name, subject: `Thank you, ${order.name.split(" ")[0]}! Your Green Ocean order ${id} is received 🌿`,
+        html: shell(`Thank you, ${order.name.split(" ")[0]}! 🌿`, `<p style="font-size:15px;line-height:1.6">We have received your order and our nursery team is already picking the healthiest plants for you. Your payment method is <b>${esc(order.pay)}</b>. We will contact you on <b>${esc(order.phone)}</b> only if we need to confirm a delivery detail.</p>${table}<p style="font-size:14px;color:#6B7A72;margin-top:14px">Delivering to: ${esc(order.address)}</p><p style="font-size:14px;line-height:1.6">Questions? Just reply to this email.<br>— Team Green Ocean</p>`, env) }),
+    ]);
     return json({ ok: true, id, total: order.total, subtotal: sub, discount: off, delivery: ship, coupon, ownerMailed: ownerMail.sent, customerMailed: custMail.sent });
   }
 
