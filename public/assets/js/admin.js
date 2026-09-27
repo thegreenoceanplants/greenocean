@@ -251,7 +251,7 @@ function productForm(id){
   const p=id==='new'?{id:'',name:'',sub:'',cat:DB.categories[0].id,price:'',mrp:'',stock:10,art:'bush',img:'',desc:'',active:true,rating:4.5,reviews:0,badge:'',care:{light:'Bright indirect',water:'Weekly',pet:'Keep away from pets'}}:prod(id);
   if(!p)return;
   openModal(id==='new'?'Add new product':'Edit product',`<form id="pForm" novalidate>
-    <div class="field"><label>Product name</label><input class="inp" name="name" data-v="name" data-label="Product name" value="${esc(p.name)}"></div>
+    <div class="field"><label>Product name</label><input class="inp" name="name" data-v="title" data-label="Product name" value="${esc(p.name)}"></div>
     <div class="row2"><div class="field"><label>Short line</label><input class="inp" name="sub" value="${esc(p.sub||'')}" placeholder="Air purifying"></div>
       <div class="field"><label>Category</label><select class="inp" name="cat">${DB.categories.map(c=>`<option value="${c.id}" ${p.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div></div>
     <div class="row2"><div class="field"><label>Selling price (₹)</label><input class="inp" type="number" name="price" data-v="price" data-label="Price" min="1" value="${p.price}"></div>
@@ -296,13 +296,13 @@ function admCategories(){
 function catForm(id){
   const c=id==='new'?{id:'',name:'',slug:'',desc:'',art:'bush',img:''}:cat(id); if(!c)return;
   openModal(id==='new'?'Add category':'Edit category',`<form id="cForm" novalidate>
-    <div class="field"><label>Name</label><input class="inp" name="name" data-v="name" data-label="Category name" value="${esc(c.name)}"></div>
+    <div class="field"><label>Name</label><input class="inp" name="name" data-v="title" data-label="Category name" value="${esc(c.name)}"></div>
     <div class="field"><label>Short description</label><input class="inp" name="desc" value="${esc(c.desc||'')}"></div>
     <div class="field"><label>Photo</label><div style="display:flex;gap:10px;align-items:center">${pic(c,'thumb')}
       <input class="inp" type="file" accept="image/*" id="cFile"></div><small class="img-size-hint">Recommended category image: <b>1000 × 1000 px</b> (1:1 square).</small></div>
     <input type="hidden" name="id" value="${esc(c.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="cSave">Save</button>`);
-  let ni=null; $('#cFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readImage(f,u=>{ni=u;toast('Photo ready — press save');});};
+  let ni=null; $('#cFile').onchange=e=>{const f=e.target.files[0];if(!f)return;fitImage(f,1000,1000,u=>{ni=u;toast('Photo ready — press save');});};
   $('#cSave').onclick=async()=>{const f=$('#cForm'); if(!validateForm(f))return;
     const btn=$('#cSave'),label=btn.textContent,d=Object.fromEntries(new FormData(f).entries());btn.disabled=true;btn.textContent=ni?'Uploading…':'Saving…';
     try{const img=ni?await storeImageValue(ni,c.img||''):(c.img||'');

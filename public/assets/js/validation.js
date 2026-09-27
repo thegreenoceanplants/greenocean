@@ -1,6 +1,7 @@
 /* ================= VALIDATION ================= */
 const RULES={
   name:v=>/^[A-Za-z][A-Za-z .']{1,39}$/.test(v.trim())||'Use letters only, at least 2 characters',
+  title:v=>/^[A-Za-z0-9][A-Za-z0-9 &.,'\/-]{1,59}$/.test(v.trim())||'Enter a name, 2–60 characters',
   email:v=>/^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/.test(v.trim())||'Enter a working email, like name@gmail.com',
   phone:v=>/^[6-9][0-9]{9}$/.test(v.replace(/[^0-9]/g,''))||'10-digit Indian mobile number starting with 6, 7, 8 or 9',
   pin:v=>/^[1-9][0-9]{5}$/.test(v.trim())||'Enter a valid 6-digit pincode',

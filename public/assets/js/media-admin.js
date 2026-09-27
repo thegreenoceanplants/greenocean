@@ -158,6 +158,21 @@ async function updateOrder(o,patch){
 async function setOrderStatus(o,status){return updateOrder(o,{status});}
 async function deleteItem(key){ if(!API.on||!key)return true; const r=await API.call('/api/admin/item/'+encodeURIComponent(key),{method:'DELETE',admin:true}); if(!r.ok)toast(r.error,true); return r.ok; }
 /* photos: shrink before saving so the website stays fast */
+/* Universal helper: any admin photo upload can use this to auto-fit to an exact
+   width x height, however large/small/odd-shaped the source photo is — it scales
+   to cover the target box and crops the overflow, centered, so nothing is ever rejected. */
+function fitImage(file,w,h,done){
+  if(!file||!/^image\//.test(file.type)){toast('Please choose a photo file',true);return;}
+  const fr=new FileReader();
+  fr.onload=()=>{ const img=new Image(); img.onload=()=>{
+      const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+      const cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,w,h);
+      const sc=Math.max(w/img.width,h/img.height), iw=img.width*sc, ih=img.height*sc;
+      cx.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);
+      done(cv.toDataURL('image/webp',0.9)); };
+    img.onerror=()=>toast('That photo could not be read',true); img.src=fr.result; };
+  fr.readAsDataURL(file);
+}
 function readImage(file,done){
   if(!file||!/^image\//.test(file.type)){toast('Please choose a photo file',true);return;}
   const fr=new FileReader();
