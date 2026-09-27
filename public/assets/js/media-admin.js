@@ -296,11 +296,17 @@ function thankYouCard(name,email,kind){
     ?`Your message has reached our nursery. A real person from our team will read it and reply to <b>${esc(email)}</b> within one working day.`
     :`You are now part of the Green Ocean community. Plant care tips and new arrivals will reach <b>${esc(email)}</b>.`;
   return `<div class="thanks-card" role="status">
-    <span class="thanks-leaf"><img src="${src('img:logo')}" alt="${esc(DB.settings.store||'Green Ocean')}"></span>
+    <span class="thanks-badge">
+      <span class="thanks-sparkle s1"></span><span class="thanks-sparkle s2"></span>
+      <span class="thanks-sparkle s3"></span><span class="thanks-sparkle s4"></span>
+      <span class="thanks-leaf"><img src="${src('img:logo')}" alt="${esc(DB.settings.store||'Green Ocean')}"></span>
+    </span>
     <h3>Thank you, ${first}!</h3>
     <p>${body}</p>
-    ${kind==='contact'?`<p class="thanks-small">Need a faster answer? Call or WhatsApp us on ${esc(DB.settings.phone)}.</p>
-    <button class="btn btn-line btn-sq btn-sm" data-act="contactAgain">Send another message</button>`:''}</div>`;
+    ${kind==='contact'?`<div class="thanks-divider"><span>${ic('leaf',14)}</span></div>
+    <p class="thanks-small">Need a faster answer? Call or WhatsApp us on</p>
+    <p class="thanks-phone">${ic('phone',16)} ${esc(DB.settings.phone)}</p>
+    <button class="btn btn-primary thanks-cta" data-act="contactAgain">Send another message ${ic('arrow',17)}</button>`:''}</div>`;
 }
 
 
