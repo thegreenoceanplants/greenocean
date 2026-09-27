@@ -554,6 +554,26 @@ async function api(req, env, url, ctx) {
       const clean = accounts.map(({ _key, ...a }) => a).filter(a => a && a.registered && RULES.email(a.email));
       return json({ ok: true, emails: clean.map(a => String(a.email).toLowerCase()), accounts: clean });
     }
+    /* Blocks a customer's Supabase login. This is the one admin action that genuinely needs
+       the service-role key (Supabase has no lesser-privileged way to disable a sign-in). */
+    if (p === "/api/admin/customers/block" && m === "POST") {
+      if (!isAdmin(req, env)) return bad("Wrong admin password.", 401);
+      if (!env.SUPABASE_SERVICE_ROLE_KEY) return bad("Add SUPABASE_SERVICE_ROLE_KEY as a Worker secret to block sign-ins.", 503);
+      const body = await readJSON(req).catch(() => ({}));
+      const email = String(body.email || "").trim().toLowerCase();
+      if (!RULES.email(email)) return bad("A valid email is required.");
+      const sHeaders = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
+      const look = await fetch(`${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=id`, { headers: sHeaders });
+      if (!look.ok) return bad("Could not look up that account.", 502);
+      const rows = await look.json();
+      if (!rows.length) return json({ ok: true, blocked: false, note: "No website account for this email (guest order) — nothing to block." });
+      const ban = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${rows[0].id}`, {
+        method: "PUT", headers: { ...sHeaders, "content-type": "application/json" },
+        body: JSON.stringify({ ban_duration: "87600h" }),
+      });
+      if (!ban.ok) return bad("Could not block that account.", 502);
+      return json({ ok: true, blocked: true });
+    }
     const sm = p.match(/^\/api\/admin\/stock\/(.+)$/);
     if (sm && m === "PATCH") {
       const productId = decodeURIComponent(sm[1]); const d = await readJSON(req);
