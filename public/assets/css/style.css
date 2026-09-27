@@ -558,14 +558,29 @@ textarea.inp{min-height:90px;resize:vertical}
 @media(max-width:900px){.faq-layout{grid-template-columns:1fr}.faq-side{position:static;grid-template-columns:1fr 1fr}.faq-hero-inner{padding:38px 30px}.faq-hero::before{width:58%}}
 @media(max-width:650px){.faq-page .wrap{padding-left:12px;padding-right:12px}.faq-hero{border-radius:16px;min-height:235px}.faq-hero-inner{padding:30px 20px}.faq-hero::before{width:78%;opacity:.30}.faq-hero h1{font-size:34px}.faq-side{grid-template-columns:1fr}.faq-title-row h2{font-size:24px}.faq-item summary{grid-template-columns:36px 1fr 30px;padding:15px 12px;gap:9px;font-size:13.5px}.faq-qicon{width:34px;height:34px}.faq-answer{padding:0 46px 16px 57px;font-size:13px}.faq-bottom{align-items:flex-start;flex-direction:column}.faq-bottom .btn{width:100%}}
 
-.thanks-card{text-align:center;padding:26px 18px;border-radius:var(--r-lg);background:linear-gradient(160deg,#F1F8F3,#E3F0E7);border:1px solid #CFE3D6;animation:pop .35s ease}
-.thanks-card h3{font-family:var(--serif);font-size:26px;margin:6px 0 8px;color:var(--green-900);font-weight:600}
-.thanks-card p{margin:0 auto 10px;max-width:46ch;color:#2E4238;line-height:1.6}
-.thanks-card .thanks-small{font-size:13px;color:var(--muted)}
-.thanks-leaf{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#fff;padding:10px;box-shadow:0 6px 18px rgba(20,70,45,.15)}
+.thanks-card{position:relative;overflow:hidden;text-align:center;padding:40px 26px 32px;border-radius:var(--r-lg);background:linear-gradient(160deg,#F1F8F3,#E3F0E7);border:1px solid #CFE3D6;animation:pop .35s ease}
+.thanks-card::before,.thanks-card::after{content:'';position:absolute;width:230px;height:230px;background-repeat:no-repeat;background-size:contain;opacity:.6;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%238FC7A4%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M10%20192%20C%2042%20150%2C%2058%20122%2C%2092%2080%22/%3E%3C/g%3E%3Cg%20fill%3D%22%238FC7A4%22%20fill-opacity%3D%220.55%22%3E%3Cellipse%20cx%3D%2228%22%20cy%3D%22168%22%20rx%3D%2219%22%20ry%3D%229%22%20transform%3D%22rotate%28-42%2028%20168%29%22/%3E%3Cellipse%20cx%3D%2248%22%20cy%3D%22142%22%20rx%3D%2221%22%20ry%3D%2210%22%20transform%3D%22rotate%28-36%2048%20142%29%22/%3E%3Cellipse%20cx%3D%2266%22%20cy%3D%22114%22%20rx%3D%2223%22%20ry%3D%2211%22%20transform%3D%22rotate%28-30%2066%20114%29%22/%3E%3Cellipse%20cx%3D%2284%22%20cy%3D%2286%22%20rx%3D%2225%22%20ry%3D%2212%22%20transform%3D%22rotate%28-18%2084%2086%29%22/%3E%3C/g%3E%3C/svg%3E")}
+.thanks-card::before{left:-38px;bottom:-38px}
+.thanks-card::after{right:-38px;top:-38px;transform:rotate(180deg)}
+.thanks-badge{position:relative;display:inline-block;z-index:1}
+.thanks-sparkle{position:absolute;width:16px;height:2px;border-radius:2px;background:#9BD1B0}
+.thanks-sparkle.s1{left:-24px;top:6px;transform:rotate(35deg)}
+.thanks-sparkle.s2{left:-14px;top:32px;transform:rotate(75deg)}
+.thanks-sparkle.s3{right:-24px;top:6px;transform:rotate(-35deg)}
+.thanks-sparkle.s4{right:-14px;top:32px;transform:rotate(-75deg)}
+.thanks-card h3{position:relative;z-index:1;font-family:var(--serif);font-size:27px;margin:14px 0 10px;color:var(--green-900);font-weight:600}
+.thanks-card p{position:relative;z-index:1;margin:0 auto 10px;max-width:44ch;color:#2E4238;line-height:1.65}
+.thanks-divider{position:relative;z-index:1;display:flex;align-items:center;gap:10px;max-width:230px;margin:16px auto}
+.thanks-divider::before,.thanks-divider::after{content:'';flex:1;height:1px;background:#CADFCE}
+.thanks-divider span{display:grid;place-items:center;color:#6FAE85;flex:none}
+.thanks-phone{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:700;color:#123526;font-size:15px;margin:0 0 22px}
+.thanks-phone svg{flex:none}
+.thanks-card .thanks-small{font-size:13.5px;color:var(--muted);margin-bottom:4px}
+.thanks-cta{position:relative;z-index:1;width:100%;max-width:360px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 20px;border-radius:999px;font-size:15.5px}
+.thanks-leaf{position:relative;z-index:1;display:inline-grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#fff;padding:10px;box-shadow:0 6px 18px rgba(20,70,45,.15)}
 .thanks-leaf img{width:100%;height:100%;object-fit:contain}
 .news .thanks-card{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);color:#fff;padding:14px;text-align:left}
-.news .thanks-card h3{color:#fff;font-size:20px;margin:0 0 4px}.news .thanks-card p{color:#E4F1E8;margin:0}.news .thanks-leaf{display:none}
+.news .thanks-card h3{color:#fff;font-size:20px;margin:0 0 4px}.news .thanks-card p{color:#E4F1E8;margin:0}.news .thanks-leaf{display:none}.news .thanks-card::before,.news .thanks-card::after{display:none}
 .cpn-msg{font-size:12.5px;margin:-6px 0 10px;line-height:1.4}.cpn-msg.bad{color:var(--red)}.cpn-msg.good{color:#1F7A4D;font-weight:600}
 .form-err{background:#FCECEA;color:#9F3329;border-radius:var(--r-sm);padding:10px 12px;font-size:13px;margin-bottom:10px}
 .adm>div{min-width:0}
