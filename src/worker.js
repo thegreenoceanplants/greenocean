@@ -8,7 +8,8 @@
  *   ASSETS static assets  — the website files
  * Secrets (Cloudflare → Worker → Settings → Variables and Secrets):
  *   ADMIN_PASSWORD         required to change anything from the admin panel
- *   BREVO_API_KEY          optional — sends thank-you emails to customers
+ *   BREVO_API_KEY          optional — sends thank-you emails/newsletters to customers
+ *   SUPABASE_SERVICE_ROLE_KEY optional — enables Admin listing/block/unblock/delete of Supabase Auth users
  * Variables:
  *   OWNER_EMAIL            where order / contact emails go (must be verified in Email Routing)
  *   FROM_EMAIL             sender address on your domain, e.g. website@greenocean.co.in
@@ -249,6 +250,57 @@ async function mailOrderUpdate(env, order, title, message) {
   const ship = order.awb || order.courier ? `<table style="width:100%;font-size:14px">${order.courier ? row("Courier", order.courier) : ""}${order.awb ? row("AWB / Tracking", order.awb) : ""}</table>` : "";
   return mailCustomer(env, { to: order.email, name: order.name, subject: `${title} — ${order.id}`,
     html: shell(title, `<p style="font-size:15px;line-height:1.65">${esc(message)}</p>${ship}${track}<p style="font-size:13px;color:#6B7A72">Order ${esc(order.id)} · ${inr(order.total)}</p>`, env) });
+}
+
+
+async function supabaseAdminUsers(env) {
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) return { ok: false, status: 503, error: "Add SUPABASE_SERVICE_ROLE_KEY as a Worker secret to manage Supabase Auth users." };
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  const headers = { apikey: key, authorization: `Bearer ${key}` };
+  const out = [];
+  try {
+    for (let page = 1; page <= 10; page++) {
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=200`, { headers });
+      if (!r.ok) return { ok: false, status: 502, error: "Could not load Supabase Auth users." };
+      const data = await r.json();
+      const users = Array.isArray(data) ? data : (Array.isArray(data.users) ? data.users : []);
+      for (const u of users) {
+        const meta = u.user_metadata || {};
+        const bannedUntil = u.banned_until || null;
+        const blocked = !!(bannedUntil && new Date(bannedUntil).getTime() > Date.now());
+        out.push({ id: String(u.id || ""), email: String(u.email || "").toLowerCase(), phone: String(meta.phone || u.phone || ""),
+          name: String(meta.name || meta.full_name || (u.email || "").split("@")[0] || "Customer").slice(0, 100),
+          provider: String((u.app_metadata && u.app_metadata.provider) || "email"), createdAt: u.created_at || "", lastSignInAt: u.last_sign_in_at || "", blocked, bannedUntil });
+      }
+      if (users.length < 200) break;
+    }
+    return { ok: true, users: out.filter(u => u.id && RULES.email(u.email)) };
+  } catch (e) { return { ok: false, status: 502, error: "Could not reach Supabase Auth." }; }
+}
+async function supabaseAdminUserAction(env, id, action) {
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) return { ok: false, status: 503, error: "Add SUPABASE_SERVICE_ROLE_KEY as a Worker secret to manage Supabase Auth users." };
+  id = String(id || "").trim(); if (!/^[A-Za-z0-9-]{20,80}$/.test(id)) return { ok: false, status: 400, error: "A valid Supabase user id is required." };
+  const key = env.SUPABASE_SERVICE_ROLE_KEY, headers = { apikey: key, authorization: `Bearer ${key}`, "content-type": "application/json" };
+  const url = `${SUPABASE_URL}/auth/v1/admin/users/${encodeURIComponent(id)}`;
+  try {
+    const r = action === "delete"
+      ? await fetch(url, { method: "DELETE", headers })
+      : await fetch(url, { method: "PUT", headers, body: JSON.stringify({ ban_duration: action === "block" ? "87600h" : "none" }) });
+    if (!r.ok) return { ok: false, status: 502, error: `Could not ${action} that Supabase account.` };
+    return { ok: true };
+  } catch (e) { return { ok: false, status: 502, error: "Could not reach Supabase Auth." }; }
+}
+async function sendNewsletterCampaign(env, campaign, subscribers) {
+  let sent = 0, failed = 0;
+  const cleanBody = esc(campaign.body).replace(/\n/g, "<br>");
+  const html = shell(campaign.subject, `<p style="font-size:15px;line-height:1.7">${cleanBody}</p><p style="font-size:12px;color:#6B7A72;margin-top:20px">You received this because you subscribed to Green Ocean updates.</p>`, env);
+  for (let i = 0; i < subscribers.length; i += 20) {
+    const batch = subscribers.slice(i, i + 20);
+    const res = await Promise.allSettled(batch.map(s => mailCustomer(env, { to: s.email, name: (s.name || s.email || "friend").split("@")[0], subject: campaign.subject, html })));
+    res.forEach(x => { if (x.status === "fulfilled" && x.value && x.value.sent) sent++; else failed++; });
+  }
+  campaign.sent = sent; campaign.failed = failed; campaign.status = failed && !sent ? "Failed" : "Sent"; campaign.completedAt = new Date().toISOString();
+  await env.DATA.put(campaign._key, JSON.stringify(campaign));
 }
 
 /* ---------- API ---------- */
@@ -555,25 +607,40 @@ async function api(req, env, url, ctx) {
       const clean = accounts.map(({ _key, ...a }) => a).filter(a => a && a.registered && RULES.email(a.email));
       return json({ ok: true, emails: clean.map(a => String(a.email).toLowerCase()), accounts: clean });
     }
-    /* Blocks a customer's Supabase login. This is the one admin action that genuinely needs
-       the service-role key (Supabase has no lesser-privileged way to disable a sign-in). */
-    if (p === "/api/admin/customers/block" && m === "POST") {
-      if (!isAdmin(req, env)) return bad("Wrong admin password.", 401);
-      if (!env.SUPABASE_SERVICE_ROLE_KEY) return bad("Add SUPABASE_SERVICE_ROLE_KEY as a Worker secret to block sign-ins.", 503);
-      const body = await readJSON(req).catch(() => ({}));
-      const email = String(body.email || "").trim().toLowerCase();
-      if (!RULES.email(email)) return bad("A valid email is required.");
-      const sHeaders = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
-      const look = await fetch(`${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=id`, { headers: sHeaders });
-      if (!look.ok) return bad("Could not look up that account.", 502);
-      const rows = await look.json();
-      if (!rows.length) return json({ ok: true, blocked: false, note: "No website account for this email (guest order) — nothing to block." });
-      const ban = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${rows[0].id}`, {
-        method: "PUT", headers: { ...sHeaders, "content-type": "application/json" },
-        body: JSON.stringify({ ban_duration: "87600h" }),
-      });
-      if (!ban.ok) return bad("Could not block that account.", 502);
-      return json({ ok: true, blocked: true });
+    /* Supabase Auth administration stays server-side; the service-role secret is never sent to the browser. */
+    if (p === "/api/admin/auth-users" && m === "GET") {
+      const result = await supabaseAdminUsers(env);
+      return result.ok ? json({ ok: true, users: result.users }) : bad(result.error, result.status || 500);
+    }
+    if (["block","unblock","delete"].some(a => p === `/api/admin/customers/${a}`) && m === "POST") {
+      const action = p.split("/").pop(); const body = await readJSON(req).catch(() => ({}));
+      const result = await supabaseAdminUserAction(env, body.id, action);
+      if (!result.ok) return bad(result.error, result.status || 500);
+      const at = new Date().toISOString();
+      await env.DATA.put(`adminlog:${at}:${crypto.randomUUID()}`, JSON.stringify({ at, action: `auth-${action}`, userId: String(body.id || ""), email: String(body.email || ""), actor: "admin" }));
+      return json({ ok: true, action });
+    }
+    if (p === "/api/admin/newsletter" && m === "GET") {
+      const draft = (await env.DATA.get("campaign:draft", "json")) || { subject: "", body: "" };
+      const campaigns = await grab("campaign:", 40);
+      return json({ ok: true, draft, campaigns: campaigns.filter(x => x._key !== "campaign:draft").map(({_key,...x})=>x) });
+    }
+    if (p === "/api/admin/newsletter/draft" && m === "PUT") {
+      const body = await readJSON(req).catch(() => ({})); const subject = String(body.subject || "").trim(), message = String(body.body || "").trim();
+      if (!subject || subject.length > 160 || !message || message.length > 8000) return bad("Enter a subject and message within the allowed length.");
+      const draft = { subject, body: message, updatedAt: new Date().toISOString() }; await env.DATA.put("campaign:draft", JSON.stringify(draft));
+      return json({ ok: true, draft });
+    }
+    if (p === "/api/admin/newsletter/send" && m === "POST") {
+      if (!env.BREVO_API_KEY) return bad("BREVO_API_KEY is not configured on the Worker yet.", 503);
+      const body = await readJSON(req).catch(() => ({})); const subject = String(body.subject || "").trim(), message = String(body.body || "").trim();
+      if (!subject || subject.length > 160 || !message || message.length > 8000) return bad("Enter a subject and message within the allowed length.");
+      const subscribers = (await grab("sub:", 1000)).filter(x => RULES.email(x.email)); if (!subscribers.length) return bad("There are no newsletter subscribers yet.", 409);
+      const createdAt = new Date().toISOString(), id = crypto.randomUUID(), key = `campaign:${createdAt}:${id}`;
+      const campaign = { id, _key: key, subject, body: message, createdAt, status: "Queued", recipients: subscribers.length, sent: 0, failed: 0 };
+      await env.DATA.put(key, JSON.stringify(campaign)); await env.DATA.delete("campaign:draft");
+      ctx.waitUntil(sendNewsletterCampaign(env, campaign, subscribers));
+      return json({ ok: true, queued: true, recipients: subscribers.length, id });
     }
     const sm = p.match(/^\/api\/admin\/stock\/(.+)$/);
     if (sm && m === "PATCH") {
@@ -699,22 +766,22 @@ function pageParts(store, url) {
     const product = (store?.products||[]).find(x=>String(x.id)===seg[1]);
     if (product) {
       const category=(store?.categories||[]).find(c=>c.id===product.cat);
-      title = `${product.name} | Buy Online at Green Ocean`; desc = product.desc || product.sub || desc;
+      title = product.seoTitle || `${product.name} | Buy Online at Green Ocean`; desc = product.seoDesc || product.desc || product.sub || desc;
       const revs=(store?.reviews||[]).filter(r=>r.status==="Published"&&r.product===product.name);
-      const ps={"@context":"https://schema.org","@type":"Product","@id":base+path+"#product",name:product.name,description:product.desc||product.sub||"",image:[abs(product.img)||base+"/assets/img/hero.jpg"],sku:String(product.id),brand:{"@type":"Brand",name:"Green Ocean"},offers:{"@type":"Offer",url:base+path,priceCurrency:"INR",price:Number(product.price||0).toFixed(2),availability:Number(product.stock||0)>0?"https://schema.org/InStock":"https://schema.org/OutOfStock",itemCondition:"https://schema.org/NewCondition",seller:{"@id":base+"/#business"}}};
+      const ps={"@context":"https://schema.org","@type":"Product","@id":base+path+"#product",name:product.name,description:product.desc||product.sub||"",image:[abs(product.img)||base+"/assets/img/hero.jpg"],sku:String(product.sku||product.id),brand:{"@type":"Brand",name:"Green Ocean"},offers:{"@type":"Offer",url:base+path,priceCurrency:"INR",price:Number(product.price||0).toFixed(2),availability:Number(product.stock||0)>0?"https://schema.org/InStock":"https://schema.org/OutOfStock",itemCondition:"https://schema.org/NewCondition",seller:{"@id":base+"/#business"}}};
       if(revs.length){const avg=revs.reduce((a,r)=>a+Number(r.rating||0),0)/revs.length;ps.aggregateRating={"@type":"AggregateRating",ratingValue:avg.toFixed(1),reviewCount:revs.length};ps.review=revs.slice(0,8).map(r=>({"@type":"Review",author:{"@type":"Person",name:r.name},datePublished:r.date,reviewBody:r.text,reviewRating:{"@type":"Rating",ratingValue:Number(r.rating||0),bestRating:5,worstRating:1},...(r.photo?{image:r.photo}:{})}));}
       schemas.push(ps,crumbs([["Home","/"],["Shop","/shop"],[category?.name||"Category","/shop?cat="+encodeURIComponent(product.cat)],[product.name,path]]));
     }
   } else if (seg[0] === "shop") {
     const catId=url.searchParams.get("cat"),category=(store?.categories||[]).find(c=>c.id===catId),items=(store?.products||[]).filter(p=>p.active!==false&&(!category||p.cat===category.id));
-    title=category?`${category.name} | Green Ocean Online Nursery`:"Shop Plants, Planters & Gardening | Green Ocean";desc=category?(category.desc||`Shop ${category.name} from Green Ocean.`):"Shop nursery-fresh plants, planters, gardening essentials and plant gifts from Green Ocean.";
+    title=category?(category.seoTitle||`${category.name} | Green Ocean Online Nursery`):"Shop Plants, Planters & Gardening | Green Ocean";desc=category?(category.seoDesc||category.desc||`Shop ${category.name} from Green Ocean.`):"Shop nursery-fresh plants, planters, gardening essentials and plant gifts from Green Ocean.";
     schemas.push({"@context":"https://schema.org","@type":"CollectionPage",name:category?.name||"Plants, Planters & Gardening",url:base+path+(url.search||""),mainEntity:{"@type":"ItemList",itemListElement:items.slice(0,24).map((p,i)=>({"@type":"ListItem",position:i+1,url:base+"/product/"+encodeURIComponent(p.id),name:p.name}))}},crumbs(category?[["Home","/"],["Shop","/shop"],[category.name,"/shop?cat="+encodeURIComponent(category.id)]]:[["Home","/"],["Shop","/shop"]]));
   } else if (seg[0] === "page" && seg[1]) {
-    const pg=(store?.pages||[]).find(x=>x.slug===seg[1]); if(pg){title=`${pg.title} | Green Ocean`;desc=String(pg.body||"").replace(/\s+/g," ").slice(0,155)||desc;schemas.push(crumbs([["Home","/"],[pg.title,path]]));
+    const pg=(store?.pages||[]).find(x=>x.slug===seg[1]); if(pg){title=pg.seoTitle||`${pg.title} | Green Ocean`;desc=pg.seoDesc||String(pg.body||"").replace(/\s+/g," ").slice(0,155)||desc;schemas.push(crumbs([["Home","/"],[pg.title,path]]));
       if(pg.slug==="faq"){const blocks=String(pg.body||"").split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean),qa=blocks.map(block=>{const m=block.match(/^(.+?)\s+[—–-]\s+([\s\S]+)$/);return m?{q:m[1].trim(),a:m[2].trim()}:null;}).filter(Boolean);if(qa.length)schemas.push({"@context":"https://schema.org","@type":"FAQPage",mainEntity:qa.map(x=>({"@type":"Question",name:x.q,acceptedAnswer:{"@type":"Answer",text:x.a}}))});}
     }
   } else if (seg[0] === "blog") {
-    const post=seg[1]&&(store?.blogs||[]).find(x=>String(x.id)===seg[1]);title=post?`${post.title} | Green Ocean Plant Care`:"Green Ocean Plant Care — Guides & Tips";desc=post?String(post.excerpt||post.body||"").replace(/\s+/g," ").slice(0,155):"Practical plant care guides for watering, light, repotting and healthier indoor plants.";schemas.push(crumbs(post?[["Home","/"],["Plant Care","/blog"],[post.title,path]]:[["Home","/"],["Plant Care","/blog"]]));
+    const post=seg[1]&&(store?.blogs||[]).find(x=>String(x.id)===seg[1]);title=post?(post.seoTitle||`${post.title} | Green Ocean Plant Care`):"Green Ocean Plant Care — Guides & Tips";desc=post?(post.seoDesc||String(post.excerpt||post.body||"").replace(/\s+/g," ").slice(0,155)):"Practical plant care guides for watering, light, repotting and healthier indoor plants.";schemas.push(crumbs(post?[["Home","/"],["Plant Care","/blog"],[post.title,path]]:[["Home","/"],["Plant Care","/blog"]]));
   }
   let canonical = base + path;
   if (seg[0] === "shop") { const c=url.searchParams.get("cat"); if(c) canonical += "?cat="+encodeURIComponent(c); }
@@ -744,7 +811,7 @@ async function serveApp(req, env, url) {
 }
 async function serveSitemap(env,url){
   const store=(await getStore(env))||{},base=siteBase(store,url),paths=["/","/shop","/blog","/page/story","/page/contact","/page/faq","/page/shipping","/page/returns","/page/privacy","/page/terms"];
-  for(const c of (store.categories||[]))paths.push("/shop?cat="+encodeURIComponent(c.id));
+  for(const c of (store.categories||[]).filter(x=>x.active!==false))paths.push("/shop?cat="+encodeURIComponent(c.id));
   for(const p of (store.products||[]).filter(x=>x.active!==false))paths.push("/product/"+encodeURIComponent(p.id));
   for(const b of (store.blogs||[]).filter(x=>x.active!==false))paths.push("/blog/"+encodeURIComponent(b.id));
   const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(paths)].map(p=>`  <url><loc>${xmlEsc(base+p)}</loc></url>`).join("\n")}\n</urlset>`;

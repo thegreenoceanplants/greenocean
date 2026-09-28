@@ -14,7 +14,7 @@ function viewSitemap(){
     <div class="sec-head"><div><h2>Site Map</h2><p>Every page on ${esc(s.store)}, in one place.</p></div></div>
     <div class="grid grid-3" style="align-items:start">
       <div>
-        ${group('Shop',[['All plants & planters','#/shop']].concat(DB.categories.map(c=>[c.name,'#/shop?cat='+c.id])))}
+        ${group('Shop',[['All plants & planters','#/shop']].concat(DB.categories.filter(c=>c.active!==false).map(c=>[c.name,'#/shop?cat='+c.id])))}
         ${group('Plants',DB.products.filter(p=>p.active).slice(0,8).map(p=>[p.name,'#/product/'+p.id]).concat([['View all products','#/shop']]))}
       </div>
       <div>
@@ -34,7 +34,7 @@ function viewSitemap(){
 function sitemapXML(domain){
   const base=String(domain||'').trim().replace(/\/+$/,'');
   const paths=['/','/shop','/cart','/wishlist','/login','/signup','/orders','/account','/blog','/sitemap']
-    .concat(DB.categories.map(c=>'/shop?cat='+c.id))
+    .concat(DB.categories.filter(c=>c.active!==false).map(c=>'/shop?cat='+c.id))
     .concat(DB.products.filter(p=>p.active).map(p=>'/product/'+p.id))
     .concat(DB.blogs.filter(b=>b.active).map(b=>'/blog/'+b.id))
     .concat(DB.pages.filter(p=>p.active).map(p=>'/page/'+p.slug));
@@ -64,11 +64,9 @@ function navOn(key){
   return false;
 }
 function header(active){
-  const s=DB.settings;
-  const items=`<span>${ic('truck',14)} Free Pan-India Delivery on Orders Above ${money(s.freeShipAbove)}</span>
-    <span>${ic('shield',14)} 7-Day Healthy Plant Guarantee</span>
-    <span>${ic('tag',14)} <b>Use FREESHIP - Free shipping - First order only</b></span>
-    <span>${ic('leaf',14)} Plants Make Better Days</span>`;
+  const s=DB.settings,c=siteContent();
+  const items=(c.ribbon||[]).map(x=>`<span>${ic(x.icon||'leaf',14)} ${x.bold?'<b>'+esc(contentText(x.text))+'</b>':esc(contentText(x.text))}</span>`).join('');
+  const navItems=(c.nav&&c.nav.length)?c.nav:NAV_MAIN.map(n=>({label:n[0],link:n[1],key:n[2]}));
   const dur=window.innerWidth<=760?24:32, delay=-((Date.now()/1000)%dur);
   return `<div class="strip" role="region" aria-label="Offers">
     <div class="strip-track" style="animation-delay:${delay.toFixed(2)}s">
@@ -76,7 +74,7 @@ function header(active){
   <header class="hdr"><div class="wrap hdr-in">
     <button class="icon-btn burger" data-act="menu" aria-label="Open menu">${ic('menu',22)}</button>
     <a class="logo" href="#/"><img src="${src('img:logo')}" alt="${esc(s.store)}" style="height:48px;width:auto;display:block;object-fit:contain"></a>
-    <nav class="nav" aria-label="Main">${NAV_MAIN.map(n=>`<a href="${n[1]}" class="${navOn(n[2])?'on':''}" ${navOn(n[2])?'aria-current="page"':''}>${n[0]}</a>`).join('')}</nav>
+    <nav class="nav" aria-label="Main">${navItems.map(n=>`<a href="${esc(n.link)}" class="${navOn(n.key)?'on':''}" ${navOn(n.key)?'aria-current="page"':''}>${esc(n.label)}</a>`).join('')}</nav>
     <form class="search" data-act="search"><span>${ic('search',16)}</span>
       <input name="q" placeholder="Search for plants, planters and more..." aria-label="Search products"></form>
     <div class="icons">
@@ -88,26 +86,18 @@ function header(active){
     </div></div></header>`;
 }
 function footer(){
-  const s=DB.settings;
+  const s=DB.settings,c=siteContent(),f=c.footer||SITE_CONTENT_DEFAULTS.footer;
   return `<footer class="ft"><div class="wrap">
    <div class="ft-in">
     <div><div class="logo"><img src="${src('img:logo')}" alt="${esc(s.store)}" style="height:42px;width:auto;display:block;object-fit:contain"></div>
       <p style="font-size:12.5px;opacity:.8;max-width:30ch;margin:8px 0 0">${esc(s.tag)}. Grown at our nursery in ${esc(s.address)}.</p>
-      <div class="soc">
-        ${s.instagram?`<a href="${esc(s.instagram)}" target="_blank" rel="noopener" aria-label="Green Ocean on Instagram">${ic('instagram',16)}</a>`:''}
-        ${s.facebook?`<a href="${esc(s.facebook)}" target="_blank" rel="noopener" aria-label="Green Ocean on Facebook">${ic('facebook',16)}</a>`:''}
-        ${s.youtube?`<a href="${esc(s.youtube)}" target="_blank" rel="noopener" aria-label="Green Ocean on YouTube">${ic('youtube',16)}</a>`:''}
-      </div></div>
-    <div><h4>Shop</h4>${DB.categories.map(c=>`<a href="#/shop?cat=${c.id}">${esc(c.name)}</a>`).join('')}</div>
-    <div><h4>Company</h4><a href="#/page/story">Our Story</a><a href="#/blog">Plant Care Blog</a><a href="#/page/contact">Contact</a><a href="#/page/faq">FAQ</a><a href="#/page/privacy">Privacy Policy</a><a href="#/page/terms">Terms & Conditions</a></div>
-    <div><h4>Support</h4><a href="#/orders">Track Order</a><a href="#/sitemap">Site Map</a><a href="#/page/shipping">Shipping Policy</a><a href="#/page/returns">Returns & Refunds</a><a href="#/page/contact">Help Centre</a></div>
-    <div><h4>Talk to us</h4><a href="mailto:${esc(s.email)}">${esc(s.email)}</a>
-      <a href="tel:${esc(s.phone.replace(/[^0-9+]/g,''))}">${esc(s.phone)}</a>
-      <a href="https://wa.me/${esc(s.phone.replace(/[^0-9]/g,''))}" target="_blank" rel="noopener">WhatsApp us</a>
-      <div style="margin-top:10px"><a class="admin-link" href="#/admin">${ic('gear',16)} Admin Panel</a></div></div>
+      <div class="soc">${s.instagram?`<a href="${esc(s.instagram)}" target="_blank" rel="noopener" aria-label="Green Ocean on Instagram">${ic('instagram',16)}</a>`:''}${s.facebook?`<a href="${esc(s.facebook)}" target="_blank" rel="noopener" aria-label="Green Ocean on Facebook">${ic('facebook',16)}</a>`:''}${s.youtube?`<a href="${esc(s.youtube)}" target="_blank" rel="noopener" aria-label="Green Ocean on YouTube">${ic('youtube',16)}</a>`:''}</div></div>
+    <div><h4>Shop</h4>${DB.categories.filter(x=>x.active!==false).map(c=>`<a href="#/shop?cat=${c.id}">${esc(c.name)}</a>`).join('')}</div>
+    <div><h4>Company</h4>${(f.company||[]).map(x=>`<a href="${esc(x[1])}">${esc(x[0])}</a>`).join('')}</div>
+    <div><h4>Support</h4>${(f.support||[]).map(x=>`<a href="${esc(x[1])}">${esc(x[0])}</a>`).join('')}</div>
+    <div><h4>Talk to us</h4><a href="mailto:${esc(s.email)}">${esc(s.email)}</a><a href="tel:${esc(s.phone.replace(/[^0-9+]/g,''))}">${esc(s.phone)}</a><a href="https://wa.me/${esc(s.phone.replace(/[^0-9]/g,''))}" target="_blank" rel="noopener">WhatsApp us</a><div style="margin-top:10px"><a class="admin-link" href="#/admin">${ic('gear',16)} Admin Panel</a></div></div>
    </div>
-   <div class="ft-bot"><span>© 2026 ${esc(s.store)}. All rights reserved.</span>
-     <span><a href="#/page/privacy" style="display:inline">Privacy Policy</a> · <a href="#/page/terms" style="display:inline">Terms & Conditions</a> · <a href="#/page/shipping" style="display:inline">Shipping Policy</a> · <a href="#/sitemap" style="display:inline">Site Map</a></span></div>
+   <div class="ft-bot"><span>${esc(contentText(f.copyright||'© 2026 {store}. All rights reserved.'))}</span><span><a href="#/page/privacy" style="display:inline">Privacy Policy</a> · <a href="#/page/terms" style="display:inline">Terms & Conditions</a> · <a href="#/page/shipping" style="display:inline">Shipping Policy</a> · <a href="#/sitemap" style="display:inline">Site Map</a></span></div>
   </div></footer>`;
 }
 function card(p){
@@ -131,9 +121,9 @@ const TRUST=[['heart','Healthy Plants','7-Day Guarantee'],['truck','Pan-India De
   ['home','Direct from Nursery','Balihari, Dhanbad'],['users','Customer Support','Order & Plant-Care Help']];
 
 function viewHome(){
-  const s=DB.settings, live=DB.products.filter(p=>p.active);
-  const best=live.slice(0,5), promo=freeShipPromoCoupon()||homePromoCoupon(), slides=homeHeroSlides();
-  const spaces=[['Living Room','sp_living'],['Bedroom','sp_bedroom'],['Workspace','sp_workspace'],['Balcony','sp_balcony'],['Outdoor Garden','sp_outdoor']];
+  const s=DB.settings,c=siteContent(),hc=c.home, live=DB.products.filter(p=>p.active);
+  const best=[...live].sort((a,b)=>(Number(!!b.featured)-Number(!!a.featured))||((+a.order||999)-(+b.order||999))).slice(0,5), promo=freeShipPromoCoupon()||homePromoCoupon(), slides=homeHeroSlides();
+  const spaces=hc.spaces||SITE_CONTENT_DEFAULTS.home.spaces;
   const revs=DB.reviews.filter(r=>r.status==='Published').slice(0,3);
   return header('home')+`
   <section class="hero"><div class="wrap home-slider" data-home-slider data-index="0">
@@ -146,50 +136,45 @@ function viewHome(){
     <div class="home-slider-nav"><div class="home-dots">${slides.map((_,idx)=>`<button class="home-dot ${idx===0?'is-active':''}" data-act="heroDot" data-i="${idx}" aria-label="Go to slide ${idx+1}"></button>`).join('')}</div></div>
   </div></section>
 
-  <div class="trust"><div class="wrap trust-in">${TRUST.map(t=>`<div class="trust-i"><span class="cc">${ic(t[0],17)}</span>
+  <div class="trust"><div class="wrap trust-in">${(hc.trust||TRUST).map(t=>`<div class="trust-i"><span class="cc">${ic(t[0],17)}</span>
     <span><b>${t[1]}</b><small>${t[2]}</small></span></div>`).join('')}</div></div>
 
   <section class="sec"><div class="wrap">
-    <div class="sec-head"><h2>Shop by Category</h2><a class="link-more" href="#/shop">View all ${ic('arrow',14)}</a></div>
-    <div class="cats">${DB.categories.map(c=>`<a class="cat" href="#/shop?cat=${c.id}"><span class="ring">${pic(c)}</span><b>${esc(c.name)}</b></a>`).join('')}</div>
+    <div class="sec-head"><h2>${esc(hc.categoryTitle)}</h2><a class="link-more" href="#/shop">${esc(hc.categoryMore)} ${ic('arrow',14)}</a></div>
+    <div class="cats">${DB.categories.filter(c=>c.active!==false).map(c=>`<a class="cat" href="#/shop?cat=${c.id}"><span class="ring">${pic(c)}</span><b>${esc(c.name)}</b></a>`).join('')}</div>
   </div></section>
 
   <section class="sec" style="padding-top:6px"><div class="wrap">
-    <div class="sec-head"><h2>Bestselling Plants</h2><a class="link-more" href="#/shop">View all ${ic('arrow',14)}</a></div>
+    <div class="sec-head"><h2>${esc(hc.bestTitle)}</h2><a class="link-more" href="#/shop">${esc(hc.bestMore)} ${ic('arrow',14)}</a></div>
     <div class="grid">${best.map(card).join('')}</div>
   </div></section>
 
   <section class="sec" style="padding-top:6px"><div class="wrap"><div class="promos">
-    <a class="promo-img" href="#/shop?cat=c4" aria-label="Explore planters">${pic({img:'img:ban_planters',art:'planter',name:'Beautiful planters for modern homes'})}</a>
-    <a class="promo-img" href="#/shop?cat=c6" aria-label="Shop combos">${pic({img:'img:ban_combos',art:'combo',name:'Plant combos'})}</a>
+    <a class="promo-img" href="${esc(hc.promoPlantersLink)}" aria-label="Explore planters">${pic({img:'img:ban_planters',art:'planter',name:'Beautiful planters for modern homes'})}</a>
+    <a class="promo-img" href="${esc(hc.promoCombosLink)}" aria-label="Shop combos">${pic({img:'img:ban_combos',art:'combo',name:'Plant combos'})}</a>
   </div></div></section>
 
   <section class="sec" style="padding-top:6px"><div class="wrap"><div class="band">
-    <div><h2 style="font-family:var(--serif);font-size:26px;margin:0 0 4px;font-weight:600">Self-Watering Planters</h2>
-      <p style="margin:0;color:var(--muted);font-size:14px">Plants that take care of themselves.</p>
-      <div class="feats">
-        <div class="feat"><span class="cc">${ic('shield',18)}</span><b>Smart Design</b></div>
-        <div class="feat"><span class="cc">${ic('drop',18)}</span><b>Less Watering</b><small>Once in 10 days</small></div>
-        <div class="feat"><span class="cc">${ic('heart',18)}</span><b>Healthier Plants</b></div>
-        <div class="feat"><span class="cc">${ic('clock',18)}</span><b>Busy Lifestyles</b></div></div>
-      <a class="btn btn-primary btn-sq" style="margin-top:16px" href="#/shop?cat=c4">Explore Planters ${ic('arrow',14)}</a></div>
+    <div><h2 style="font-family:var(--serif);font-size:26px;margin:0 0 4px;font-weight:600">${esc(hc.selfTitle)}</h2>
+      <p style="margin:0;color:var(--muted);font-size:14px">${esc(hc.selfSub)}</p>
+      <div class="feats">${(hc.selfFeatures||[]).map(t=>`<div class="feat"><span class="cc">${ic(t[0]||'leaf',18)}</span><b>${esc(t[1])}</b>${t[2]?`<small>${esc(t[2])}</small>`:''}</div>`).join('')}</div>
+      <a class="btn btn-primary btn-sq" style="margin-top:16px" href="${esc(hc.selfLink)}">${esc(hc.selfCta)} ${ic('arrow',14)}</a></div>
     <div style="border-radius:var(--r);overflow:hidden;background:var(--green-50)">${pic({img:'img:selfwater_plant',art:'planter',name:'Self-watering planter'})}</div>
   </div></div></section>
 
   <section class="sec" style="padding-top:6px"><div class="wrap">
-    <div class="sec-head"><div><h2>Plants for Every Space</h2><p>From cosy corners to big balconies.</p></div></div>
-    <div class="spaces">${spaces.map(sp=>`<a class="space" href="#/shop"><img src="${src('img:'+sp[1])}" alt="${sp[0]}" loading="lazy"><b>${sp[0]}</b></a>`).join('')}</div>
+    <div class="sec-head"><div><h2>${esc(hc.spacesTitle)}</h2><p>${esc(hc.spacesSub)}</p></div></div>
+    <div class="spaces">${spaces.map(sp=>`<a class="space" href="${esc(sp[2]||'#/shop')}"><img src="${src('img:'+sp[1])}" alt="${esc(sp[0])}" loading="lazy"><b>${esc(sp[0])}</b></a>`).join('')}</div>
   </div></section>
 
   <section class="sec" style="padding-top:6px"><div class="wrap">
-    <div class="sec-head"><h2>Why Choose ${esc(s.store)}?</h2></div>
-    <div class="trust-in" style="padding:0">${[['heart','Healthy Plants','7-Day Guarantee'],['home','Nursery Fresh','Directly from our farm'],
-      ['truck','Pan-India Delivery','Safe & Secure'],['users','Trusted by','10,000+ Plant Lovers']].map(t=>`<div class="trust-i">
+    <div class="sec-head"><h2>${esc(contentText(hc.whyTitle))}</h2></div>
+    <div class="trust-in" style="padding:0">${(hc.why||[]).map(t=>`<div class="trust-i">
       <span class="cc">${ic(t[0],17)}</span><span><b>${t[1]}</b><small>${t[2]}</small></span></div>`).join('')}</div>
   </div></section>
 
   ${revs.length?`<section class="sec" style="padding-top:6px"><div class="wrap">
-    <div class="sec-head"><h2>What Our Customers Say</h2><a class="link-more" href="#/blog">Plant care blog ${ic('arrow',14)}</a></div>
+    <div class="sec-head"><h2>${esc(hc.reviewsTitle)}</h2><a class="link-more" href="${esc(hc.reviewsLink)}">${esc(hc.reviewsLinkText)} ${ic('arrow',14)}</a></div>
     <div class="tcards">${revs.map(r=>`<div class="tcard"><div class="stars">${stars(r.rating)}</div>
       <p style="margin-top:8px">“${esc(r.text)}”</p>
       <div class="who">${r.av?`<img class="av" style="object-fit:cover" src="${src(r.av)}" alt="">`:`<span class="av">${esc(r.name[0])}</span>`}
@@ -197,25 +182,25 @@ function viewHome(){
   </div></section>`:''}
 
   <section class="sec" style="padding-top:6px"><div class="wrap"><div class="news">
-    <div><h3>Join Our Green Community</h3><p>Get plant care tips, new arrivals and exclusive offers.</p>
+    <div><h3>${esc(hc.newsletterTitle)}</h3><p>${esc(hc.newsletterSub)}</p>
       <form data-act="subscribe" novalidate style="align-items:flex-start"><span class="field" style="flex:1;margin:0"><input class="inp" style="border-radius:var(--r-pill)" name="email" data-v="email" data-label="Email" placeholder="Enter your email address"></span>
       <button class="btn btn-ghost" style="background:#fff;border-color:#fff">Subscribe</button></form></div>
-    <div style="text-align:center"><span class="script" style="color:#fff;font-size:30px;display:inline-block">Plants<br>People<br>A Better Tomorrow ♥</span></div>
+    <div style="text-align:center"><span class="script" style="color:#fff;font-size:30px;display:inline-block">${esc(hc.newsletterScript).replace(/\n/g,'<br>')}</span></div>
   </div></div></section>`+footer();
 }
 
 /* ---------- Shop ---------- */
 function viewShop(q){
   const params=new URLSearchParams(q||'');
-  const catId=params.get('cat')||'', termRaw=params.get('q')||'', term=termRaw.toLowerCase(), sort=params.get('sort')||'pop', max=+(params.get('max')||0);
+  const catId=params.get('cat')||'', termRaw=params.get('q')||'', term=termRaw.toLowerCase(), sort=params.get('sort')||'pop', max=+(params.get('max')||0), c=cat(catId);
   let list=DB.products.filter(p=>p.active);
-  if(catId)list=list.filter(p=>p.cat===catId);
+  if(sort==='pop')list=[...list].sort((a,b)=>(Number(!!b.featured)-Number(!!a.featured))||((+a.order||999)-(+b.order||999))||((+b.rating||0)-(+a.rating||0)));
+  if(catId)list=(c&&c.active!==false)?list.filter(p=>p.cat===catId):[];
   if(term)list=list.filter(p=>(p.name+' '+p.sub+' '+p.desc).toLowerCase().includes(term));
   if(max)list=list.filter(p=>p.price<=max);
   if(sort==='low')list=[...list].sort((a,b)=>a.price-b.price);
   if(sort==='high')list=[...list].sort((a,b)=>b.price-a.price);
   if(sort==='rating')list=[...list].sort((a,b)=>b.rating-a.rating);
-  const c=cat(catId);
   const sortMap={pop:'Most popular',low:'Price: Low to High',high:'Price: High to Low',rating:'Top rated'};
   const activeCount=(catId?1:0)+(max?1:0)+(sort!=='pop'?1:0);
   const shopHref=(changes={})=>{
@@ -257,7 +242,7 @@ function viewShop(q){
             <div class="filter-group-title"><b>Category</b><span>${DB.categories.length} collections</span></div>
             <div class="filter-options">
               <label class="filter-option"><input type="radio" name="cat" value="" ${!catId?'checked':''}><span class="filter-radio"></span><span>All categories</span></label>
-              ${DB.categories.map(x=>`<label class="filter-option"><input type="radio" name="cat" value="${x.id}" ${catId===x.id?'checked':''}><span class="filter-radio"></span><span>${esc(x.name)}</span></label>`).join('')}
+              ${DB.categories.filter(x=>x.active!==false).map(x=>`<label class="filter-option"><input type="radio" name="cat" value="${x.id}" ${catId===x.id?'checked':''}><span class="filter-radio"></span><span>${esc(x.name)}</span></label>`).join('')}
             </div>
           </div>
           <div class="fgroup" data-filter-group="budget">
@@ -293,7 +278,7 @@ function shopFilterPreviewCount(){
   const pick=n=>{const el=f.querySelector(`input[name="${n}"]:checked`);return el?el.value:'';};
   const catId=pick('cat'), max=+(pick('max')||0), term=(f.dataset.term||'').toLowerCase();
   let list=DB.products.filter(p=>p.active);
-  if(catId)list=list.filter(p=>p.cat===catId);
+  if(catId)list=(c&&c.active!==false)?list.filter(p=>p.cat===catId):[];
   if(term)list=list.filter(p=>(p.name+' '+p.sub+' '+p.desc).toLowerCase().includes(term));
   if(max)list=list.filter(p=>p.price<=max);
   out.textContent='Show '+list.length+' product'+(list.length===1?'':'s');
@@ -986,8 +971,8 @@ function viewPage(slug){
 }
 function setBlogSEO(b){
   const isArticle=!!b;
-  const title=isArticle?`${b.title} | Green Ocean Plant Care Blog`:'Plant Care Blog | Green Ocean Online Nursery';
-  const desc=isArticle?(b.excerpt||'Practical plant care guidance from Green Ocean.'):'Practical indoor plant care guides on watering, low light, repotting and everyday plant care from Green Ocean, a plant nursery in Dhanbad, Jharkhand.';
+  const title=isArticle?(b.seoTitle||`${b.title} | Green Ocean Plant Care Blog`):'Plant Care Blog | Green Ocean Online Nursery';
+  const desc=isArticle?(b.seoDesc||b.excerpt||'Practical plant care guidance from Green Ocean.'):'Practical indoor plant care guides on watering, low light, repotting and everyday plant care from Green Ocean, a plant nursery in Dhanbad, Jharkhand.';
   document.title=title;
   const md=document.querySelector('meta[name="description"]'); if(md)md.setAttribute('content',desc);
   const ot=document.querySelector('meta[property="og:title"]'); if(ot)ot.setAttribute('content',title);
@@ -1016,16 +1001,16 @@ function viewBlog(id){
     </div></main>`+footer();
   }
   setBlogSEO(null); ensureBlogSchema(null);
-  const list=active, featured=list[0], rest=list.slice(1);
+  const list=active, pc=siteContent().plantCare, featured=list.find(x=>x.featured)||list[0], rest=list.filter(x=>!featured||x.id!==featured.id);
   return header('blog')+`<main class="care-home-v3"><div class="care-v3-wrap">
     <section class="care-v3-hero">
-      <div class="care-v3-copy"><span class="care-v3-kicker">${ic('leaf',14)} Green Ocean Plant Care</span><h1>Grow better. Care smarter.</h1><p>Clear, practical plant-care guidance for real homes — from watering and light to repotting, low-light plants and everyday troubleshooting.</p><div class="care-v3-topics"><span class="care-v3-topic">${ic('drop',13)} Watering</span><span class="care-v3-topic">${ic('home',13)} Indoor plants</span><span class="care-v3-topic">${ic('sun',13)} Light</span><span class="care-v3-topic">${ic('planter',13)} Repotting</span></div></div>
+      <div class="care-v3-copy"><span class="care-v3-kicker">${ic('leaf',14)} ${esc(pc.kicker)}</span><h1>${esc(pc.title)}</h1><p>${esc(pc.sub)}</p><div class="care-v3-topics">${(pc.topics||[]).map(t=>`<span class="care-v3-topic">${ic(t[0]||'leaf',13)} ${esc(t[1])}</span>`).join('')}</div></div>
       ${featured?`<article class="care-v3-feature"><a class="care-v3-feature-img" href="#/blog/${featured.id}" aria-label="Read ${esc(featured.title)}">${pic(featured)}</a><div class="care-v3-feature-card"><span class="care-v3-badge">${ic('star',12)} Featured guide</span><h2>${esc(featured.title)}</h2><div class="care-v3-meta"><span>${ic('doc',12)} ${esc(featured.date||'')}</span><span>${ic('clock',12)} ${blogReadTime(featured)} min read</span></div><p>${esc(featured.excerpt||'Practical plant care guidance from Green Ocean.')}</p><a class="care-v3-read" href="#/blog/${featured.id}">Read the guide ${ic('arrow',13)}</a></div></article>`:`<div class="care-v3-feature"><a class="care-v3-feature-img" href="#/shop"><img src="${src('img:hero')}" alt="Healthy indoor plants from Green Ocean" loading="eager" fetchpriority="high" decoding="async"></a><div class="care-v3-feature-card"><span class="care-v3-badge">Plant care</span><h2>Practical guidance for healthier plants.</h2><a class="care-v3-read" href="#/shop">Explore plants ${ic('arrow',13)}</a></div></div>`}
     </section>
-    <div class="care-v3-section-head"><div><h2>Latest plant-care guides</h2><p>Useful, easy-to-follow advice for healthier plants and more confident plant parents.</p></div><a class="care-v3-shop" href="#/shop">Shop plants ${ic('arrow',12)}</a></div>
+    <div class="care-v3-section-head"><div><h2>${esc(pc.latestTitle)}</h2><p>${esc(pc.latestSub)}</p></div><a class="care-v3-shop" href="${esc(pc.latestLink)}">${esc(pc.latestCta)} ${ic('arrow',12)}</a></div>
     <section class="care-v3-guides">${(rest.length?rest:list).map(b=>`<a class="care-v3-guide" href="#/blog/${b.id}"><div class="care-v3-guide-img">${pic(b)}</div><div class="care-v3-guide-copy"><span class="blog-label">Plant care</span><h3>${esc(b.title)}</h3><div class="care-v3-meta"><span>${esc(b.date||'')}</span><span>${blogReadTime(b)} min read</span></div><p>${esc(b.excerpt||'')}</p><span class="care-v3-more">Read article ${ic('arrow',13)}</span></div></a>`).join('')}</section>
-    <div class="blog-title-row"><div><h2>Plant-care basics</h2><p>Three habits that solve a surprising number of plant problems.</p></div></div>
-    <section class="blog-basics"><article class="blog-basic"><span class="bi">${ic('drop',18)}</span><b>Check soil before watering</b><p>Moisture changes with season, light and pot size. Let the soil guide the schedule.</p></article><article class="blog-basic"><span class="bi">${ic('sun',18)}</span><b>Match the plant to the light</b><p>Low light, bright indirect light and direct sun are different environments. Choose accordingly.</p></article><article class="blog-basic"><span class="bi">${ic('planter',18)}</span><b>Repot only when needed</b><p>Move up gradually and avoid oversizing the pot. Roots need both moisture and air.</p></article></section>
-    <div class="blog-cta"><div><h3>Need help choosing a plant?</h3><p>Browse plants by category or contact Green Ocean for product and order support.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-line btn-sq" style="background:#fff" href="#/page/contact">Contact Us</a><a class="btn btn-primary btn-sq" href="#/shop">Explore Plants</a></div></div>
+    <div class="blog-title-row"><div><h2>${esc(pc.basicsTitle)}</h2><p>${esc(pc.basicsSub)}</p></div></div>
+    <section class="blog-basics">${(pc.basics||[]).map(t=>`<article class="blog-basic"><span class="bi">${ic(t[0]||'leaf',18)}</span><b>${esc(t[1])}</b><p>${esc(t[2]||'')}</p></article>`).join('')}</section>
+    <div class="blog-cta"><div><h3>${esc(pc.ctaTitle)}</h3><p>${esc(pc.ctaSub)}</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-line btn-sq" style="background:#fff" href="${esc(pc.contactLink)}">${esc(pc.contactText)}</a><a class="btn btn-primary btn-sq" href="${esc(pc.shopLink)}">${esc(pc.shopText)}</a></div></div>
   </div></main>`+footer();
 }

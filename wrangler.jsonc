@@ -23,8 +23,10 @@
     { "name": "MAIL", "destination_address": "thegreenoceanplants@gmail.com" }
   ],
 
-  // NOTE: ADMIN_PASSWORD is NOT here on purpose.
-  // Add it in Cloudflare → greenocean → Settings → Variables and Secrets → type "Secret".
+  // NOTE: secrets are NOT written here on purpose.
+  // Required: ADMIN_PASSWORD. Optional: BREVO_API_KEY for customer/newsletter mail,
+  // SUPABASE_SERVICE_ROLE_KEY for Admin-side Supabase Auth user management.
+  // Add them in Cloudflare → greenocean → Settings → Variables and Secrets → type "Secret".
   "vars": {
     "FROM_EMAIL": "website@greenocean.co.in",
     "OWNER_EMAIL": "thegreenoceanplants@gmail.com",

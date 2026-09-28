@@ -113,6 +113,7 @@ function load(){
   if(DB.settings.adminEmail==='admin@greenocean.in')DB.settings.adminEmail=fresh.adminEmail;
   if(!DB.settings.media||typeof DB.settings.media!=='object')DB.settings.media={};
   if(!Array.isArray(DB.settings.homeSlides)||DB.settings.homeSlides.length!==4)DB.settings.homeSlides=fresh.homeSlides.map(x=>({...x}));
+  if(typeof normalizeAdminContent==='function')normalizeAdminContent(DB);
   SEED().pages.forEach(p=>{ if(!DB.pages.some(x=>x.slug===p.slug))DB.pages.push(p); });
   DB.pages.forEach(p=>{ if(p.body)p.body=p.body.replace(/826004/g,'828116').replace(/\+91 98765 43210/g,fresh.phone).replace(/care@greenocean\.in/g,fresh.email); });
   if(!DB.subscribers)DB.subscribers=[];

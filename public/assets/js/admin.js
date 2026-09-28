@@ -1,7 +1,7 @@
 /* ================= ADMIN ================= */
 const NAV=[['dashboard','Dashboard','home'],['products','Products','box'],['categories','Categories','grid'],['orders','Orders','bag'],['returns','Returns & Refunds','back'],
  ['customers','Customers','users'],['messages','Messages','mail'],['inventory','Inventory','stack'],['banners','Banners & Sliders','image'],['offers','Offers & Coupons','tag'],
- ['blog','Blog / Content','doc'],['reviews','Reviews','star'],['pages','Pages','pages'],['newsletter','Newsletter','mail'],
+ ['blog','Blog / Content','doc'],['reviews','Reviews','star'],['pages','Pages','pages'],['content','Site Content','pages'],['newsletter','Newsletter','mail'],
  ['settings','Website Settings','globe'],['appearance','Appearance','brush'],['media','Media & Image Sizes','image'],['reports','Reports','chart'],['account','Settings','gear']];
 
 function adminLogin(){
@@ -35,7 +35,7 @@ function adminShell(page,body,title,sub,actions){
     ['Overview',['dashboard','reports']],
     ['Commerce',['orders','returns','products','categories','inventory','customers']],
     ['Customer & growth',['messages','offers','newsletter','reviews']],
-    ['Storefront',['banners','media','pages','blog','appearance']],
+    ['Storefront',['banners','media','content','pages','blog','appearance']],
     ['System',['settings','account']]
   ];
   const nav=groups.map(g=>`<div class="admin-nav-group">${g[0]}</div>${g[1].map(k=>adminNavItem(k,page)).join('')}`).join('');
@@ -287,17 +287,17 @@ function productForm(id){
 function admCategories(){
   return adminShell('categories',`<div class="mgrid">${DB.categories.map(c=>`<div class="mtile">
     <span class="ph" style="aspect-ratio:1">${pic(c)}</span><span class="bd"><b>${esc(c.name)}</b>
-    <small>${DB.products.filter(p=>p.cat===c.id).length} products</small>
+    <small>${DB.products.filter(p=>p.cat===c.id).length} products · ${c.active===false?'Hidden':'Visible'} · order ${c.order||DB.categories.indexOf(c)+1}</small>
     <span style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-sm btn-line btn-sq" data-edit-cat="${c.id}">Edit</button>
     <button class="btn btn-sm btn-danger btn-sq" data-del-cat="${c.id}">${ic('trash',13)}</button></span></span></div>`).join('')}</div>`,
    'Categories','Group your plants the way customers shop.',
    `<button class="btn btn-primary btn-sq" data-edit-cat="new">${ic('plus',15)} Add Category</button>`);
 }
 function catForm(id){
-  const c=id==='new'?{id:'',name:'',slug:'',desc:'',art:'bush',img:''}:cat(id); if(!c)return;
+  const c=id==='new'?{id:'',name:'',slug:'',desc:'',art:'bush',img:'',active:true,order:DB.categories.length+1}:cat(id); if(!c)return;
   openModal(id==='new'?'Add category':'Edit category',`<form id="cForm" novalidate>
     <div class="field"><label>Name</label><input class="inp" name="name" data-v="title" data-label="Category name" value="${esc(c.name)}"></div>
-    <div class="field"><label>Short description</label><input class="inp" name="desc" value="${esc(c.desc||'')}"></div>
+    <div class="field"><label>Short description</label><input class="inp" name="desc" value="${esc(c.desc||'')}"></div><div class="row2"><div class="field"><label>Display order</label><input class="inp" type="number" min="1" name="order" value="${c.order||DB.categories.indexOf(c)+1}"></div><label style="display:flex;gap:8px;align-items:center;font-size:13.5px;padding-top:28px"><input type="checkbox" name="active" ${c.active!==false?'checked':''}> Visible on storefront</label></div>
     <div class="field"><label>Photo</label><div style="display:flex;gap:10px;align-items:center">${pic(c,'thumb')}
       <input class="inp" type="file" accept="image/*" id="cFile"></div><small class="img-size-hint">Recommended category image: <b>1000 × 1000 px</b> (1:1 square).</small></div>
     <input type="hidden" name="id" value="${esc(c.id)}"></form>`,
@@ -306,9 +306,9 @@ function catForm(id){
   $('#cSave').onclick=async()=>{const f=$('#cForm'); if(!validateForm(f))return;
     const btn=$('#cSave'),label=btn.textContent,d=Object.fromEntries(new FormData(f).entries());btn.disabled=true;btn.textContent=ni?'Uploading…':'Saving…';
     try{const img=ni?await storeImageValue(ni,c.img||''):(c.img||'');
-    const obj={id:d.id||uid('c'),name:d.name,desc:d.desc,slug:d.name.toLowerCase().replace(/\W+/g,'-'),art:c.art||'bush',img};
+    const obj={id:d.id||uid('c'),name:d.name,desc:d.desc,slug:d.name.toLowerCase().replace(/\W+/g,'-'),active:!!d.active,order:+d.order||99,art:c.art||'bush',img};
     if(d.id)Object.assign(cat(d.id),obj); else DB.categories.push(obj);
-    save();closeLayer();paint();toast('Category saved');}
+    DB.categories.sort((a,b)=>(a.order||99)-(b.order||99));save();closeLayer();paint();toast('Category saved');}
     catch(e){btn.disabled=false;btn.textContent=label;toast(e.message||'Photo upload failed',true);}};
 }
 /* ---------- orders ---------- */
@@ -468,7 +468,7 @@ function couponForm(id){
 }
 function admBlog(){
   return adminShell('blog',`<div class="mgrid" style="grid-template-columns:repeat(3,1fr)">${DB.blogs.map(b=>`<div class="mtile">
-    <span class="ph">${pic(b)}</span><span class="bd"><b>${esc(b.title)}</b><small>${esc(b.date)} · ${b.active?'Published':'Draft'}</small>
+    <span class="ph">${pic(b)}</span><span class="bd"><b>${esc(b.title)}</b><small>${esc(b.date)} · ${b.active?'Published':'Draft'} ${b.featured?'· Featured':''}</small>
     <small style="margin-top:4px">${esc(b.excerpt)}</small>
     <span style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-sm btn-line btn-sq" data-edit-blog="${b.id}">Edit</button>
     <button class="btn btn-sm btn-danger btn-sq" data-del-blog="${b.id}">${ic('trash',13)}</button></span></span></div>`).join('')}</div>`,
@@ -480,17 +480,21 @@ function blogForm(id){
   openModal(id==='new'?'New post':'Edit post',`<form id="gForm" novalidate>
     <div class="field"><label>Title</label><input class="inp" name="title" data-v="text" data-label="Title" value="${esc(b.title)}"></div>
     <div class="field"><label>One-line summary</label><input class="inp" name="excerpt" value="${esc(b.excerpt)}"></div>
+    <div class="row2"><div class="field"><label>Publish date</label><input class="inp" type="date" name="date" value="${esc(b.date||today())}"></div><div class="field"><label>SEO title (optional)</label><input class="inp" name="seoTitle" value="${esc(b.seoTitle||'')}"></div></div>
+    <div class="field"><label>SEO description (optional)</label><input class="inp" name="seoDesc" value="${esc(b.seoDesc||'')}"></div>
     <div class="field"><label>Body</label><textarea class="inp" name="body" data-v="msg" data-label="Body" style="min-height:140px">${esc(b.body)}</textarea></div>
     <div class="field"><label>Cover photo</label><div style="display:flex;gap:10px;align-items:center">${pic(b,'thumb')}
       <input class="inp" type="file" accept="image/*" id="gFile"></div><small class="img-size-hint">Recommended blog cover: <b>1200 × 800 px</b> (3:2 landscape).</small></div>
     <label style="display:flex;gap:8px;align-items:center;font-size:13.5px"><input type="checkbox" name="active" ${b.active?'checked':''}> Published</label>
+    <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:7px"><input type="checkbox" name="featured" ${b.featured?'checked':''}> Featured guide on Plant Care page</label>
     <input type="hidden" name="id" value="${esc(b.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="gSave">Save post</button>`);
   let ni=null; $('#gFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readImage(f,u=>{ni=u;toast('Photo ready — press save');});};
   $('#gSave').onclick=async()=>{const f=$('#gForm'); if(!validateForm(f))return;
     const btn=$('#gSave'),label=btn.textContent,d=Object.fromEntries(new FormData(f).entries());btn.disabled=true;btn.textContent=ni?'Uploading…':'Saving…';
     try{const img=ni?await storeImageValue(ni,b.img||''):(b.img||'');
-    const obj={id:d.id||uid('g'),title:d.title,excerpt:d.excerpt,body:d.body,active:!!d.active,date:b.date||today(),art:b.art||'bush',img};
+    const obj={id:d.id||uid('g'),title:d.title,excerpt:d.excerpt,body:d.body,active:!!d.active,featured:!!d.featured,date:d.date||b.date||today(),seoTitle:(d.seoTitle||'').trim(),seoDesc:(d.seoDesc||'').trim(),art:b.art||'bush',img};
+    if(obj.featured)DB.blogs.forEach(x=>x.featured=false);
     if(d.id)Object.assign(DB.blogs.find(x=>x.id===d.id),obj); else DB.blogs.unshift(obj);
     save();closeLayer();paint();toast('Post saved');}
     catch(e){btn.disabled=false;btn.textContent=label;toast(e.message||'Cover upload failed',true);}};
