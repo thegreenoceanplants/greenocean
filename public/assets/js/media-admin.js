@@ -1,5 +1,5 @@
 /* ================= LIVE SERVER (Cloudflare Worker) ================= */
-const PUB_KEYS=['products','categories','banners','coupons','blogs','pages'];
+const PUB_KEYS=['products','categories','banners','coupons','blogs','pages','hiddenCustomers'];
 const API={on:false,key:null,storeMissing:false,lastPub:'',timer:null,status:'local',err:'',inboxAt:0,ordersAt:0,syncingOrders:false,pendingReviews:[],messages:[],returns:[],inventoryLogs:[],health:null,applying:false,
   async call(path,opt={}){
     const o={method:opt.method||'GET',headers:{'content-type':'application/json'},cache:'no-store'};

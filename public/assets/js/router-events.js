@@ -116,6 +116,7 @@ function paint(){
   }
   root.innerHTML=html;
   upgradeInternalLinks(root);
+  if(typeof renderTurnstileWidgets==='function')renderTurnstileWidgets();
   document.documentElement.style.setProperty('--green-800',DB.settings.theme||'#0F4632');
   applyMediaAssets();
   applyPageSEO(seg,query);
@@ -391,7 +392,17 @@ document.addEventListener('submit',async e=>{
     else window.open('https://wa.me/'+waNumber()+'?text='+encodeURIComponent(text),'_blank','noopener');
     f.reset(); f.querySelectorAll('.inp').forEach(i=>i.classList.remove('good','bad'));
     toast(via==='mail'?'Your email app is opening — press send there':'WhatsApp is opening — press send there');return;}
-  if(act==='campaign'){e.preventDefault(); if(!validateForm(f))return; f.reset();toast('Campaign saved as a draft');return;}
+  if(act==='campaign'){e.preventDefault(); if(!validateForm(f))return;
+    const d=Object.fromEntries(new FormData(f).entries()),sending=d.mode==='send';
+    const btn=f.querySelector(`button[value="${d.mode}"]`),label=btn?btn.textContent:'';
+    if(btn){btn.disabled=true;btn.textContent=sending?'Sending…':'Saving…';}
+    const r=await API.call(sending?'/api/admin/newsletter/send':'/api/admin/newsletter/draft',
+      {method:sending?'POST':'PUT',admin:true,body:{subject:d.subject,body:d.body},timeout:20000});
+    if(btn){btn.disabled=false;btn.textContent=label;}
+    if(!r.ok){toast(r.error,true);return;}
+    if(sending){f.reset();toast('Campaign queued for '+r.recipients+' subscriber'+(r.recipients===1?'':'s'));}
+    else toast('Draft saved');
+    API.newsAt=0; if(typeof loadInbox==='function')loadInbox(true); return;}
   if(f.id==='admForm'){e.preventDefault(); if(!validateForm(f))return; const d=Object.fromEntries(new FormData(f).entries());
     if(API.on){
       if(d.user.trim().toLowerCase()!=='admin'){toast('Username or password is wrong',true);return;}
@@ -416,9 +427,9 @@ document.addEventListener('submit',async e=>{
   if(f.id==='suForm'){e.preventDefault(); if(!validateForm(f))return;
     const d=Object.fromEntries(new FormData(f).entries());
     const btn=f.querySelector('button[type="submit"]'),label=btn.innerHTML; btn.disabled=true; btn.innerHTML='Creating account…';
-    const res=await SB.signUp({name:d.name.trim(),email:d.email.trim().toLowerCase(),phone:d.phone,pass:d.pass});
+    const res=await SB.signUp({name:d.name.trim(),email:d.email.trim().toLowerCase(),phone:d.phone,pass:d.pass,captchaToken:turnstileToken('ts-signup')});
     btn.disabled=false; btn.innerHTML=label;
-    if(!res.ok){toast(res.error,true); if(/already has an account/.test(res.error))go('#/login'); return;}
+    if(!res.ok){resetTurnstile('ts-signup'); toast(res.error,true); if(/already has an account/.test(res.error))go('#/login'); return;}
     if(res.needsConfirm){ openModal('Confirm your email',`<p style="margin:0;line-height:1.6">We've sent a confirmation link to <b>${esc(d.email)}</b>. Please open it, then come back and sign in.</p>`,
       `<button class="btn btn-primary btn-sq" data-close="1">OK</button>`); go('#/login'); return; }
     return;}
@@ -426,9 +437,9 @@ document.addEventListener('submit',async e=>{
     const d=Object.fromEntries(new FormData(f).entries());
     const btn=f.querySelector('button[type="submit"]'),label=btn.innerHTML; btn.disabled=true; btn.innerHTML='Signing in…';
     if(!d.remember)DB.sessionTemp=true;
-    const res=await SB.signIn({login:d.email,pass:d.pass});
+    const res=await SB.signIn({login:d.email,pass:d.pass,captchaToken:turnstileToken('ts-login')});
     btn.disabled=false; btn.innerHTML=label;
-    if(!res.ok){toast(res.error,true);return;}
+    if(!res.ok){resetTurnstile('ts-login'); toast(res.error,true);return;}
     // Do not depend only on the auth-state event: apply the returned session and navigate now.
     await SB.applySession(res.session);
     if(DB.session&&!DB.customers.some(c=>c.email===DB.session.email))
@@ -444,9 +455,9 @@ document.addEventListener('submit',async e=>{
     if(!OTP_SENT_EMAIL){
       const chk=RULES.email(d.email); if(chk!==true){toast(chk,true);return;}
       btn.disabled=true; btn.innerHTML='Sending…';
-      const res=await SB.sendOtp(d.email.trim().toLowerCase());
+      const res=await SB.sendOtp(d.email.trim().toLowerCase(),turnstileToken('ts-otp'));
       btn.disabled=false; btn.innerHTML=label;
-      if(!res.ok){toast(res.error,true);return;}
+      if(!res.ok){resetTurnstile('ts-otp'); toast(res.error,true);return;}
       OTP_SENT_EMAIL=d.email.trim().toLowerCase(); paint(); toast('Code sent — check your email'); return;
     }
     if(!/^[0-9]{6}$/.test((d.token||'').trim())){toast('Enter the 6-digit code',true);return;}

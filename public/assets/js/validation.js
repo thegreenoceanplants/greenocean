@@ -121,11 +121,13 @@ function viewLogin(){
       ${iField('Password','pass','password','any','lock','Enter your password','',true)}
       <div class="auth-row"><label><input type="checkbox" name="remember" checked> Remember me</label>
         <a href="#/login" class="auth-link" data-act="forgot">Forgot password?</a></div>
+      <div class="cf-turnstile" id="ts-login"></div>
       <button type="submit" class="btn btn-primary btn-block btn-lg">Sign in ${ic('arrow',16)}</button></form>`:
      `<form id="otpForm" novalidate>
       ${!OTP_SENT_EMAIL?iField('Email address','email','email','email','mail','Enter your email address'):
         `<p style="margin:0 0 10px;font-size:13.5px;color:var(--muted)">Code sent to <b>${esc(OTP_SENT_EMAIL)}</b>. <a href="#" data-act="otpChangeEmail" style="color:var(--green-700);font-weight:600">Change email</a></p>
          ${iField('6-digit code','token','text','code','lock','Enter the code from your email')}`}
+      <div class="cf-turnstile" id="ts-otp"></div>
       <button class="btn btn-primary btn-block btn-lg" style="margin-top:2px">${OTP_SENT_EMAIL?'Verify & sign in':'Send code'} ${ic('arrow',16)}</button></form>`}
     <div class="auth-or">OR</div>
     <button type="button" class="auth-alt" data-act="socialLogin" data-p="Google">${ic('google',18)} Continue with Google</button>
@@ -145,7 +147,8 @@ function viewSignup(){
         <input type="checkbox" name="agree" data-v="agree" data-label="Agreement" style="margin-top:2px;width:16px;height:16px;flex:none">
         <span>I agree to the <a href="#/page/terms" style="color:var(--green-700);font-weight:600;text-decoration:underline">Terms &amp; Conditions</a> and
         <a href="#/page/privacy" style="color:var(--green-700);font-weight:600;text-decoration:underline">Privacy Policy</a></span></label></div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg">Create account ${ic('arrow',16)}</button>
+      <div class="cf-turnstile" id="ts-signup"></div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg">Create account ${ic('arrow',16)}</button>
     </form>
     <p class="auth-foot">Already have an account? <a href="#/login">Sign in</a></p>`;
   return authShell('signup',card);

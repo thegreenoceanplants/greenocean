@@ -489,7 +489,7 @@ function blogForm(id){
     <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin-top:7px"><input type="checkbox" name="featured" ${b.featured?'checked':''}> Featured guide on Plant Care page</label>
     <input type="hidden" name="id" value="${esc(b.id)}"></form>`,
     `<button class="btn btn-line btn-sq" data-close="1">Cancel</button><button class="btn btn-primary btn-sq" id="gSave">Save post</button>`);
-  let ni=null; $('#gFile').onchange=e=>{const f=e.target.files[0];if(!f)return;readImage(f,u=>{ni=u;toast('Photo ready — press save');});};
+  let ni=null; $('#gFile').onchange=e=>{const f=e.target.files[0];if(!f)return;fitImage(f,1200,800,u=>{ni=u;toast('Photo ready — press save');});};
   $('#gSave').onclick=async()=>{const f=$('#gForm'); if(!validateForm(f))return;
     const btn=$('#gSave'),label=btn.textContent,d=Object.fromEntries(new FormData(f).entries());btn.disabled=true;btn.textContent=ni?'Uploading…':'Saving…';
     try{const img=ni?await storeImageValue(ni,b.img||''):(b.img||'');

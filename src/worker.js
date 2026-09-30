@@ -176,7 +176,7 @@ async function deleteUnreferencedOldMedia(env, oldStore, newStore) {
 function publicStore(s) {
   if (!s || typeof s !== "object") return {};
   const out = {};
-  for (const k of ["products", "categories", "banners", "coupons", "blogs", "pages", "reviews"]) if (Array.isArray(s[k])) out[k] = s[k];
+  for (const k of ["products", "categories", "banners", "coupons", "blogs", "pages", "reviews", "hiddenCustomers"]) if (Array.isArray(s[k])) out[k] = s[k];
   if (s.settings && typeof s.settings === "object") {
     const { adminPass, adminEmail, ...rest } = s.settings;
     out.settings = rest;

@@ -4,6 +4,23 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,
   {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce'}}):null;
 
+/* Cloudflare Turnstile — bot protection on signup/login/OTP. Create a widget at
+   https://dash.cloudflare.com → Turnstile, paste the Site Key below, and add the
+   matching Secret Key in Supabase → Authentication → Attack Protection → Captcha (Turnstile).
+   Leaves auth working normally (no token sent) until a real site key is set. */
+const TURNSTILE_SITE_KEY='';
+function turnstileWidgetsReady(){return typeof turnstile!=='undefined'&&TURNSTILE_SITE_KEY;}
+function renderTurnstileWidgets(){
+  if(!turnstileWidgetsReady())return;
+  document.querySelectorAll('.cf-turnstile:not([data-rendered])').forEach(el=>{
+    el.setAttribute('data-rendered','1');
+    try{ const id=turnstile.render(el,{sitekey:TURNSTILE_SITE_KEY,theme:'light',callback:t=>{el.dataset.token=t;},'error-callback':()=>{el.dataset.token='';}});
+      el.dataset.widgetId=id; }catch(e){}
+  });
+}
+function turnstileToken(containerId){ if(!TURNSTILE_SITE_KEY)return undefined; const el=document.getElementById(containerId); return (el&&el.dataset.token)||''; }
+function resetTurnstile(containerId){ const el=document.getElementById(containerId); if(el&&el.dataset.widgetId&&typeof turnstile!=='undefined'){ try{turnstile.reset(el.dataset.widgetId);}catch(e){} el.dataset.token=''; } }
+
 function sbError(e){
   const m=(e&&e.message)||'Something went wrong. Please try again.';
   if(/already registered/i.test(m))return 'That email already has an account — sign in instead';
@@ -106,15 +123,15 @@ const SB={
     try{ const {data}=await sb.from('profiles').select('email').eq('phone',phone).maybeSingle(); return data&&data.email||null; }
     catch(e){ return null; }
   },
-  async signUp({name,email,phone,pass}){
+  async signUp({name,email,phone,pass,captchaToken}){
     if(!sb)return {ok:false,error:'Accounts are temporarily unavailable — please try again shortly.'};
     const {data,error}=await sb.auth.signUp({email,password:pass,
-      options:{data:{name,phone},emailRedirectTo:location.origin+location.pathname}});
+      options:{data:{name,phone},emailRedirectTo:location.origin+location.pathname,...(captchaToken?{captchaToken}:{})}});
     if(error)return {ok:false,error:sbError(error)};
     if(data && data.user && !data.session) return {ok:true,needsConfirm:true};
     return {ok:true};
   },
-  async signIn({login,pass}){
+  async signIn({login,pass,captchaToken}){
     if(!sb)return {ok:false,error:'Accounts are temporarily unavailable — please try again shortly.'};
     let email=login.trim();
     const digits=email.replace(/[^0-9]/g,'');
@@ -123,7 +140,7 @@ const SB={
       if(!found)return {ok:false,error:'No account found for that mobile number. Try your email, or create an account.'};
       email=found;
     }
-    const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pass,...(captchaToken?{options:{captchaToken}}:{})});
     if(error)return {ok:false,error:sbError(error)};
     if(!data||!data.session)return {ok:false,error:'Sign-in succeeded but no session was returned. Please try again.'};
     return {ok:true,session:data.session,user:data.user};
@@ -132,9 +149,9 @@ const SB={
     if(!sb)return;
     await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
   },
-  async sendOtp(email){
+  async sendOtp(email,captchaToken){
     if(!sb)return {ok:false,error:'Accounts are temporarily unavailable — please try again shortly.'};
-    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true,...(captchaToken?{captchaToken}:{})}});
     if(error)return {ok:false,error:sbError(error)};
     return {ok:true};
   },
