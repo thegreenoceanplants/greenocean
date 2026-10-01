@@ -8,7 +8,7 @@ const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createC
    https://dash.cloudflare.com → Turnstile, paste the Site Key below, and add the
    matching Secret Key in Supabase → Authentication → Attack Protection → Captcha (Turnstile).
    Leaves auth working normally (no token sent) until a real site key is set. */
-const TURNSTILE_SITE_KEY='';
+const TURNSTILE_SITE_KEY='0x4AAAAAAFKvq_fI3mc0CMCh';
 function turnstileWidgetsReady(){return typeof turnstile!=='undefined'&&TURNSTILE_SITE_KEY;}
 function renderTurnstileWidgets(){
   if(!turnstileWidgetsReady())return;
