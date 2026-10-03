@@ -442,16 +442,24 @@ async function api(req, env, url, ctx) {
     await env.DATA.put("orderid:" + id, orderKey);
     await env.DATA.put("ordered:" + order.email, "1");
     // Inventory is reserved immediately when the order is accepted.
+    const LOW_STOCK_AT = 5;
+    const lowStockNow = [];
     if (Array.isArray(store.products)) {
       const logs = [];
       for (const it of items) {
         const pr = store.products.find((x) => x.id === it.id); if (!pr) continue;
         const before = Number(pr.stock || 0), after = Math.max(0, before - it.qty); pr.stock = after;
         logs.push({ productId: pr.id, productName: pr.name, before, after, reason: "Website order", ref: id, actor: "system" });
+        if (before > LOW_STOCK_AT && after <= LOW_STOCK_AT) lowStockNow.push({ name: pr.name, stock: after });
       }
       await saveStore(env, store, url.origin);
       await Promise.all(logs.map((x) => logInventory(env, x)));
     }
+    if (lowStockNow.length) ctx.waitUntil(mailOwner(env, {
+      subject: `⚠️ Low stock: ${lowStockNow.map((p) => p.name).join(", ")}`,
+      text: lowStockNow.map((p) => `${p.name}: ${p.stock} left`).join("\n"),
+      html: shell("Low stock alert", `<p style="font-size:15px;line-height:1.6">These items just dropped to ${LOW_STOCK_AT} or fewer after order ${id}:</p><table style="width:100%;font-size:14px">${lowStockNow.map((p) => row(p.name, p.stock + " left")).join("")}</table><p style="font-size:14px;color:#6B7A72;margin-top:14px">Update stock from Admin → Inventory once you've restocked.</p>`, env),
+    }).catch(() => {}));
     const lines = items.map((i) => `<tr><td style="padding:6px 0">${esc(i.name)} × ${i.qty}</td><td style="padding:6px 0;text-align:right">${inr(i.price * i.qty)}</td></tr>`).join("");
     const table = `<table style="width:100%;border-collapse:collapse;font-size:14px">${lines}
       <tr><td style="padding:6px 0;color:#6B7A72">Delivery</td><td style="text-align:right">${ship ? inr(ship) : "Free"}</td></tr>
