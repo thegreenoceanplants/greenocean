@@ -1,4 +1,5 @@
 /* ================= DATA ================= */
+function gaEvent(name,params){ try{ if(typeof gtag==='function')gtag('event',name,params||{}); }catch(e){} }
 const KEY='greenocean_v1';
 const SEED=()=>({
  settings:{store:'Green Ocean',tag:'Plants, Planters & Gifts',email:'support@greenocean.co.in',phone:'+91 97189 85034',
@@ -197,6 +198,7 @@ function addToCart(id,qty){
   const line=DB.cart.find(i=>i.id===id);
   if(line)line.qty=Math.min(line.qty+(qty||1),p.stock); else DB.cart.push({id,qty:Math.min(qty||1,p.stock)});
   save(); paint(); toast(p.name+' added to basket');
+  gaEvent('add_to_cart',{currency:'INR',value:p.price*(qty||1),items:[{item_id:p.id,item_name:p.name,price:p.price,quantity:qty||1}]});
 }
 function setQty(id,q){
   if(typeof clearCheckoutCoupon==='function')clearCheckoutCoupon(false);

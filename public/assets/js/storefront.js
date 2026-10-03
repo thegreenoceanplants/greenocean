@@ -512,6 +512,8 @@ function placeOrder(f,server){
     Object.assign(DB.session,{phone:d.phone,address:d.address,city:d.city,pin:d.pin});
     SB.updateProfile({phone:d.phone,address:d.address,city:d.city,pin:d.pin});
   } else DB.session={name:d.name,email:d.email,phone:d.phone,address:d.address,city:d.city,pin:d.pin};
+  gaEvent('purchase',{transaction_id:id,currency:'INR',value:server&&server.total!=null?server.total:sub-off+ship,shipping:ship,
+    items:items.map(i=>({item_id:i.id,item_name:i.name,price:i.price,quantity:i.qty}))});
   DB.cart=[]; DB.coupon=''; CO_COUPON=''; CPN_MSG=null; CO_STEP=1; save(); go('#/thanks/'+id); return id;
 }
 function viewThanks(id){

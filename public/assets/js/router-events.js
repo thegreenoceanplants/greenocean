@@ -78,6 +78,7 @@ function initPremiumMotion(scope){
   const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add('is-visible');io.unobserve(x.target);}}),{rootMargin:'0px 0px -4% 0px',threshold:.08});nodes.forEach(n=>io.observe(n));
 }
 let LAST_MAIN_PAGE='';
+let GA_LAST_PATH='';
 function resetCheckoutFlow(){CO_STEP=1;CO_COUPON='';CPN_MSG=null;if(DB)DB.coupon='';}
 function paint(){
   const {seg,query}=route();
@@ -85,6 +86,10 @@ function paint(){
   if(mainPage==='checkout'&&LAST_MAIN_PAGE!=='checkout')resetCheckoutFlow();
   if(mainPage!=='checkout'&&LAST_MAIN_PAGE==='checkout')resetCheckoutFlow();
   LAST_MAIN_PAGE=mainPage;
+  if(mainPage!=='admin'){ const gaPath=location.pathname+location.search;
+    if(gaPath!==GA_LAST_PATH){ GA_LAST_PATH=gaPath; gaEvent('page_view',{page_path:gaPath,page_title:document.title});
+      if(mainPage==='checkout'&&DB.cart.length)gaEvent('begin_checkout',{currency:'INR',value:cartSubtotal(),
+        items:DB.cart.map(l=>{const p=prod(l.id);return{item_id:l.id,item_name:p?p.name:l.id,price:p?p.price:0,quantity:l.qty};})}); } }
   const root=$('#root'); let html='';
   if(seg[0]==='admin'){
     if(!DB.admin){html=adminLogin();}
