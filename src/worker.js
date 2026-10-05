@@ -303,6 +303,69 @@ async function sendNewsletterCampaign(env, campaign, subscribers) {
   await env.DATA.put(campaign._key, JSON.stringify(campaign));
 }
 
+/* ---------- Payments (Razorpay / Cashfree) ---------- */
+// Shared cart pricing used both to size the payment-gateway charge and, again, to record the
+// final order — so a race (price/stock/coupon changing mid-checkout) can never let the two drift apart.
+async function computeCartPricing(d, store, env) {
+  const prods = new Map((store.products || []).map((x) => [x.id, x]));
+  const items = [];
+  for (const it of (d.items || [])) {
+    const qty = Math.max(1, Math.min(99, parseInt(it.qty, 10) || 1));
+    const pr = prods.get(it.id);
+    const price = pr ? Number(pr.price) : Number(it.price);
+    if (!pr && !store.products) { /* store not published yet — accept browser price */ }
+    else if (!pr) return { error: `“${String(it.name || it.id).slice(0, 40)}” is no longer available.` };
+    if (pr && pr.active === false) return { error: `“${String(pr.name || it.id).slice(0, 40)}” is currently unavailable.` };
+    if (!(price > 0)) return { error: "A product in your basket has no price." };
+    if (pr && Number(pr.stock || 0) < qty) return { error: `Only ${Math.max(0, Number(pr.stock || 0))} of “${String(pr.name || it.id).slice(0, 40)}” is left in stock.` };
+    items.push({ id: String(it.id), name: pr ? pr.name : String(it.name || "").slice(0, 80), price, qty, art: pr ? pr.art : it.art || "", img: pr && pr.img && pr.img.startsWith("img:") ? pr.img : "" });
+  }
+  if (!items.length) return { error: "Your basket is empty." };
+  const s = store.settings || {};
+  const sub = items.reduce((x, i) => x + i.price * i.qty, 0);
+  let off = 0, ship = sub >= (s.freeShipAbove ?? 499) ? 0 : (s.shipFee ?? 59), coupon = "";
+  if (d.coupon) {
+    const code = String(d.coupon).trim().toUpperCase();
+    const c = (store.coupons || []).find((k) => k && String(k.code || "").toUpperCase() === code);
+    if (!c) return { error: `“${code}” is not a valid coupon code.` };
+    if (!c.active) return { error: `“${code}” is not active right now.` };
+    if (sub < Number(c.min || 0)) return { error: `“${code}” works on orders of ${inr(c.min || 0)} or more.` };
+    if (firstOrderOnly(c) && env && await hasPriorOrder(env, String(d.email || "").trim().toLowerCase())) return { error: `“${code}” is a one-time first-order offer and cannot be used again.` };
+    coupon = String(c.code || code).toUpperCase();
+    if (c.type === "percent") off = Math.round((sub * Number(c.value || 0)) / 100);
+    if (c.type === "ship") ship = 0;
+  }
+  return { items, sub, off, ship, coupon, total: Math.max(0, sub - off + ship) };
+}
+async function verifyRazorpaySignature(orderId, paymentId, signature, secret) {
+  try {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const sig = await crypto.subtle.sign("HMAC", key, enc.encode(orderId + "|" + paymentId));
+    const hex = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    return hex === String(signature || "");
+  } catch (e) { return false; }
+}
+async function razorpayOrderStatus(orderId, env) {
+  try {
+    const auth = btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`);
+    const r = await fetch(`https://api.razorpay.com/v1/orders/${encodeURIComponent(orderId)}`, { headers: { authorization: `Basic ${auth}` } });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return { amountPaid: (data.amount_paid || 0) / 100, status: data.status };
+  } catch (e) { return null; }
+}
+async function cashfreeOrderStatus(orderId, env) {
+  try {
+    const r = await fetch(`https://api.cashfree.com/pg/orders/${encodeURIComponent(orderId)}`, {
+      headers: { "x-client-id": env.CASHFREE_APP_ID, "x-client-secret": env.CASHFREE_SECRET_KEY, "x-api-version": "2023-08-01" },
+    });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return { amountPaid: data.order_status === "PAID" ? Number(data.order_amount) : 0, status: data.order_status, cfOrderId: data.cf_order_id };
+  } catch (e) { return null; }
+}
+
 /* ---------- API ---------- */
 async function api(req, env, url, ctx) {
   const p = url.pathname.replace(/\/+$/, "");
@@ -387,6 +450,45 @@ async function api(req, env, url, ctx) {
   }
 
   /* orders */
+  if (p === "/api/payment/razorpay/order" && m === "POST") {
+    if (await limited(env, req, "payorder", 20, 600)) return bad("Too many attempts. Please try again in a few minutes.", 429);
+    if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) return bad("Online payment is not configured yet.", 503);
+    let d; try { d = await readJSON(req); } catch { return bad("Could not read the request."); }
+    const store = (await getStore(env)) || {};
+    const pricing = await computeCartPricing(d, store, env);
+    if (pricing.error) return bad(pricing.error);
+    const amountPaise = Math.round(pricing.total * 100);
+    if (amountPaise < 100) return bad("Order total is too small to pay online.");
+    const auth = btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`);
+    const r = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST", headers: { authorization: `Basic ${auth}`, "content-type": "application/json" },
+      body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt: "go_" + Date.now() }),
+    });
+    if (!r.ok) return bad("Could not start payment. Please try again.", 502);
+    const data = await r.json();
+    return json({ ok: true, orderId: data.id, amount: data.amount, key: env.RAZORPAY_KEY_ID });
+  }
+  if (p === "/api/payment/cashfree/order" && m === "POST") {
+    if (await limited(env, req, "payorder", 20, 600)) return bad("Too many attempts. Please try again in a few minutes.", 429);
+    if (!env.CASHFREE_APP_ID || !env.CASHFREE_SECRET_KEY) return bad("Online payment is not configured yet.", 503);
+    let d; try { d = await readJSON(req); } catch { return bad("Could not read the request."); }
+    const store = (await getStore(env)) || {};
+    const pricing = await computeCartPricing(d, store, env);
+    if (pricing.error) return bad(pricing.error);
+    if (pricing.total < 1) return bad("Order total is too small to pay online.");
+    if (!RULES.email(d.email)) return bad("A valid email is required.");
+    if (!RULES.phone(d.phone)) return bad("A valid 10-digit mobile number is required.");
+    const orderId = "go" + Date.now();
+    const r = await fetch("https://api.cashfree.com/pg/orders", {
+      method: "POST",
+      headers: { "x-client-id": env.CASHFREE_APP_ID, "x-client-secret": env.CASHFREE_SECRET_KEY, "x-api-version": "2023-08-01", "content-type": "application/json" },
+      body: JSON.stringify({ order_id: orderId, order_amount: pricing.total, order_currency: "INR",
+        customer_details: { customer_id: "cust" + Date.now(), customer_phone: String(d.phone).replace(/[^0-9]/g, ""), customer_email: String(d.email).trim().toLowerCase() } }),
+    });
+    if (!r.ok) return bad("Could not start payment. Please try again.", 502);
+    const data = await r.json();
+    return json({ ok: true, orderId: data.order_id, sessionId: data.payment_session_id });
+  }
   if (p === "/api/orders" && m === "POST") {
     if (await limited(env, req, "order", 10, 600)) return bad("Too many orders from this connection. Please try again in a few minutes.", 429);
     let d; try { d = await readJSON(req); } catch { return bad("Could not read the order."); }
@@ -425,6 +527,24 @@ async function api(req, env, url, ctx) {
       if (c.type === "percent") off = Math.round((sub * Number(c.value || 0)) / 100);
       if (c.type === "ship") ship = 0;
     }
+    let computedTotal = sub - off + ship, paymentInfo = null;
+    if (d.pay === "Razorpay") {
+      if (!env.RAZORPAY_KEY_SECRET || !d.razorpay_order_id || !d.razorpay_payment_id || !d.razorpay_signature) return bad("Payment details missing.");
+      const sigOk = await verifyRazorpaySignature(d.razorpay_order_id, d.razorpay_payment_id, d.razorpay_signature, env.RAZORPAY_KEY_SECRET);
+      if (!sigOk) return bad("Payment verification failed. If money was deducted, it will be auto-refunded within a few days; contact us if it isn't.");
+      const info = await razorpayOrderStatus(d.razorpay_order_id, env);
+      if (!info || !(info.amountPaid > 0)) return bad("Payment could not be confirmed. Please try again or contact us if money was deducted.");
+      paymentInfo = { gateway: "Razorpay", ref: d.razorpay_payment_id, orderRef: d.razorpay_order_id, amountPaid: info.amountPaid };
+    } else if (d.pay === "Cashfree") {
+      if (!env.CASHFREE_SECRET_KEY || !d.cashfree_order_id) return bad("Payment details missing.");
+      const info = await cashfreeOrderStatus(d.cashfree_order_id, env);
+      if (!info || info.status !== "PAID" || !(info.amountPaid > 0)) return bad("Payment could not be confirmed. Please try again or contact us if money was deducted.");
+      paymentInfo = { gateway: "Cashfree", ref: info.cfOrderId || d.cashfree_order_id, orderRef: d.cashfree_order_id, amountPaid: info.amountPaid };
+    }
+    // Once money has actually changed hands, what was paid is the source of truth for the order total —
+    // never a freshly recomputed number, which could differ by a few rupees if stock/coupon shifted mid-checkout.
+    const total = paymentInfo ? paymentInfo.amountPaid : computedTotal;
+    const totalMismatch = paymentInfo && Math.abs(paymentInfo.amountPaid - computedTotal) > 1;
     const id = "GO" + todayIST().slice(2).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000);
     const createdAt = new Date().toISOString();
     const verifiedUser = await supabaseUserFromRequest(req);
@@ -433,8 +553,9 @@ async function api(req, env, url, ctx) {
     if (accountRegistered) await rememberRegisteredAccount(env, verifiedUser);
     const order = { id, name: String(d.name).trim(), phone: String(d.phone).replace(/[^0-9]/g, ""), email: orderEmail,
       address: `${String(d.address).trim()}, ${String(d.city).trim()} ${String(d.pin).trim()}`, items, subtotal: sub, discount: off, delivery: ship,
-      total: sub - off + ship, coupon, pay: ["UPI", "Card", "COD"].includes(d.pay) ? d.pay : "COD", note: String(d.note || "").slice(0, 200),
-      via: d.via === "WhatsApp" ? "WhatsApp" : "Website", status: "Processing", fulfillmentStatus: "Unfulfilled", courier: "", awb: "", trackingUrl: "", adminNote: "",
+      total, coupon, pay: ["UPI", "Card", "COD", "Razorpay", "Cashfree"].includes(d.pay) ? d.pay : "COD", note: String(d.note || "").slice(0, 200),
+      via: d.via === "WhatsApp" ? "WhatsApp" : "Website", status: "Processing", fulfillmentStatus: "Unfulfilled", courier: "", awb: "", trackingUrl: "", adminNote: totalMismatch ? "Charged amount differs slightly from the computed total — please review." : "",
+      payment: paymentInfo || undefined,
       accountRegistered, accountId: accountRegistered ? verifiedUser.id : "",
       stockRestored: false, refundStatus: "", returnStatus: "", date: todayIST(), createdAt, events: [{ status: "Processing", note: "Order received", at: createdAt }] };
     const orderKey = "order:" + order.createdAt + ":" + id;
@@ -472,7 +593,7 @@ async function api(req, env, url, ctx) {
         html: shell(`New order ${id}`, `<table style="width:100%;font-size:14px">${row("Customer", order.name)}${row("Mobile", order.phone)}${row("Email", order.email)}${row("Address", order.address)}${row("Payment", order.pay)}${row("Came via", order.via)}${order.note ? row("Gift note", order.note) : ""}</table><hr style="border:0;border-top:1px solid #E2E7E3;margin:14px 0">${table}`, env),
       }),
       mailCustomer(env, { to: order.email, name: order.name, subject: `Thank you, ${order.name.split(" ")[0]}! Your Green Ocean order ${id} is received 🌿`,
-        html: shell(`Thank you, ${order.name.split(" ")[0]}! 🌿`, `<p style="font-size:15px;line-height:1.6">We have received your order and our nursery team is already picking the healthiest plants for you. Your payment method is <b>${esc(order.pay)}</b>. We will contact you on <b>${esc(order.phone)}</b> only if we need to confirm a delivery detail.</p>${table}<p style="font-size:14px;color:#6B7A72;margin-top:14px">Delivering to: ${esc(order.address)}</p><p style="font-size:14px;line-height:1.6">Questions? Just reply to this email.<br>— Team Green Ocean</p>`, env) }),
+        html: shell(`Thank you, ${order.name.split(" ")[0]}! 🌿`, `<p style="font-size:15px;line-height:1.6">We have received your order and our nursery team is already picking the healthiest plants for you. Your payment method is <b>${esc(order.pay)}</b>. We will contact you on <b>${esc(order.phone)}</b> only if we need to confirm a delivery detail.</p>${table}<p style="margin:14px 0"><a href="${url.origin}/invoice/${encodeURIComponent(id)}?email=${encodeURIComponent(order.email)}" style="color:#14532d;font-weight:700;text-decoration:none">📄 Download your invoice</a></p><p style="font-size:14px;color:#6B7A72;margin-top:14px">Delivering to: ${esc(order.address)}</p><p style="font-size:14px;line-height:1.6">Questions? Just reply to this email.<br>— Team Green Ocean</p>`, env) }),
     ]);
     return json({ ok: true, id, total: order.total, subtotal: sub, discount: off, delivery: ship, coupon, ownerMailed: ownerMail.sent, customerMailed: custMail.sent });
   }
@@ -827,6 +948,49 @@ async function serveSitemap(env,url){
   const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(paths)].map(p=>`  <url><loc>${xmlEsc(base+p)}</loc></url>`).join("\n")}\n</urlset>`;
   return new Response(xml,{headers:{"content-type":"application/xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
 }
+async function serveInvoice(env,url,orderId){
+  const store=(await getStore(env))||{}, s=store.settings||{};
+  const email=String(url.searchParams.get("email")||"").trim().toLowerCase();
+  if(!RULES.email(email))return bad("Add your order email as ?email= to view this invoice.",400);
+  const found=await findOrder(env,orderId); if(!found)return bad("Order not found.",404);
+  const o=found.order;
+  if(String(o.email||"").toLowerCase()!==email)return bad("That email does not match this order.",403);
+  const itemRows=(o.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${inr(i.price)}</td><td style="text-align:right">${inr(i.price*i.qty)}</td></tr>`).join("");
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${esc(o.id)}</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;color:#1a2e22;max-width:760px;margin:30px auto;padding:0 20px}
+h1{font-size:22px;margin:0 0 2px}
+.muted{color:#6B7A72}
+.row{display:flex;justify-content:space-between;gap:24px;margin:18px 0;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;margin-top:16px}
+th,td{padding:9px 6px;border-bottom:1px solid #E2E7E3;font-size:13.5px;text-align:left}
+th{color:#6B7A72;font-weight:600;font-size:12px;text-transform:uppercase}
+.totals{width:280px;margin-left:auto;margin-top:10px}
+.totals div{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+.totals .grand{font-weight:700;font-size:16px;border-top:2px solid #1a2e22;margin-top:6px;padding-top:8px}
+.print-btn{margin:18px 0;padding:10px 20px;border-radius:999px;border:0;background:#14532d;color:#fff;font-size:14px;cursor:pointer}
+@media print{.print-btn{display:none}}
+</style></head><body>
+<button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+<h1>${esc(s.store||"Green Ocean")}</h1>
+<div class="muted">${esc(s.address||"")}${s.gst?` · GSTIN: ${esc(s.gst)}`:""}</div>
+<div class="muted">${esc(s.email||"")} · ${esc(s.phone||"")}</div>
+<div class="row">
+  <div><b>Tax Invoice</b><br><span class="muted">Order: ${esc(o.id)}</span><br><span class="muted">Date: ${esc(o.date||"")}</span></div>
+  <div><b>Billed to</b><br>${esc(o.name)}<br>${esc(o.address)}<br>${esc(o.phone)} · ${esc(o.email)}</div>
+</div>
+<table><thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Amount</th></tr></thead>
+<tbody>${itemRows}</tbody></table>
+<div class="totals">
+  <div><span>Subtotal</span><span>${inr(o.subtotal)}</span></div>
+  ${o.discount?`<div><span>Discount${o.coupon?` (${esc(o.coupon)})`:""}</span><span>-${inr(o.discount)}</span></div>`:""}
+  <div><span>Shipping</span><span>${o.delivery?inr(o.delivery):"Free"}</span></div>
+  <div class="grand"><span>Total</span><span>${inr(o.total)}</span></div>
+</div>
+<p class="muted" style="font-size:12px;margin-top:22px">Payment method: ${esc(o.pay)}${o.payment&&o.payment.ref?` · Reference: ${esc(o.payment.ref)}`:""}. Prices shown are inclusive of applicable taxes.</p>
+</body></html>`;
+  return new Response(html,{headers:{"content-type":"text/html; charset=UTF-8","cache-control":"no-cache"}});
+}
 async function serveRobots(env,url){const store=(await getStore(env))||{},base=siteBase(store,url);return new Response(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /checkout\nDisallow: /account\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nSitemap: ${base}/sitemap.xml\n`,{headers:{"content-type":"text/plain; charset=UTF-8","cache-control":"public, max-age=3600"}});}
 
 export default {
@@ -837,6 +1001,7 @@ export default {
       catch (e) { return bad("Something went wrong on our side. Please try again.", 500); }
     }
     if (req.method === "GET" && /^\/media\/[A-Za-z0-9-]+$/.test(url.pathname)) return serveManagedMedia(env, url.pathname.split("/").pop());
+    if (req.method === "GET" && /^\/invoice\/[A-Za-z0-9-]+$/.test(url.pathname)) return serveInvoice(env, url, url.pathname.split("/").pop());
     if (req.method === "GET" && cleanPathname(url.pathname) === "/sitemap.xml") return serveSitemap(env, url);
     if (req.method === "GET" && cleanPathname(url.pathname) === "/robots.txt") return serveRobots(env, url);
     if (req.method === "GET" && isAppRoute(url.pathname)) {

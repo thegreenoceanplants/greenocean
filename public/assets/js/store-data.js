@@ -9,7 +9,7 @@ const SEED=()=>({
    instagram:'https://www.instagram.com/thegreeenocean',
    facebook:'https://www.facebook.com/share/1DXzzjny6W/',
    youtube:'https://youtube.com/@thegreenocean94',
-   codEnabled:true,upiEnabled:true,cardEnabled:true,metaTitle:'Green Ocean — Buy Indoor Plants Online',
+   codEnabled:true,razorpayEnabled:true,cashfreeEnabled:false,metaTitle:'Green Ocean — Buy Indoor Plants Online',
    metaDesc:'Healthy nursery-fresh plants, planters and gifts delivered across India.',
    heroTitle:'Happier Spaces Greener Lives',heroSub:'Healthy plants for a better tomorrow. Handpicked from our nursery, delivered to your doorstep.',
    heroKicker:'BRING NATURE HOME',heroNote:'Good Plants\nGood Days',theme:'#0F4632',adminPass:'admin123',adminEmail:'thegreenoceanplants@gmail.com',media:{},homeSlides:[{id:'hs1',img:'img:home_slide_1',link:'#/shop?cat=c1',alt:'Happier Spaces Greener Lives — Green Ocean indoor plant banner'},{id:'hs2',img:'img:home_slide_2',link:'#/shop?cat=c1',alt:'Soft leaves. Softer days. — indoor plant banner'},{id:'hs3',img:'img:home_slide_3',link:'#/shop',alt:'Give your balcony a greener mood — balcony plant banner'},{id:'hs4',img:'img:home_slide_4',link:'#/shop?cat=c6',alt:'A plant gift that keeps growing — Green Ocean gifting banner'}]},

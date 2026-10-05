@@ -459,9 +459,10 @@ function viewCheckout(){
           <div class="checkout-card checkout-payment-card">
             <h3>Choose payment method</h3>
             <div class="checkout-payments">
-              ${s.upiEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="UPI" checked><span class="pay-icon">${ic('phone',19)}</span><span><b>UPI</b><small>Pay using any supported UPI app</small></span><span class="pay-radio"></span></label>`:''}
-              ${s.cardEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="Card"><span class="pay-icon">${ic('card',19)}</span><span><b>Card</b><small>Credit or debit card</small></span><span class="pay-radio"></span></label>`:''}
-              ${s.codEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="COD"><span class="pay-icon">${ic('wallet',19)}</span><span><b>Cash on delivery</b><small>Pay when your order arrives</small></span><span class="pay-radio"></span></label>`:''}
+              ${(()=>{const first=s.razorpayEnabled?'rp':s.cashfreeEnabled?'cf':'cod';return `
+              ${s.razorpayEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="Razorpay" ${first==='rp'?'checked':''}><span class="pay-icon">${ic('phone',19)}</span><span><b>Pay Online</b><small>UPI, Card or Netbanking via Razorpay</small></span><span class="pay-radio"></span></label>`:''}
+              ${s.cashfreeEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="Cashfree" ${first==='cf'?'checked':''}><span class="pay-icon">${ic('phone',19)}</span><span><b>Pay Online</b><small>UPI, Card or Netbanking via Cashfree</small></span><span class="pay-radio"></span></label>`:''}
+              ${s.codEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="COD" ${first==='cod'?'checked':''}><span class="pay-icon">${ic('wallet',19)}</span><span><b>Cash on delivery</b><small>Pay when your order arrives</small></span><span class="pay-radio"></span></label>`:''}`;})()}
             </div>
             <div class="field checkout-gift"><label>Gift note <span>(optional)</span></label><input class="inp" name="note" placeholder="We will write it on the card"></div>
             <div class="checkout-security">${ic('shield',17)} <span>Your order details are protected. Green Ocean never stores card PINs, CVV or UPI PINs.</span></div>
@@ -581,6 +582,7 @@ function viewOrders(){
       <div style="display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap"><b style="margin-right:auto">${money(o.total)}</b>
         ${['Processing','Packed'].includes(o.status)?`<button class="btn btn-danger btn-sq btn-sm" data-cancel="${o.id}">Cancel order</button>`:''}
         ${o.status==='Delivered'&&!o.returnStatus?`<button class="btn btn-line btn-sq btn-sm" data-request-return="${o.id}">${ic('back',13)} Request return / refund</button>`:''}
+        <a class="btn btn-line btn-sq btn-sm" target="_blank" rel="noopener" href="/invoice/${encodeURIComponent(o.id)}?email=${encodeURIComponent(o.email)}">${ic('doc',13)} Invoice</a>
         <button class="btn btn-line btn-sq btn-sm" data-reorder="${o.id}">Buy again</button></div></article>`).join(''):`<div class="panel empty">${ic('bag',30)}<h3>No orders yet</h3><p>Your orders will appear here after checkout.</p><a class="btn btn-primary btn-sq" href="#/shop">Start shopping</a></div>`}</div>`+footer();
 }
 function accountHeader(u){

@@ -346,18 +346,53 @@ function rateProduct(rv,dir){
   const n=p.reviews||0, sum=(p.rating||0)*n + dir*rv.rating, m=Math.max(0,n+dir);
   p.reviews=m; p.rating=m?Math.round(sum/m*10)/10:0;
 }
+async function payWithRazorpay(items,d){
+  const order=await API.call('/api/payment/razorpay/order',{method:'POST',body:{items,coupon:CO_COUPON||'',email:d.email}});
+  if(!order.ok)return order.error;
+  if(typeof Razorpay==='undefined')return 'Payment could not load. Please check your connection and try again.';
+  return new Promise(resolve=>{
+    let settled=false;
+    const rz=new Razorpay({ key:order.key, amount:order.amount, currency:'INR', name:(DB.settings.store||'Green Ocean'),
+      description:'Order payment', order_id:order.orderId, prefill:{name:d.name,email:d.email,contact:d.phone},
+      theme:{color:'#14532d'},
+      handler:(resp)=>{ settled=true; resolve({razorpay_order_id:resp.razorpay_order_id,razorpay_payment_id:resp.razorpay_payment_id,razorpay_signature:resp.razorpay_signature}); },
+      modal:{ondismiss:()=>{ if(!settled)resolve(false); }} });
+    rz.on('payment.failed',()=>{ settled=true; resolve(false); });
+    rz.open();
+  });
+}
+async function payWithCashfree(items,d){
+  const order=await API.call('/api/payment/cashfree/order',{method:'POST',body:{items,coupon:CO_COUPON||'',email:d.email,phone:d.phone}});
+  if(!order.ok)return order.error;
+  if(typeof Cashfree==='undefined')return 'Payment could not load. Please check your connection and try again.';
+  try{
+    const cashfree=Cashfree({mode:'production'});
+    const result=await cashfree.checkout({paymentSessionId:order.sessionId,redirectTarget:'_modal'});
+    if(result&&result.error)return false;
+    return {cashfree_order_id:order.orderId};
+  }catch(e){ return false; }
+}
 async function submitOrderLive(f){
   const d=Object.fromEntries(new FormData(f).entries());
   const wa=DB.settings.orderMode==='whatsapp';
   const btn=f.querySelector('button[type="submit"]'), label=btn.innerHTML;
+  const items=DB.cart.map(l=>{const p=prod(l.id);return{id:l.id,qty:l.qty,name:p&&p.name,price:p&&p.price,art:p&&p.art};});
   btn.disabled=true; btn.innerHTML='Placing your order…'; $('#coErr').innerHTML='';
   const win=wa?window.open('','_blank'):null;
+  const showErr=(msg)=>{ if(win)win.close(); btn.disabled=false; btn.innerHTML=label;
+    $('#coErr').innerHTML=`<div class="form-err" role="alert">${esc(msg)}</div>`; $('#coErr').scrollIntoView({block:'center'}); };
+  if(d.pay==='Razorpay'||d.pay==='Cashfree'){
+    btn.innerHTML='Opening payment…';
+    const proof=d.pay==='Razorpay'?await payWithRazorpay(items,d):await payWithCashfree(items,d);
+    if(typeof proof==='string'){ showErr(proof); return; }
+    if(!proof){ showErr('Payment was not completed. Your order was not placed — no amount was charged.'); return; }
+    Object.assign(d,proof);
+    btn.innerHTML='Placing your order…';
+  }
   let authToken='';
   if(sb&&DB.session&&DB.session.id){try{const s=await sb.auth.getSession();authToken=s&&s.data&&s.data.session&&s.data.session.access_token||'';}catch(e){}}
-  const res=await API.call('/api/orders',{method:'POST',authToken,body:{...d,coupon:CO_COUPON||'',via:wa?'WhatsApp':'Website',
-    items:DB.cart.map(l=>{const p=prod(l.id);return{id:l.id,qty:l.qty,name:p&&p.name,price:p&&p.price,art:p&&p.art};})}});
-  if(!res.ok){ if(win)win.close(); btn.disabled=false; btn.innerHTML=label;
-    $('#coErr').innerHTML=`<div class="form-err" role="alert">${esc(res.error)}</div>`; $('#coErr').scrollIntoView({block:'center'}); return; }
+  const res=await API.call('/api/orders',{method:'POST',authToken,body:{...d,coupon:CO_COUPON||'',via:wa?'WhatsApp':'Website',items}});
+  if(!res.ok){ showErr(res.error); return; }
   const id=placeOrder(f,res);
   const o=DB.orders.find(x=>x.id===id);
   if(win&&o){ try{ win.location.href=orderWhatsAppLink(o); }catch(e){} }
@@ -495,7 +530,7 @@ document.addEventListener('submit',async e=>{
     toast('Password updated');return;}
   if(f.id==='setForm'){e.preventDefault(); if(!validateForm(f))return;const d=Object.fromEntries(new FormData(f).entries());
     Object.assign(DB.settings,{store:d.store,tag:d.tag,email:d.email,phone:d.phone,address:d.address,gst:d.gst,
-      freeShipAbove:+d.freeShipAbove,shipFee:+d.shipFee,upiEnabled:!!d.upiEnabled,cardEnabled:!!d.cardEnabled,codEnabled:!!d.codEnabled,
+      freeShipAbove:+d.freeShipAbove,shipFee:+d.shipFee,razorpayEnabled:!!d.razorpayEnabled,cashfreeEnabled:!!d.cashfreeEnabled,codEnabled:!!d.codEnabled,
       metaTitle:d.metaTitle,metaDesc:d.metaDesc,domain:(d.domain||'').trim(),orderMode:d.orderMode==='online'?'online':'whatsapp',
       instagram:(d.instagram||'').trim(),facebook:(d.facebook||'').trim(),youtube:(d.youtube||'').trim()});
     save();paint();toast('Settings saved');return;}
