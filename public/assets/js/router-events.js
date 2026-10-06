@@ -374,7 +374,7 @@ async function payWithCashfree(items,d){
 }
 async function submitOrderLive(f){
   const d=Object.fromEntries(new FormData(f).entries());
-  const wa=DB.settings.orderMode==='whatsapp';
+  const wa=DB.settings.orderMode==='whatsapp'&&d.pay==='COD';
   const btn=f.querySelector('button[type="submit"]'), label=btn.innerHTML;
   const items=DB.cart.map(l=>{const p=prod(l.id);return{id:l.id,qty:l.qty,name:p&&p.name,price:p&&p.price,art:p&&p.art};});
   btn.disabled=true; btn.innerHTML='Placing your order…'; $('#coErr').innerHTML='';
@@ -399,6 +399,11 @@ async function submitOrderLive(f){
 }
 /* ---------- change events ---------- */
 document.addEventListener('change',e=>{
+  if(e.target.name==='pay'&&e.target.closest('#coForm')){
+    const map={Razorpay:'rp',Cashfree:'cf',COD:'cod'}, method=map[e.target.value]||'cod';
+    const btn=$('#coPlaceOrder'); if(btn)btn.innerHTML=checkoutPayButtonLabel(method,checkoutAmounts().total);
+    const mc=$('#coPayMicrocopy'); if(mc)mc.textContent=checkoutPayMicrocopy(method);
+  }
   if(e.target.type==='checkbox'&&e.target.dataset.v)markField(e.target);
   if(e.target.dataset.range){DASH_RANGE=+e.target.value;paint();return;}
   const st=e.target.dataset.status;

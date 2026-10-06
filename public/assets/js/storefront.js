@@ -377,6 +377,17 @@ function viewWishlist(){
 }
 
 /* ---------- Checkout ---------- */
+function checkoutPayButtonLabel(method,total){
+  if(method==='cod'&&DB.settings.orderMode==='whatsapp')return `${ic('phone',16)} Send order on WhatsApp · ${money(total)}`;
+  if(method==='rp')return `${ic('phone',16)} Pay ${money(total)} with Razorpay`;
+  if(method==='cf')return `${ic('phone',16)} Pay ${money(total)} with Cashfree`;
+  return `Place order · ${money(total)}`;
+}
+function checkoutPayMicrocopy(method){
+  if(method==='cod'&&DB.settings.orderMode==='whatsapp')return 'WhatsApp opens with the order prepared for you. Press Send there to finish.';
+  if(method==='rp'||method==='cf')return 'A secure payment window will open. Your order is placed only after payment is confirmed.';
+  return 'You can review the order once more in your confirmation page.';
+}
 function viewCheckout(){
   if(!DB.session&&DB.cart.length){
     DB.afterLogin='checkout';
@@ -473,8 +484,8 @@ function viewCheckout(){
             <div class="checkout-total-line"><span>Delivery</span><b data-co-delivery>${a.ship?money(a.ship):'Free'}</b></div>
             <div class="checkout-total-line grand"><span>To pay</span><b data-co-total>${money(a.total)}</b></div>
             <p class="checkout-terms">By placing this order you agree to our <a href="#/page/terms">Terms & Conditions</a> and <a href="#/page/privacy">Privacy Policy</a>.</p>
-            <button class="btn btn-primary btn-lg btn-block" id="coPlaceOrder" type="submit">${s.orderMode==='whatsapp'?`${ic('phone',16)} Send order on WhatsApp · ${money(a.total)}`:`Place order · ${money(a.total)}`}</button>
-            ${s.orderMode==='whatsapp'?`<p class="checkout-microcopy">WhatsApp opens with the order prepared for you. Press Send there to finish.</p>`:`<p class="checkout-microcopy">You can review the order once more in your confirmation page.</p>`}
+            <button class="btn btn-primary btn-lg btn-block" id="coPlaceOrder" type="submit">${checkoutPayButtonLabel(first,a.total)}</button>
+            <p class="checkout-microcopy" id="coPayMicrocopy">${checkoutPayMicrocopy(first)}</p>
           </aside>
         </div>
         <div class="checkout-actions"><button type="button" class="btn btn-line btn-sq" data-act="checkoutBack" data-step="3">${ic('back',14)} Order summary</button></div>

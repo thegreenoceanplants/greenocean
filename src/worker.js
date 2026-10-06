@@ -958,19 +958,22 @@ async function serveInvoice(env,url,orderId){
   const itemRows=(o.items||[]).map(i=>`<tr><td>${esc(i.name)}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${inr(i.price)}</td><td style="text-align:right">${inr(i.price*i.qty)}</td></tr>`).join("");
   const html=`<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${esc(o.id)}</title>
 <style>
-body{font-family:Arial,Helvetica,sans-serif;color:#1a2e22;max-width:760px;margin:30px auto;padding:0 20px}
-h1{font-size:22px;margin:0 0 2px}
-.muted{color:#6B7A72}
-.row{display:flex;justify-content:space-between;gap:24px;margin:18px 0;flex-wrap:wrap}
-table{width:100%;border-collapse:collapse;margin-top:16px}
-th,td{padding:9px 6px;border-bottom:1px solid #E2E7E3;font-size:13.5px;text-align:left}
-th{color:#6B7A72;font-weight:600;font-size:12px;text-transform:uppercase}
-.totals{width:280px;margin-left:auto;margin-top:10px}
-.totals div{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
-.totals .grand{font-weight:700;font-size:16px;border-top:2px solid #1a2e22;margin-top:6px;padding-top:8px}
-.print-btn{margin:18px 0;padding:10px 20px;border-radius:999px;border:0;background:#14532d;color:#fff;font-size:14px;cursor:pointer}
-@media print{.print-btn{display:none}}
-</style></head><body>
+@page{size:A4;margin:0}
+body{font-family:Arial,Helvetica,sans-serif;color:#1a2e22;margin:0;padding:14px;font-size:12px}
+.sheet{width:99mm;max-width:100%;margin:0 auto}
+h1{font-size:15px;margin:0 0 2px}
+.muted{color:#6B7A72;font-size:10.5px}
+.row{display:flex;justify-content:space-between;gap:10px;margin:10px 0;flex-wrap:wrap;font-size:11px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{padding:4px 3px;border-bottom:1px solid #E2E7E3;font-size:10.5px;text-align:left}
+th{color:#6B7A72;font-weight:600;font-size:9px;text-transform:uppercase}
+.totals{width:100%;margin-top:6px}
+.totals div{display:flex;justify-content:space-between;padding:2px 0;font-size:11px}
+.totals .grand{font-weight:700;font-size:13px;border-top:2px solid #1a2e22;margin-top:4px;padding-top:5px}
+.print-btn{margin:0 0 14px;padding:9px 18px;border-radius:999px;border:0;background:#14532d;color:#fff;font-size:13px;cursor:pointer}
+.foot{font-size:9px;margin-top:14px}
+@media print{.print-btn{display:none}body{padding:0}.sheet{width:105mm;height:148.5mm;padding:8mm;box-sizing:border-box;page-break-after:always}}
+</style></head><body><div class="sheet">
 <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
 <h1>${esc(s.store||"Green Ocean")}</h1>
 <div class="muted">${esc(s.address||"")}${s.gst?` · GSTIN: ${esc(s.gst)}`:""}</div>
@@ -987,8 +990,8 @@ th{color:#6B7A72;font-weight:600;font-size:12px;text-transform:uppercase}
   <div><span>Shipping</span><span>${o.delivery?inr(o.delivery):"Free"}</span></div>
   <div class="grand"><span>Total</span><span>${inr(o.total)}</span></div>
 </div>
-<p class="muted" style="font-size:12px;margin-top:22px">Payment method: ${esc(o.pay)}${o.payment&&o.payment.ref?` · Reference: ${esc(o.payment.ref)}`:""}. Prices shown are inclusive of applicable taxes.</p>
-</body></html>`;
+<p class="foot muted">Payment: ${esc(o.pay)}${o.payment&&o.payment.ref?` · Ref: ${esc(o.payment.ref)}`:""}. Prices are inclusive of applicable taxes.</p>
+</div></body></html>`;
   return new Response(html,{headers:{"content-type":"text/html; charset=UTF-8","cache-control":"no-cache"}});
 }
 async function serveRobots(env,url){const store=(await getStore(env))||{},base=siteBase(store,url);return new Response(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /checkout\nDisallow: /account\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nSitemap: ${base}/sitemap.xml\n`,{headers:{"content-type":"text/plain; charset=UTF-8","cache-control":"public, max-age=3600"}});}
