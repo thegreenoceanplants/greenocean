@@ -274,7 +274,10 @@ function updateCheckoutSummary(){
   const msg=document.getElementById('cpnMsg');
   if(msg){msg.className='cpn-msg '+(CPN_MSG?(CPN_MSG.ok?'good':'bad'):'');msg.textContent=CPN_MSG?CPN_MSG.text:'';}
   const btn=document.getElementById('coPlaceOrder');
-  if(btn){btn.innerHTML=DB.settings.orderMode==='whatsapp'?`${ic('phone',16)} Send order on WhatsApp · ${money(a.total)}`:`Place order · ${money(a.total)}`;}
+  const sel=document.querySelector('#coForm input[name=pay]:checked');
+  const method={Razorpay:'rp',Cashfree:'cf',COD:'cod'}[sel&&sel.value]||checkoutFirstPay(DB.settings);
+  if(btn){btn.innerHTML=checkoutPayButtonLabel(method,a.total);}
+  const mc=document.getElementById('coPayMicrocopy'); if(mc)mc.textContent=checkoutPayMicrocopy(method);
 }
 function checkoutShowStep(step,backward=false){
   step=Math.max(1,Math.min(4,+step||1));

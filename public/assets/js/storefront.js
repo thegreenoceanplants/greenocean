@@ -377,6 +377,7 @@ function viewWishlist(){
 }
 
 /* ---------- Checkout ---------- */
+function checkoutFirstPay(s){ return s.razorpayEnabled?'rp':s.cashfreeEnabled?'cf':'cod'; }
 function checkoutPayButtonLabel(method,total){
   if(method==='cod'&&DB.settings.orderMode==='whatsapp')return `${ic('phone',16)} Send order on WhatsApp · ${money(total)}`;
   if(method==='rp')return `${ic('phone',16)} Pay ${money(total)} with Razorpay`;
@@ -470,9 +471,9 @@ function viewCheckout(){
           <div class="checkout-card checkout-payment-card">
             <h3>Choose payment method</h3>
             <div class="checkout-payments">
-              ${(()=>{const first=s.razorpayEnabled?'rp':s.cashfreeEnabled?'cf':'cod';return `
-              ${s.razorpayEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="Razorpay" ${first==='rp'?'checked':''}><span class="pay-icon">${ic('phone',19)}</span><span><b>Pay Online</b><small>UPI, Card or Netbanking via Razorpay</small></span><span class="pay-radio"></span></label>`:''}
-              ${s.cashfreeEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="Cashfree" ${first==='cf'?'checked':''}><span class="pay-icon">${ic('phone',19)}</span><span><b>Pay Online</b><small>UPI, Card or Netbanking via Cashfree</small></span><span class="pay-radio"></span></label>`:''}
+              ${(()=>{const first=checkoutFirstPay(s);return `
+              ${s.razorpayEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="Razorpay" ${first==='rp'?'checked':''}><span class="pay-icon">${ic('phone',19)}</span><span><b>${s.cashfreeEnabled?'Pay with Razorpay':'Pay Online'}</b><small>UPI, Card or Netbanking</small></span><span class="pay-radio"></span></label>`:''}
+              ${s.cashfreeEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="Cashfree" ${first==='cf'?'checked':''}><span class="pay-icon">${ic('phone',19)}</span><span><b>${s.razorpayEnabled?'Pay with Cashfree':'Pay Online'}</b><small>UPI, Card or Netbanking</small></span><span class="pay-radio"></span></label>`:''}
               ${s.codEnabled?`<label class="checkout-payment-option"><input type="radio" name="pay" value="COD" ${first==='cod'?'checked':''}><span class="pay-icon">${ic('wallet',19)}</span><span><b>Cash on delivery</b><small>Pay when your order arrives</small></span><span class="pay-radio"></span></label>`:''}`;})()}
             </div>
             <div class="field checkout-gift"><label>Gift note <span>(optional)</span></label><input class="inp" name="note" placeholder="We will write it on the card"></div>
@@ -484,8 +485,8 @@ function viewCheckout(){
             <div class="checkout-total-line"><span>Delivery</span><b data-co-delivery>${a.ship?money(a.ship):'Free'}</b></div>
             <div class="checkout-total-line grand"><span>To pay</span><b data-co-total>${money(a.total)}</b></div>
             <p class="checkout-terms">By placing this order you agree to our <a href="#/page/terms">Terms & Conditions</a> and <a href="#/page/privacy">Privacy Policy</a>.</p>
-            <button class="btn btn-primary btn-lg btn-block" id="coPlaceOrder" type="submit">${checkoutPayButtonLabel(first,a.total)}</button>
-            <p class="checkout-microcopy" id="coPayMicrocopy">${checkoutPayMicrocopy(first)}</p>
+            <button class="btn btn-primary btn-lg btn-block" id="coPlaceOrder" type="submit">${checkoutPayButtonLabel(checkoutFirstPay(s),a.total)}</button>
+            <p class="checkout-microcopy" id="coPayMicrocopy">${checkoutPayMicrocopy(checkoutFirstPay(s))}</p>
           </aside>
         </div>
         <div class="checkout-actions"><button type="button" class="btn btn-line btn-sq" data-act="checkoutBack" data-step="3">${ic('back',14)} Order summary</button></div>
@@ -529,8 +530,28 @@ function placeOrder(f,server){
   metaEvent('Purchase',{content_ids:items.map(i=>i.id),content_type:'product',currency:'INR',value:server&&server.total!=null?server.total:sub-off+ship});
   DB.cart=[]; DB.coupon=''; CO_COUPON=''; CPN_MSG=null; CO_STEP=1; save(); go('#/thanks/'+id); return id;
 }
+const THANKS_TRIED={};
+function thanksNotFound(id,loading){
+  return header()+`<div class="wrap sec"><div class="panel" style="max-width:640px;margin:0 auto;text-align:center;padding:30px">
+    <span style="width:60px;height:60px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:grid;place-items:center;margin:0 auto 14px">${ic(loading?'clock':'doc',28)}</span>
+    <h2 style="font-family:var(--serif);margin:0 0 6px">${loading?'Finding your order…':'We could not find this order on this device'}</h2>
+    <p style="color:var(--muted);margin:0 0 18px;line-height:1.6">${loading?'One moment please.':`Order details are saved on the device used at checkout. Please check your confirmation email, or sign in with the email you ordered with to see all your orders. Need help? We are one message away.`}</p>
+    ${loading?'':`<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a class="btn btn-primary btn-sq" href="#/orders">My orders</a><a class="btn btn-line btn-sq" href="#/page/contact">Contact us</a><a class="btn btn-line btn-sq" href="#/shop">Keep shopping</a></div>`}
+  </div></div>`+footer();
+}
 function viewThanks(id){
-  const o=DB.orders.find(x=>x.id===id)||DB.orders[0];
+  const o=DB.orders.find(x=>x.id===id);
+  if(!o){
+    if(API.on&&DB.session&&DB.session.email&&id&&!THANKS_TRIED[id]){
+      THANKS_TRIED[id]=1;
+      API.call('/api/orders/status',{method:'POST',body:{email:DB.session.email,ids:[id]}}).then(r=>{
+        if(r.ok&&r.orders&&r.orders[0]){ DB.orders.unshift({...r.orders[0]}); save(); }
+        if(location.pathname==='/thanks/'+id)paint();
+      });
+      return thanksNotFound(id,true);
+    }
+    return thanksNotFound(id,false);
+  }
   return header()+`<div class="wrap sec"><div class="panel" style="max-width:640px;margin:0 auto;text-align:center;padding:30px">
     <span style="width:60px;height:60px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:grid;place-items:center;margin:0 auto 14px">${ic('check',28)}</span>
     ${o.via==='WhatsApp'?`<h2 style="font-family:var(--serif);margin:0 0 6px">Order ${esc(o.id)} sent on WhatsApp</h2>

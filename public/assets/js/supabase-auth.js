@@ -174,7 +174,7 @@ const SB={
     return {ok:true};
   },
   async updateProfile(fields){
-    const u=DB.session; if(!u)return {ok:false,error:'Not signed in'};
+    const u=DB.session; if(!u||!sb)return {ok:false,error:'Not signed in'};
     const {error}=await sb.from('profiles').update({...fields,updated_at:new Date().toISOString()}).eq('id',u.id);
     if(error)return {ok:false,error:sbError(error)};
     return {ok:true};

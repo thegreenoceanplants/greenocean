@@ -462,7 +462,7 @@ async function api(req, env, url, ctx) {
     const auth = btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`);
     const r = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST", headers: { authorization: `Basic ${auth}`, "content-type": "application/json" },
-      body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt: "go_" + Date.now() }),
+      body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt: "go_" + Date.now(), notes: { email: String(d.email || "").slice(0, 80), source: "greenocean.co.in" } }),
     });
     if (!r.ok) return bad("Could not start payment. Please try again.", 502);
     const data = await r.json();
@@ -482,7 +482,7 @@ async function api(req, env, url, ctx) {
     const r = await fetch("https://api.cashfree.com/pg/orders", {
       method: "POST",
       headers: { "x-client-id": env.CASHFREE_APP_ID, "x-client-secret": env.CASHFREE_SECRET_KEY, "x-api-version": "2023-08-01", "content-type": "application/json" },
-      body: JSON.stringify({ order_id: orderId, order_amount: pricing.total, order_currency: "INR",
+      body: JSON.stringify({ order_id: orderId, order_amount: pricing.total, order_currency: "INR", order_note: "Green Ocean order for " + String(d.email).trim().toLowerCase().slice(0, 80),
         customer_details: { customer_id: "cust" + Date.now(), customer_phone: String(d.phone).replace(/[^0-9]/g, ""), customer_email: String(d.email).trim().toLowerCase() } }),
     });
     if (!r.ok) return bad("Could not start payment. Please try again.", 502);
@@ -498,36 +498,8 @@ async function api(req, env, url, ctx) {
     if (!RULES.text(d.address, 10, 300)) errs.push("address"); if (!RULES.pin(d.pin)) errs.push("pin"); if (!RULES.text(d.city, 2, 60)) errs.push("city");
     if (!Array.isArray(d.items) || !d.items.length || d.items.length > 50) errs.push("items");
     if (errs.length) return bad("Please check: " + errs.join(", "));
-    const store = (await getStore(env)) || {};
-    const prods = new Map((store.products || []).map((x) => [x.id, x]));
-    const items = [];
-    for (const it of d.items) {
-      const qty = Math.max(1, Math.min(99, parseInt(it.qty, 10) || 1));
-      const pr = prods.get(it.id);
-      // price always comes from the published store, never from the browser
-      const price = pr ? Number(pr.price) : Number(it.price);
-      if (!pr && !store.products) { /* store not published yet — accept browser price */ }
-      else if (!pr) return bad(`“${String(it.name || it.id).slice(0, 40)}” is no longer available.`);
-      if (pr && pr.active === false) return bad(`“${String(pr.name || it.id).slice(0, 40)}” is currently unavailable.`);
-      if (!(price > 0)) return bad("A product in your basket has no price.");
-      if (pr && Number(pr.stock || 0) < qty) return bad(`Only ${Math.max(0, Number(pr.stock || 0))} of “${String(pr.name || it.id).slice(0, 40)}” is left in stock.`);
-      items.push({ id: String(it.id), name: pr ? pr.name : String(it.name || "").slice(0, 80), price, qty, art: pr ? pr.art : it.art || "", img: pr && pr.img && pr.img.startsWith("img:") ? pr.img : "" });
-    }
-    const s = store.settings || {};
-    const sub = items.reduce((x, i) => x + i.price * i.qty, 0);
-    let off = 0, ship = sub >= (s.freeShipAbove ?? 499) ? 0 : (s.shipFee ?? 59), coupon = "";
-    if (d.coupon) {
-      const code = String(d.coupon).trim().toUpperCase();
-      const c = (store.coupons || []).find((k) => k && String(k.code || "").toUpperCase() === code);
-      if (!c) return bad(`“${code}” is not a valid coupon code.`);
-      if (!c.active) return bad(`“${code}” is not active right now.`);
-      if (sub < Number(c.min || 0)) return bad(`“${code}” works on orders of ${inr(c.min || 0)} or more.`);
-      if (firstOrderOnly(c) && await hasPriorOrder(env, String(d.email).trim().toLowerCase())) return bad(`“${code}” is a one-time first-order offer and cannot be used again.`);
-      coupon = String(c.code || code).toUpperCase();
-      if (c.type === "percent") off = Math.round((sub * Number(c.value || 0)) / 100);
-      if (c.type === "ship") ship = 0;
-    }
-    let computedTotal = sub - off + ship, paymentInfo = null;
+    const orderEmail0 = String(d.email).trim().toLowerCase();
+    let paymentInfo = null;
     if (d.pay === "Razorpay") {
       if (!env.RAZORPAY_KEY_SECRET || !d.razorpay_order_id || !d.razorpay_payment_id || !d.razorpay_signature) return bad("Payment details missing.");
       const sigOk = await verifyRazorpaySignature(d.razorpay_order_id, d.razorpay_payment_id, d.razorpay_signature, env.RAZORPAY_KEY_SECRET);
@@ -541,10 +513,61 @@ async function api(req, env, url, ctx) {
       if (!info || info.status !== "PAID" || !(info.amountPaid > 0)) return bad("Payment could not be confirmed. Please try again or contact us if money was deducted.");
       paymentInfo = { gateway: "Cashfree", ref: info.cfOrderId || d.cashfree_order_id, orderRef: d.cashfree_order_id, amountPaid: info.amountPaid };
     }
-    // Once money has actually changed hands, what was paid is the source of truth for the order total —
-    // never a freshly recomputed number, which could differ by a few rupees if stock/coupon shifted mid-checkout.
-    const total = paymentInfo ? paymentInfo.amountPaid : computedTotal;
-    const totalMismatch = paymentInfo && Math.abs(paymentInfo.amountPaid - computedTotal) > 1;
+    if (paymentInfo) {
+      // one payment can only ever create one order (stops replay), and a repeated submit just returns the same order
+      const prior = await env.DATA.get("pay:" + paymentInfo.gateway + ":" + paymentInfo.ref);
+      if (prior) {
+        const ex = await findOrder(env, prior);
+        if (ex && String(ex.order.email || "").toLowerCase() === orderEmail0) {
+          const o2 = ex.order;
+          return json({ ok: true, id: o2.id, total: o2.total, subtotal: o2.subtotal, discount: o2.discount, delivery: o2.delivery, coupon: o2.coupon, ownerMailed: false, customerMailed: false, duplicate: true });
+        }
+        return bad("This payment has already been used for another order.");
+      }
+    }
+    // If money was taken but the order can't be created (stock/coupon/price changed), never lose track of it.
+    const failOrder = async (msg) => {
+      if (!paymentInfo) return bad(msg);
+      await env.DATA.put("payfail:" + Date.now() + ":" + paymentInfo.ref, JSON.stringify({ ...paymentInfo, email: orderEmail0, phone: String(d.phone), name: String(d.name), reason: msg, at: new Date().toISOString() }));
+      ctx.waitUntil(mailOwner(env, { subject: `⚠️ Payment received but order NOT created — ${paymentInfo.ref}`,
+        text: `${paymentInfo.gateway} payment ${paymentInfo.ref} of ${inr(paymentInfo.amountPaid)} from ${d.name} (${orderEmail0}, ${d.phone}) could not become an order: ${msg}`,
+        html: shell("Payment received, order not created", `<table style="width:100%;font-size:14px">${row("Gateway", paymentInfo.gateway)}${row("Payment ref", paymentInfo.ref)}${row("Amount", inr(paymentInfo.amountPaid))}${row("Customer", String(d.name))}${row("Email", orderEmail0)}${row("Mobile", String(d.phone))}${row("Why", msg)}</table><p style="font-size:14px;line-height:1.6">Please refund this payment from your ${esc(paymentInfo.gateway)} dashboard or contact the customer.</p>`, env) }).catch(() => {}));
+      return bad(msg + " Your payment was received, our team has been alerted and will refund or contact you shortly.");
+    };
+    const store = (await getStore(env)) || {};
+    const prods = new Map((store.products || []).map((x) => [x.id, x]));
+    const items = [];
+    for (const it of d.items) {
+      const qty = Math.max(1, Math.min(99, parseInt(it.qty, 10) || 1));
+      const pr = prods.get(it.id);
+      // price always comes from the published store, never from the browser
+      const price = pr ? Number(pr.price) : Number(it.price);
+      if (!pr && !store.products) { /* store not published yet — accept browser price */ }
+      else if (!pr) return await failOrder(`“${String(it.name || it.id).slice(0, 40)}” is no longer available.`);
+      if (pr && pr.active === false) return await failOrder(`“${String(pr.name || it.id).slice(0, 40)}” is currently unavailable.`);
+      if (!(price > 0)) return await failOrder("A product in your basket has no price.");
+      if (pr && Number(pr.stock || 0) < qty) return await failOrder(`Only ${Math.max(0, Number(pr.stock || 0))} of “${String(pr.name || it.id).slice(0, 40)}” is left in stock.`);
+      items.push({ id: String(it.id), name: pr ? pr.name : String(it.name || "").slice(0, 80), price, qty, art: pr ? pr.art : it.art || "", img: pr && pr.img && pr.img.startsWith("img:") ? pr.img : "" });
+    }
+    const s = store.settings || {};
+    const sub = items.reduce((x, i) => x + i.price * i.qty, 0);
+    let off = 0, ship = sub >= (s.freeShipAbove ?? 499) ? 0 : (s.shipFee ?? 59), coupon = "";
+    if (d.coupon) {
+      const code = String(d.coupon).trim().toUpperCase();
+      const c = (store.coupons || []).find((k) => k && String(k.code || "").toUpperCase() === code);
+      if (!c) return await failOrder(`“${code}” is not a valid coupon code.`);
+      if (!c.active) return await failOrder(`“${code}” is not active right now.`);
+      if (sub < Number(c.min || 0)) return await failOrder(`“${code}” works on orders of ${inr(c.min || 0)} or more.`);
+      if (firstOrderOnly(c) && await hasPriorOrder(env, String(d.email).trim().toLowerCase())) return await failOrder(`“${code}” is a one-time first-order offer and cannot be used again.`);
+      coupon = String(c.code || code).toUpperCase();
+      if (c.type === "percent") off = Math.round((sub * Number(c.value || 0)) / 100);
+      if (c.type === "ship") ship = 0;
+    }
+    const computedTotal = sub - off + ship;
+    // Underpaid (cart changed after the payment was sized, or a tampered cart) => no order, owner alerted.
+    if (paymentInfo && paymentInfo.amountPaid < computedTotal - 1) return await failOrder(`The order total is ${inr(computedTotal)} but ${inr(paymentInfo.amountPaid)} was paid.`);
+    const total = computedTotal;
+    const overpaid = !!paymentInfo && paymentInfo.amountPaid > computedTotal + 1;
     const id = "GO" + todayIST().slice(2).replace(/-/g, "") + "-" + Math.floor(1000 + Math.random() * 9000);
     const createdAt = new Date().toISOString();
     const verifiedUser = await supabaseUserFromRequest(req);
@@ -554,10 +577,11 @@ async function api(req, env, url, ctx) {
     const order = { id, name: String(d.name).trim(), phone: String(d.phone).replace(/[^0-9]/g, ""), email: orderEmail,
       address: `${String(d.address).trim()}, ${String(d.city).trim()} ${String(d.pin).trim()}`, items, subtotal: sub, discount: off, delivery: ship,
       total, coupon, pay: ["UPI", "Card", "COD", "Razorpay", "Cashfree"].includes(d.pay) ? d.pay : "COD", note: String(d.note || "").slice(0, 200),
-      via: d.via === "WhatsApp" ? "WhatsApp" : "Website", status: "Processing", fulfillmentStatus: "Unfulfilled", courier: "", awb: "", trackingUrl: "", adminNote: totalMismatch ? "Charged amount differs slightly from the computed total — please review." : "",
+      via: d.via === "WhatsApp" ? "WhatsApp" : "Website", status: "Processing", fulfillmentStatus: "Unfulfilled", courier: "", awb: "", trackingUrl: "", adminNote: overpaid ? `Customer paid ${inr(paymentInfo.amountPaid)} but the order total is ${inr(computedTotal)} — refund the difference.` : "",
       payment: paymentInfo || undefined,
       accountRegistered, accountId: accountRegistered ? verifiedUser.id : "",
       stockRestored: false, refundStatus: "", returnStatus: "", date: todayIST(), createdAt, events: [{ status: "Processing", note: "Order received", at: createdAt }] };
+    if (paymentInfo) await env.DATA.put("pay:" + paymentInfo.gateway + ":" + paymentInfo.ref, id);
     const orderKey = "order:" + order.createdAt + ":" + id;
     await env.DATA.put(orderKey, JSON.stringify(order));
     await env.DATA.put("orderid:" + id, orderKey);
@@ -1007,6 +1031,7 @@ export default {
     if (req.method === "GET" && /^\/invoice\/[A-Za-z0-9-]+$/.test(url.pathname)) return serveInvoice(env, url, url.pathname.split("/").pop());
     if (req.method === "GET" && cleanPathname(url.pathname) === "/sitemap.xml") return serveSitemap(env, url);
     if (req.method === "GET" && cleanPathname(url.pathname) === "/robots.txt") return serveRobots(env, url);
+    if (req.method === "GET" && url.pathname === "/favicon.ico") return Response.redirect(url.origin + "/assets/img/favicon.png", 301);
     if (req.method === "GET" && isAppRoute(url.pathname)) {
       try { return await serveApp(req, env, url); }
       catch (e) { return bad("The website could not be loaded right now.", 500); }
